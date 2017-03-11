@@ -31,3 +31,13 @@
 # Debug files
 *.dSYM/
 *.su
+
+# Folders
+builds
+
+# Atom Editor (plugins)
+.atom-build.json
+.build.sh
+.gcc-flags.json
+.opencl-config.json
+compile_commands.json
