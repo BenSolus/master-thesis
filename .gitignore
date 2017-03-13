@@ -1,0 +1,6 @@
+# Folders
+_site
+
+# Atom Editor (plugins)
+.atom-build.json
+.build.sh

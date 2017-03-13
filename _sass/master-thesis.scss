@@ -1,0 +1,37 @@
+
+.wrapper {
+  width: inherit;
+}
+
+header {
+  padding-bottom: 44px;
+  padding-left: 50px;
+  padding-right: 50px;
+  padding-top: 68px;
+}
+
+h1.header {
+  font-size: 22.5px;
+}
+
+a.home {
+  background: url('../images/home.svg') no-repeat 1px;
+}
+
+a.blog {
+  background: url('../images/blog.svg') no-repeat 1px;
+}
+
+a.docu {
+  background: url('../images/documentation.svg') no-repeat 1px;
+}
+
+section {
+  min-width: 240px;
+  width: calc(100% - 300px);
+}
+
+.post-list {
+  list-style: none;
+  margin-left: 0;
+}
