@@ -1,17 +1,21 @@
 ---
 layout:   home
-title:    Master Thesis Main Page
+title:    Main Page
 author:   Bennet Carstensen
 date:     March 12, 2017
 comments: false
 ---
 
-## My master thesis
+## Home
 
-Dies ist die Webseite zu meiner Masterarbeit. Hier werde ich Ideen in Form eines
-Blogs festhalten sowie die Dokumentation des Sourcecodes bereitstellen.
+This is the website of my master thesis with the working title *"An efficient
+implementation of the Green cross approximation method on GPGPUs"* based on the
+article
+[Approximation of integral operators by Green quadrature and nested cross approximation](https://link.springer.com/article/10.1007/s00211-015-0757-y)
+[\[1\]]({{ site.baseurl }}/refs). Here I am going to collecting ideas and
+provide the documentation of the source code.
 
-Der Sourcecode ist lizensiert unter der
+The source code is licensed under the
 [GNU Lesser General Public License](https://www.gnu.org/licenses/lgpl-3.0.html)
-und der Inhalt dieser Webseite unter der
-[Creative Commons Attribution-ShareAlike 4.0 International Lizenz](https://creativecommons.org/licenses/by-sa/4.0).
+and the content of this website (code and text) under a
+[Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0).

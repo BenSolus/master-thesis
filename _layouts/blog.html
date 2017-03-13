@@ -1,0 +1,30 @@
+---
+layout:    default
+author:    Bennet Carstensen
+date:      March 13, 2017
+permalink: /blog/
+---
+
+{{ content }}
+<div>
+
+  <ul class="post-list">
+    {% for post in site.posts %}
+      <li>
+        <h2>
+          <span>
+              {{ post.date | date: "%b %-d, %Y" }}
+              <em> by </em>
+              {{ post.author | data_to_string }}:
+          </span>
+          <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+        </h2>
+        <div>
+          {{ post.excerpt }}
+          <a href="{{ post.url | relative_url }}">Read more...</a><br><br>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+
+</div>

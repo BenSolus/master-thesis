@@ -11,6 +11,10 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <script
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+      type="text/javascript">
+    </script>
   </head>
   <body>
     <div class="wrapper">
@@ -19,7 +23,7 @@
           {{ site.title | default: site.github.repository_name }}
         </h1>
         <p class="header">
-          {{ site.description | default: site.github.project_tagline }}
+          {{ site.tagline | default: site.github.project_tagline }}
         </p>
 
         <ul>
@@ -36,6 +40,11 @@
           <li>
             <a class="buttons docu" href="{{ site.baseurl }}/doc">
               Documentation
+            </a>
+          </li>
+          <li>
+            <a class="buttons refs" href="{{ site.baseurl }}/refs">
+              References
             </a>
           </li>
           <li>

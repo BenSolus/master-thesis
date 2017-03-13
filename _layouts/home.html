@@ -17,11 +17,9 @@ date:   March 13, 2017
         <span>
           {{ post.date | date: "%b %-d, %Y" }}
           <em> by </em>
-          {{ post.author | data_to_string }}
-          {% if post.comments %}
-             • <a href="{{ post.url | relative_url }}#disqus_thread" data-disqus-identifier="{{ post.url | relative_url }}"></a>
-          {% endif %}
+          {{ post.author | data_to_string }}:
         </span>
+        <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
       </h3>
       <div>
         {{ post.excerpt }}

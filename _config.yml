@@ -1,4 +1,6 @@
 title:              My master thesis
+tagline:            An efficient implementation of the Green cross
+                    approximation method on GPGPUs
 baseurl:            "/masterThesis"
 url:                ""
 markdown:           kramdown
