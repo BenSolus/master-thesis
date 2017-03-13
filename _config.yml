@@ -1,8 +1,8 @@
 title:              My master thesis
 tagline:            An efficient implementation of the Green cross
                     approximation method on GPGPUs
-baseurl:            "/masterThesis"
-url:                ""
+baseurl:            "/master-thesis"
+url:                "https://bensolus.github.io/master-thesis"
 markdown:           kramdown
 theme:              jekyll-theme-dinky
 sass:
