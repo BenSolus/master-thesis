@@ -38,6 +38,7 @@ builds
 # Atom Editor (plugins)
 .atom-build.json
 .build.sh
+.clang_complete
 .gcc-flags.json
 .opencl-config.json
 compile_commands.json

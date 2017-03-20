@@ -1,6 +1,12 @@
 ADD_LIBRARY(MasterThesis
-            objects.c
-            objects.h
+            clamatrix.cl
+            greencross.cl
+            greencross.c
+            greencross.h
+            ie1d.c
+            ie1d.h
+            ocl_system.c
+            ocl_system.h
 )
 
 IF(CMAKE_EXPORT_COMPILE_COMMANDS EQUAL 1)
