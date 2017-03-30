@@ -18,19 +18,18 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9"; fi
 
   ### Install AMDs OpenCL implementation
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then
-      bash Tools/Travis-CI/amd_sdk.sh;
-      tar -xjf AMD-SDK.tar.bz2;
-      AMDAPPSDKROOT=${HOME}/AMDAPPSDK;
-      export OPENCL_VENDOR_PATH=${AMDAPPSDKROOT}/etc/OpenCL/vendors;
-      mkdir -p ${OPENCL_VENDOR_PATH};
-      sh AMD-APP-SDK*.sh --tar -xf -C ${AMDAPPSDKROOT};
-      echo libamdocl64.so > ${OPENCL_VENDOR_PATH}/amdocl64.icd;
-      export LD_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LD_LIBRARY_PATH};
-      export CMAKE_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64;
-      export LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LIBRARY_PATH};
-    fi;
+  - bash Tools/Travis-CI/amd_sdk.sh;
+  - tar -xjf AMD-SDK.tar.bz2;
+  - AMDAPPSDKROOT=${HOME}/AMDAPPSDK;
+  - export OPENCL_VENDOR_PATH=${AMDAPPSDKROOT}/etc/OpenCL/vendors;
+  - mkdir -p ${OPENCL_VENDOR_PATH};
+  - sh AMD-APP-SDK*.sh --tar -xf -C ${AMDAPPSDKROOT};
+  - echo libamdocl64.so > ${OPENCL_VENDOR_PATH}/amdocl64.icd;
+  - export LD_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LD_LIBRARY_PATH};
+  - export CMAKE_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64;
+  - export LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LIBRARY_PATH};
 
+before_script:
   ### Install H2Lib
   - git clone https://github.com/H2Lib/H2Lib.git
   - cd H2Lib || exit 1
