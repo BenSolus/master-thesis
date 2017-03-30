@@ -50,7 +50,7 @@ before_script:
 script:
   - mkdir -p build
   - cd build || exit 1
-  - cmake -DCMAKE_BUILD_TYPE=Debug -DH2INC:PATH=../H2Lib/Library -DH2LINK:PATH=../H2Lib ..
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DH2INC:PATH=/home/travis/build/BenSolus/master-thesis/H2Lib/Library -DH2LINK:PATH=/home/travis/build/BenSolus/master-thesis/H2Lib ..
   - make -j2
   - ctest --output-on-failure
 
