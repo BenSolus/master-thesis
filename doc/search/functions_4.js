@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['random_5fobjects',['random_objects',['../d3/db8/group__objects.html#ga177820fbfa6d36be90b8f3d6e8e05370',1,'random_objects(pobjects objs):&#160;objects.c'],['../d3/db8/group__objects.html#ga177820fbfa6d36be90b8f3d6e8e05370',1,'random_objects(pobjects objs):&#160;objects.c']]]
+  ['mvm_5famatrix_5favector',['mvm_amatrix_avector',['../de/dfb/group__amatrix.html#gafe236d191ead8e0a2b2ddfa6133da0c3',1,'clamatrix.cl']]]
 ];

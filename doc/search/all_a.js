@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['uninit_5fobjects',['uninit_objects',['../d3/db8/group__objects.html#ga913b5f8f8a99b39dba723926a394b46d',1,'uninit_objects(pobjects objs):&#160;objects.c'],['../d3/db8/group__objects.html#ga913b5f8f8a99b39dba723926a394b46d',1,'uninit_objects(pobjects objs):&#160;objects.c']]]
+  ['ocl_5fsystem',['ocl_system',['../d9/d64/group__ocl__system.html',1,'']]],
+  ['ocl_5fsystem_2eh',['ocl_system.h',['../d3/d9b/ocl__system_8h.html',1,'']]]
 ];

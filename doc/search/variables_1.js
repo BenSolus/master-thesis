@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mem',['mem',['../d3/d30/struct__objects.html#ae52dea064e3f665085f5833813f46d26',1,'_objects']]]
+  ['cols',['cols',['../dd/d6c/struct__amatrix.html#a5db4bd93ab5a8daa815dc2d2e1d540af',1,'_amatrix']]]
 ];

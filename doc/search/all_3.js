@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['del_5fobjects',['del_objects',['../d3/db8/group__objects.html#ga61c56622053584459637d27d93b9712f',1,'del_objects(pobjects objs):&#160;objects.c'],['../d3/db8/group__objects.html#ga61c56622053584459637d27d93b9712f',1,'del_objects(pobjects objs):&#160;objects.c']]],
-  ['dim',['dim',['../d3/d30/struct__objects.html#a8ded5edb667f5c834eb3cde207f7bf19',1,'_objects']]],
-  ['documentation',['Documentation',['../index.html',1,'']]]
+  ['clamatrix_2ecl',['clamatrix.cl',['../d5/dae/cl_2clamatrix_8cl.html',1,'']]],
+  ['clavector_2ecl',['clavector.cl',['../de/d96/cl_2clavector_8cl.html',1,'']]],
+  ['clbasic_2ecl',['clbasic.cl',['../da/dd4/cl_2clbasic_8cl.html',1,'']]],
+  ['cols',['cols',['../dd/d6c/struct__amatrix.html#a5db4bd93ab5a8daa815dc2d2e1d540af',1,'_amatrix']]]
 ];

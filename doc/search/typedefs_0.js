@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['objects',['objects',['../d3/db8/group__objects.html#gafb54d8ac5b8500c00f810b2ef34c195e',1,'objects.h']]]
+  ['amatrix',['amatrix',['../de/dfb/group__amatrix.html#ga3cf2ca5231e9b442a1cbf349228b8c3e',1,'clamatrix.cl']]],
+  ['avector',['avector',['../de/d6e/group__avector.html#ga1cd9b4f2fc2a234a126bcdc599566a7e',1,'clavector.cl']]]
 ];
