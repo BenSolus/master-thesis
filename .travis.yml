@@ -9,6 +9,14 @@ matrix:
         apt:
           sources: ubuntu-toolchain-r-test
           packages:
+            - build-essential
+            - git
+            - libgnome-keyring-dev
+            - fakeroot
+            - opencl-headers
+            - libblas-dev
+            - liblapack-dev
+            - gfortran
             - gcc-4.9
             - g++-4.9
 
@@ -18,16 +26,18 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9"; fi
 
   ### Install AMDs OpenCL implementation
-  - bash Tools/Travis-CI/amd_sdk.sh;
-  - tar -xjf AMD-SDK.tar.bz2;
-  - AMDAPPSDKROOT=${HOME}/AMDAPPSDK;
-  - export OPENCL_VENDOR_PATH=${AMDAPPSDKROOT}/etc/OpenCL/vendors;
-  - mkdir -p ${OPENCL_VENDOR_PATH};
-  - sh AMD-APP-SDK*.sh --tar -xf -C ${AMDAPPSDKROOT};
-  - echo libamdocl64.so > ${OPENCL_VENDOR_PATH}/amdocl64.icd;
-  - export LD_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LD_LIBRARY_PATH};
-  - export CMAKE_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64;
-  - export LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LIBRARY_PATH};
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then
+      bash Tools/Travis-CI/amd_sdk.sh;
+      tar -xjf AMD-SDK.tar.bz2;
+      AMDAPPSDKROOT=${HOME}/AMDAPPSDK;
+      export OPENCL_VENDOR_PATH=${AMDAPPSDKROOT}/etc/OpenCL/vendors;
+      mkdir -p ${OPENCL_VENDOR_PATH};
+      sh AMD-APP-SDK*.sh --tar -xf -C ${AMDAPPSDKROOT};
+      echo libamdocl64.so > ${OPENCL_VENDOR_PATH}/amdocl64.icd;
+      export LD_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LD_LIBRARY_PATH};
+      export CMAKE_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64;
+      export LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LIBRARY_PATH};
+    fi;
 
 before_script:
   ### Install H2Lib
@@ -56,15 +66,3 @@ git:
   depth: 10
 
 sudo: false
-
-addons:
-  apt:
-    packages:
-    - build-essential
-    - git
-    - libgnome-keyring-dev
-    - fakeroot
-    - opencl-headers
-    - libblas-dev
-    - liblapack-dev
-    - gfortran
