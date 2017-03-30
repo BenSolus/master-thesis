@@ -1,6 +1,12 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(MasterThesis)
 
+################################################################################
+# Policy for relative paths                                                    #
+################################################################################
+
+CMAKE_POLICY(SET CMP0015 NEW)
+
 SET(H2INC  ""    CACHE PATH "Path to the include directory of the H2Lib.")
 SET(H2LINK ""    CACHE PATH "Path to the linking directory of the H2Lib.")
 SET(DOC    OFF   CACHE BOOL "Whether to build the documentation")
