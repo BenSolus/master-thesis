@@ -240,21 +240,30 @@ fillS_interpolation_ie1d(pccluster rc, uint rname,
  * Create matrices
  * ------------------------------------------------------------ */
 
-/** @brief Fill an @ref hmatrix object.
+/** @brief Fill a
+ *         <a href="http://www.h2lib.org/doc/d1/dc7/group__hmatrix.html">
+ *           hmatrix
+ *         </a> object.
  *
  *  @param ie Problem description.
  *  @param G Target matrix. */
 HEADER_PREFIX void
 fill_hmatrix_ie1d(pcie1d ie, phmatrix G);
 
-/** @brief Fill a @ref clusterbasis object.
+/** @brief Fill a
+ *         <a href="http://www.h2lib.org/doc/d5/d84/group__clusterbasis.html">
+ *           clusterbasis
+ *         </a> object.
  *
  *  @param ie Problem description.
  *  @param cb Target cluster basis. */
 HEADER_PREFIX void
 fill_clusterbasis_ie1d(pcie1d ie, pclusterbasis cb);
 
-/** @brief Fill a @ref h2matrix object.
+/** @brief Fill a
+ *         <a href="http://www.h2lib.org/doc/d7/ddd/group__h2matrix.html">
+ *           h2matrix
+ *         </a>object.
  *
  *  @param ie Problem description.
  *  @param G Target matrix. */

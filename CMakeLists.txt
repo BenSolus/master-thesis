@@ -26,6 +26,7 @@ FIND_PACKAGE(OpenCL REQUIRED)
 ################################################################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/Library)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/Tests)
 INCLUDE_DIRECTORIES(${H2INC})
 
 ################################################################################
@@ -42,6 +43,7 @@ SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -std=c11 \
                                         -Wall \
                                         -Wextra \
                                         -pedantic \
+                                        -Wno-overlength-strings \
                                         -pipe \
                                         -DUSE_OPENMP=1 \
                                         -DUSE_OPENCL=1 \
@@ -50,6 +52,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 \
                                         -Wall \
                                         -Wextra \
                                         -pedantic \
+                                        -Wno-overlength-strings \
                                         -pipe \
                                         -DUSE_OPENMP=1 \
                                         -DUSE_OPENCL=1 \
@@ -71,6 +74,18 @@ IF(CMAKE_COMPILER_IS_GNUCC)
   SET(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs \
                                                        -ftest-coverage")
 ENDIF()
+
+################################################################################
+# Convert OpenCL source code into a string.                                    #
+################################################################################
+
+IF(WIN32)
+  # Write windows script to perform conversion.
+else(WIN32)
+  execute_process(COMMAND ${PROJECT_SOURCE_DIR}/.cmake.sh
+                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+ENDIF(WIN32)
+
 ################################################################################
 # Adding various sub directories for compilation                               #
 ################################################################################

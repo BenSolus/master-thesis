@@ -1,8 +1,6 @@
 ADD_LIBRARY(MasterThesis
             clamatrix.cl
-            greencross.cl
-            greencross.c
-            greencross.h
+            clavector.cl
             ie1d.c
             ie1d.h
             ocl_system.c

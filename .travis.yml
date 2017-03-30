@@ -66,3 +66,6 @@ addons:
     - libgnome-keyring-dev
     - fakeroot
     - opencl-headers
+    - libblas-dev
+    - liblapack-dev
+    - gfortran

@@ -1,13 +1,17 @@
 /* ------------------------------------------------------------
- This is the file "clbasic.h" of this master thesis.
+ This is the file "clbasic.cl" of this master thesis.
  All rights reserved, Sven Christophersen 2015
  ------------------------------------------------------------ */
 
 /**
- * @file clbasic.h
- * @author Bennet Carstensen
- * @date 2015
+ * @file      cl/clbasic.cl
+ * @author    Bennet Carstensen
+ * @date      2017
+ * @copyright All rights reserved, Sven Christophersen 2015
  */
+
+#ifndef CLBASIC_CL
+#define CLBASIC_CL
 
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
@@ -159,3 +163,5 @@ inline field cmul(field x, field y) {
 #else
 
 #endif
+
+#endif // CLBASIC_CL
