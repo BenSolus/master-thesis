@@ -47,6 +47,7 @@ before_script:
   - sed -i -e 's/#define INLINE_PREFIX static extern "C"/#define INLINE_PREFIX inline/g' Library/settings.h
   - sed -i -e 's/\/\*\* @brief Boolean type. \*\//\#define __cplusplus\n\/\*\* @brief Boolean type. \*\//g' Library/settings.h
   - sed -i -e 's/extern const bool false;/extern const bool false;\n\#endif/g' Library/settings.h
+  - cat Library/settings.h
   - make -j2
   - cd ..
 
