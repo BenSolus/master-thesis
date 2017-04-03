@@ -1,7 +1,7 @@
 ---
 layout:    post
 author:    Bennet Carstensen
-title:     Let´s get started - Motivation by a model problem
+title:     Let’s get started - Motivation by a model problem
 date:      March 30, 2017
 permalink: /blog/intro
 comments:  true
