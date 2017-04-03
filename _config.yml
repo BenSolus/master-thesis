@@ -1,6 +1,6 @@
 title:              My master thesis
 tagline:            An efficient implementation of the Green cross
-                    approximation method on GPGPUs
+                    approximation method on GPUs
 baseurl:            "/master-thesis"
 url:                "https://bensolus.github.io/master-thesis"
 markdown:           kramdown
@@ -9,6 +9,6 @@ sass:
     sass_dir:       _sass
 excerpt_separator:  <!--more-->
 show_downloads:     false
-email:              bennet.carstensen@gmail.com
+email:              bca@informatik.uni-kiel.de
 github_username:    BenSolus
 bitbucket_username: BenSolus

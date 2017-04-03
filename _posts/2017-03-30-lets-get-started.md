@@ -1,7 +1,7 @@
 ---
 layout:    post
 author:    Bennet Carstensen
-title:     Let's get started - Motivation by a model problem
+title:     Let´s get started - Motivation by a model problem
 date:      March 30, 2017
 permalink: /blog/intro
 comments:  true
@@ -9,7 +9,7 @@ comments:  true
 
 In this blog I will collect ideas for my master thesis with the working title
 *"An efficient implementation of the Green cross approximation method on
-GPGPUs"* based on the article
+GPUs"* based on the article
 [Approximation of integral operators by Green quadrature and nested cross approximation](https://link.springer.com/article/10.1007/s00211-015-0757-y) [\[1\]]({{ site.baseurl }}/refs).
 
 We consider integral equations e.g. of the form
@@ -78,7 +78,7 @@ $$
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
-after the standard Galerkin approach and thus we get the following
+after the standard Galerkin approach. Furthermore, we get the following
 finite-dimensional variational problem and look for an $$u_n \in V_n$$ such that
 
 $$
@@ -110,7 +110,7 @@ $$
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
-Defining the matrix $$G \in \mathbb{R}^{n \times n}$$ and the vector
+Defining the matrix $$G \in \mathbb{R}^{n \times n}$$ as well as the vector
 $$b \in \mathbb{R}^n$$ by
 
 <!-- lint disable no-shortcut-reference-link no-undefined-references-->
@@ -144,8 +144,8 @@ non-local, in other words we have $$g(x, y) \neq 0$$ for almost all $$x, y \in
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
-For those kind of matrices, we summarize common techniques proposed to handle
-them into three categories: kernel-based-, matrix-based- and hybrid techniques.
+For this kind of matrices, we summarize common techniques proposed to handle
+them into three categories: kernel-based, matrix-based and hybrid techniques.
 
 The first category replaces the kernel function $$g$$ by a degenerated
 approximation $$\tilde{g}$$ which the corresponding method handles efficiently.
@@ -158,19 +158,20 @@ construct an approximation. The cross-approximation
 [\[4\]]({{ site.baseurl }}/refs) method in particular computes a small number of
 *"crosses"*, each represented by one row and column of a submatrix of $$G$$,
 which leads to a low-rank approximation. For an efficient implementation we
-only partial evaluate the full matrix to retrieve the "crosses" thus we have
+only partially evaluate the full matrix to retrieve the "crosses" thus we have
 to specify a pivoting strategy and an error estimator to construct the
 low-rank matrix which leads to the adaptive cross
 approximation [\[5\]]({{ site.baseurl }}/refs).
 
-Kernel- and matrix-based approximations both have advantages and disadvantages.
-Kernel-based approximations are typically proven to converge at a certain
-rate, and they do not depend on the choice of basis functions, but they are
-frequently less efficient than matrix-based approximations. Matrix-based
-approximations typically lead to high compression rates but finding a reliable
-stopping criterion becomes challenging because of the partial evaluation and
-efficient pivoting attempts [\[5\]]({{ site.baseurl }}/refs) presently rely on
-further stability assumptions.
+Kernel- and matrix-based approximations both have advantages as well as
+disadvantages. Kernel-based approximations are typically proven to converge at
+a certain rate, and they do not depend on the choice of basis functions, but
+they are frequently less efficient than matrix-based approximations.
+Matrix-based approximations typically lead to high compression rates.
+Finding a reliable stopping criterion, however, becomes challenging because of
+the partial evaluation, and furthermore, efficient pivoting strategies
+[\[5\]]({{ site.baseurl }}/refs) presently rely on further stability
+assumptions.
 
 The third category tries to combine kernel and matrix-based techniques to
 compensate the disadvantages while maintaining the advantages. The hybrid cross
@@ -182,9 +183,8 @@ Building up on the implementation of the newly developed Green cross
 approximation (GCA) method [\[1\]]({{ site.baseurl }}/refs) for boundary
 element matrices [\[7\]]({{ site.baseurl }}/refs) based on the
 *H2Lib*[$$^1$$](#1), we are going to improve the performance of this method
-by analyzing the algorithm and proposing techniques which divide the
-upcoming tasks between CPU and GPU and take advantage of the architecture of
-GPGPUs for computationally expensive operations.
+by analyzing the algorithm as well as proposing techniques which divide the
+upcoming tasks between CPU and GPU along with taking advantage of the architecture of the latter one for computationally expensive operations.
 
 --------------------------------------------------------------------------------
 <b id="1">$$^1$$</b> Available at [http://www.h2lib.org](http://www.h2lib.org)
