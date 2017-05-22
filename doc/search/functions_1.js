@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['build_5fie1d_5fcluster',['build_ie1d_cluster',['../d8/de6/group__ie1d.html#ga7df500b6044ea293481a82d5106d3c11',1,'build_ie1d_cluster(pcie1d ie, uint leafsize):&#160;ie1d.c'],['../d8/de6/group__ie1d.html#ga7df500b6044ea293481a82d5106d3c11',1,'build_ie1d_cluster(pcie1d ie, uint leafsize):&#160;ie1d.c']]]
+  ['build_5fclustergeometry_5fgreencross',['build_clustergeometry_greencross',['../d6/dbf/group__greencross.html#ga58e44702c7ffb276ea038b76d8e4fe10',1,'greencross.c']]]
 ];

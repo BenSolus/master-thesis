@@ -17,28 +17,35 @@ We consider integral equations e.g. of the form
 <!-- lint disable no-shortcut-reference-link no-undefined-references-->
 
 $$
-\int\limits_0^1 g(x, y)\ u(y)\ dy = f(x) \qquad \text{for all } x \in [0, 1].
+\int\limits_{\Omega} g(x, y)\ u(y)\ dy = f(x) \qquad
+\text{for all } x \in \Omega := [0, 1]^d.
 $$
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
-with
+with $$d \in \{ 2, 3 \}$$ and
 
 <!-- lint disable no-shortcut-reference-link no-undefined-references-->
 
 $$
 g(x, y) :=
 \begin{cases}
-  -\log|x - y| & \text{if } x \neq y, \newline
-  0            & \text{otherwise}
+  -\frac{1}{2 \pi} \log{\left \Vert x - y \right \Vert_2} &
+  \text{if } x \neq y, \ d = 2 \\
+  \\
+  \frac{1}{4 \pi \left \Vert x - y \right \Vert_2} &
+  \text{if } x \neq y, \ d = 3 \\
+  \\
+  0 & \text{otherwise}
 \end{cases}
-\qquad \text{for all } x, y \in [0, 1]
+\qquad \text{for all } x, y \in \Omega
 $$
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
-as an sample *kernel function* to construct the simple one-dimensional
-[Fredholm integral equation](https://en.wikipedia.org/wiki/Fredholm_integral_equation).
+as an sample *kernel function* for a fundamental solution of the negative
+Laplace operator $$-\Delta$$, e.g. occurring in the interpretation of
+Poisson's equations in differential form.
 
 <!--more-->
 
@@ -46,53 +53,48 @@ To compute an approximation of the solution, we consider a test space
 V and look for the Galerkin approximation $$u \in V$$ satisfying the
 variational equation
 
+<!-- lint disable emphasis-marker-->
+
 $$
-\int\limits_0^1 v(x) \int\limits_0^1 g(x, y)\ u(y)\ dy\ dx =
-\int\limits_0^1 v(x)\ f(x)\ dx \qquad \text{for all } v \in V.
+\int\limits_{\Omega} v(x) \int\limits_{\Omega} g(x, y)\ u(y)\ dy\ dx =
+\int\limits_{\Omega} v(x)\ f(x)\ dx \qquad \text{for all } v \in V.
 $$
 
 Since our first priority is the Galerkin discretization of the variational
 formulation, we let $$n \in \mathbb{N}$$, introduce basis functions
+$$(\phi_i)_{i \in \mathcal{I}}$$, where $$\mathcal{I}$$ is a suitable finite
+index set, and replace the space $$V$$ by
+
+<!-- lint enable emphasis-marker-->
 
 <!-- lint disable no-shortcut-reference-link no-undefined-references-->
 
 $$
-\phi_i(x) :=
-\begin{cases}
-  1 & \text{if } x \in \left [\frac{i - 1}{n}, \frac{i}{n} \right ]
-  \newline
-  0 & \text{otherwise}
-\end{cases}
-\qquad \text{for all } i \in [1 : n], x \in [0, 1]
-$$
-
-<!-- lint enable no-shortcut-reference-link no-undefined-references-->
-
-and replace the space $$V$$ by
-
-<!-- lint disable no-shortcut-reference-link no-undefined-references-->
-
-$$
-V_n := span\{\phi_i : i \in [1 : n]\}
+V_n := span\{\phi_i : i \in \mathcal{I} \}
 $$
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
 after the standard Galerkin approach. Furthermore, we get the following
-finite-dimensional variational problem and look for an $$u_n \in V_n$$ such that
-
-$$
-\int\limits_0^1 v_n(x) \int\limits_0^1 g(x, y)\ u_n(y)\ dy\ dx =
-\int\limits_0^1 v_n(x)\ f(x)\ dx \qquad \text{for all } v_n \in V_n.
-$$
-
-To compute $$u_n$$, we express it as a linear combination of our
-basis with the coefficient vector $$z \in \mathbb{R}^n$$:
+finite-dimensional variational problem and are now searching for an $$u_n \in
+V_n$$ such that
 
 <!-- lint disable emphasis-marker-->
 
 $$
-u_n = \sum\limits_{j = 1}^n z_j\ \phi_j
+\int\limits_{\Omega} v_n(x) \int\limits_{\Omega} g(x, y)\ u_n(y)\ dy\ dx =
+\int\limits_{\Omega} v_n(x)\ f(x)\ dx \qquad \text{for all } v_n \in V_n.
+$$
+
+<!-- lint enable emphasis-marker-->
+
+To compute $$u_n$$, we express it as a linear combination of our
+basis with the coefficient vector $$z \in \mathbb{R}^{\mathcal{I}}$$:
+
+<!-- lint disable emphasis-marker-->
+
+$$
+u_n = \sum\limits_{i \in \mathcal{I}} z_j\ \phi_j
 $$
 
 <!-- lint enable emphasis-marker-->
@@ -101,27 +103,36 @@ and thus we can describe an $$n$$-dimensional linear system of equations
 
 <!-- lint disable no-shortcut-reference-link no-undefined-references-->
 
+<!-- lint disable emphasis-marker-->
+
 $$
-\sum\limits_{j = 1}^n z_j \int\limits_0^1 \phi_i(x) \int\limits_0^1
-g(x, y)\ \phi_j(y)\ dy\ dx =
-\int\limits_0^1 \phi_i(x)\ f(x)\ dx
+\sum\limits_{i \in \mathcal{I}} z_j
+\int\limits_{\Omega} \phi_i(x) \int\limits_{\Omega} g(x, y)\ \phi_j(y)\ dy\ dx =
+\int\limits_{\Omega} \phi_i(x)\ f(x)\ dx
 \qquad \text{for all } i \in [1 : n].
 $$
 
+<!-- lint enable emphasis-marker-->
+
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
-Defining the matrix $$G \in \mathbb{R}^{n \times n}$$ as well as the vector
-$$b \in \mathbb{R}^n$$ by
+Defining the matrix $$G \in \mathbb{R}^{\mathcal{I} \times \mathcal{I}}$$ as
+well as the vector $$b \in \mathbb{R}^{\mathcal{I}}$$ by
 
 <!-- lint disable no-shortcut-reference-link no-undefined-references-->
 
+<!-- lint disable emphasis-marker-->
+
 $$
 \begin{array}{rcl}
-g_{ij} & := & \int\limits_0^1 \phi_i(x) \int\limits_0^1 g(x, y)\ \phi_j(y)\ dy\ dx, \newline
-b_i & := & \int\limits_0^1 \phi_i(x)\ f(x)\ dx,
+g_{ij} & := & \int\limits_{\Omega}
+\phi_i(x) \int\limits_{\Omega} g(x, y)\ \phi_j(y)\ dy\ dx, \newline
+b_i & := & \int\limits_{\Omega} \phi_i(x)\ f(x)\ dx,
 \end{array}
-\qquad \text{for all } i, j \in [1 : n]
+\qquad \text{for all } i, j \in \mathcal{I}
 $$
+
+<!-- lint enable emphasis-marker-->
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 
@@ -140,7 +151,7 @@ rather unattractive.
 
 The matrix $$G$$ is typically non-sparse since the integral operator is
 non-local, in other words we have $$g(x, y) \neq 0$$ for almost all $$x, y \in
-[0, 1]$$, and thus $$g_{ij} \neq 0$$ for all $$i, j \in [1 : n]$$.
+\Omega$$, and thus $$g_{ij} \neq 0$$ for all $$i, j \in \mathcal{I}$$.
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
 

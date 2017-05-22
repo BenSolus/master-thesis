@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['setup_5faprx_5finterpolation_5fie1d',['setup_aprx_interpolation_ie1d',['../d8/de6/group__ie1d.html#gac731302bc6b5fbb688edd4cafdec1241',1,'setup_aprx_interpolation_ie1d(pie1d ie, pccluster root, real m0, real m1):&#160;ie1d.c'],['../d8/de6/group__ie1d.html#gac731302bc6b5fbb688edd4cafdec1241',1,'setup_aprx_interpolation_ie1d(pie1d ie, pccluster root, real m0, real m1):&#160;ie1d.c']]],
-  ['setup_5faprx_5ftaylor_5fie1d',['setup_aprx_taylor_ie1d',['../d8/de6/group__ie1d.html#gaabc513e2b22411b32ec8d29b5187d44b',1,'setup_aprx_taylor_ie1d(pie1d ie, pccluster root, real m0, real m1):&#160;ie1d.c'],['../d8/de6/group__ie1d.html#gaabc513e2b22411b32ec8d29b5187d44b',1,'setup_aprx_taylor_ie1d(pie1d ie, pccluster root, real m0, real m1):&#160;ie1d.c']]],
-  ['setup_5fkernels_5ffix',['setup_kernels_fix',['../d9/d64/group__ocl__system.html#ga0f8a7834e03627f43df8c5222872c80a',1,'setup_kernels_fix(const uint n, const char **src_strs, const uint num_kernels, const char **kernel_names, cl_kernel **kernels):&#160;ocl_system.c'],['../d9/d64/group__ocl__system.html#ga0f8a7834e03627f43df8c5222872c80a',1,'setup_kernels_fix(const uint n, const char **src_strs, const uint num_kernels, const char **kernel_names, cl_kernel **kernels):&#160;ocl_system.c']]]
+  ['new_5famatrix',['new_amatrix',['../de/dfb/group__amatrix.html#gab94e273203ac5b85e1bc94375180cf28',1,'clamatrix.cl']]],
+  ['new_5favector',['new_avector',['../de/d6e/group__avector.html#gad5ef1e6f5462e9624c119d9b2c702d7f',1,'clavector.cl']]],
+  ['new_5flaplace2d_5fgreencross',['new_laplace2d_greencross',['../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964',1,'new_laplace2d_greencross(pcurve2d gr, uint res, void *eta, uint m):&#160;greencross.c'],['../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964',1,'new_laplace2d_greencross(pcurve2d gr, uint res, void *eta, uint m):&#160;greencross.c']]]
 ];

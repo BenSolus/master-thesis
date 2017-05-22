@@ -1,9 +1,5 @@
 var searchData=
 [
-  ['n',['n',['../db/d45/struct__ie1d.html#a42192b26864dbe6bc5bc6257a697482d',1,'_ie1d']]],
-  ['nearfield',['nearfield',['../db/d45/struct__ie1d.html#a7bf176cf80a4c42ef44f5f81b1e6bce5',1,'_ie1d']]],
-  ['nearfield_5fie1d',['nearfield_ie1d',['../d8/de6/group__ie1d.html#ga3c90ad522f495963db3746bba9c8b015',1,'nearfield_ie1d(const uint *ridx, const uint *cidx, pcie1d ie, pamatrix N):&#160;ie1d.c'],['../d8/de6/group__ie1d.html#ga3c90ad522f495963db3746bba9c8b015',1,'nearfield_ie1d(const uint *ridx, const uint *cidx, pcie1d ie, pamatrix N):&#160;ie1d.c']]],
-  ['new_5famatrix',['new_amatrix',['../de/dfb/group__amatrix.html#gab94e273203ac5b85e1bc94375180cf28',1,'clamatrix.cl']]],
-  ['new_5favector',['new_avector',['../de/d6e/group__avector.html#gad5ef1e6f5462e9624c119d9b2c702d7f',1,'clavector.cl']]],
-  ['new_5fie1d',['new_ie1d',['../d8/de6/group__ie1d.html#ga4a1afd2255c4333244a6eab5d6182f8a',1,'new_ie1d(uint n, uint q):&#160;ie1d.c'],['../d8/de6/group__ie1d.html#ga4a1afd2255c4333244a6eab5d6182f8a',1,'new_ie1d(uint n, uint q):&#160;ie1d.c']]]
+  ['kernel_5ffunction',['kernel_function',['../d1/d58/struct__greencross.html#ad28ffaaf3f0c9851f43052df885eafa6',1,'_greencross']]],
+  ['kmax',['kmax',['../d1/d58/struct__greencross.html#a04e4a251e7cf18f3f537bc2bd6e95c6f',1,'_greencross']]]
 ];

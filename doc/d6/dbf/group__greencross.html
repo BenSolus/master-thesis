@@ -143,46 +143,586 @@ var searchBox = new SearchBox("searchBox", "../../search",false,'Search');
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
 <div class="title">greencross</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Implementation of the green cross approximation.  
+<p>Algorithms and functions to perform the Green cross approximation method.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dc/dfb/struct__greencross__ocl.html">_greencross_ocl</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main container object for performing the Green cross approximation method.  <a href="../../d1/d58/struct__greencross.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:gab45b108bc4f1c080a0d789ff39cfc036"><td class="memItemLeft" align="right" valign="top"><a id="gab45b108bc4f1c080a0d789ff39cfc036"></a>
-typedef struct <a class="el" href="../../dc/dfb/struct__greencross__ocl.html">_greencross_ocl</a>&#160;</td><td class="memItemRight" valign="bottom"><b>greencross_ocl</b></td></tr>
-<tr class="separator:gab45b108bc4f1c080a0d789ff39cfc036"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gadff888e5fb68b46061cc87aa22bf2a54"><td class="memItemLeft" align="right" valign="top"><a id="gadff888e5fb68b46061cc87aa22bf2a54"></a>
-typedef <a class="el" href="../../dc/dfb/struct__greencross__ocl.html">greencross_ocl</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pgreencross_ocl</b></td></tr>
-<tr class="separator:gadff888e5fb68b46061cc87aa22bf2a54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1673e53f3cf27b0294ab42b460e93184"><td class="memItemLeft" align="right" valign="top"><a id="ga1673e53f3cf27b0294ab42b460e93184"></a>
-typedef const <a class="el" href="../../dc/dfb/struct__greencross__ocl.html">greencross_ocl</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pcgreencross_ocl</b></td></tr>
-<tr class="separator:ga1673e53f3cf27b0294ab42b460e93184"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1d17309eb2e7c98c0c41f9a7b3ba2d8c"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a></td></tr>
+<tr class="memdesc:ga1d17309eb2e7c98c0c41f9a7b3ba2d8c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="../../d6/dbf/group__greencross.html">greencross</a> is just an abbreviation for the struct <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a>.  <a href="#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">More...</a><br /></td></tr>
+<tr class="separator:ga1d17309eb2e7c98c0c41f9a7b3ba2d8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga51ce6367fa3525cd9ca0718fdfa9e946"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a></td></tr>
+<tr class="memdesc:ga51ce6367fa3525cd9ca0718fdfa9e946"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to a <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="#ga51ce6367fa3525cd9ca0718fdfa9e946">More...</a><br /></td></tr>
+<tr class="separator:ga51ce6367fa3525cd9ca0718fdfa9e946"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad92f5f089090ec57ab6bc477f0695838"><td class="memItemLeft" align="right" valign="top">typedef const <a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">pcgreencross</a></td></tr>
+<tr class="memdesc:gad92f5f089090ec57ab6bc477f0695838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to a constant <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="#gad92f5f089090ec57ab6bc477f0695838">More...</a><br /></td></tr>
+<tr class="separator:gad92f5f089090ec57ab6bc477f0695838"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:gac20cecdcc41118f00fe0673d602ba090"><td class="memItemLeft" align="right" valign="top"><a id="gac20cecdcc41118f00fe0673d602ba090"></a>
-HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><b>init_greencross_ocl</b> ()</td></tr>
-<tr class="separator:gac20cecdcc41118f00fe0673d602ba090"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2f793f0295641e392d6f0b07e7b8b1ee"><td class="memItemLeft" align="right" valign="top"><a id="ga2f793f0295641e392d6f0b07e7b8b1ee"></a>
-HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><b>uninit_greencross_ocl</b> ()</td></tr>
-<tr class="separator:ga2f793f0295641e392d6f0b07e7b8b1ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gadd19ae1a570938aff0929cd78beef1f1"><td class="memItemLeft" align="right" valign="top"><a id="gadd19ae1a570938aff0929cd78beef1f1"></a>
-HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><b>forward_greencross_1</b> (pclusterbasis cb, <a class="el" href="../../de/d6e/group__avector.html#gabc80ad7f0d6ee8784260e889f27861d9">pcavector</a> x, <a class="el" href="../../de/d6e/group__avector.html#ga77756b1a6a289faa445db25bed047aa0">pavector</a> xt)</td></tr>
-<tr class="separator:gadd19ae1a570938aff0929cd78beef1f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3f8c929c9d0539b39ffdb138765991cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga3f8c929c9d0539b39ffdb138765991cd">dd_laplace_kernel</a> (const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *x, const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *y, <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *n, const uint dim)</td></tr>
+<tr class="memdesc:ga3f8c929c9d0539b39ffdb138765991cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The directional derivative \(D_nf(x) = \langle \lambda(f)(x), n \rangle\) of a fundamental solution of the negative Laplace operator.  <a href="#ga3f8c929c9d0539b39ffdb138765991cd">More...</a><br /></td></tr>
+<tr class="separator:ga3f8c929c9d0539b39ffdb138765991cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga793784a6b91cacbae2fa20a082ff4d71"><td class="memItemLeft" align="right" valign="top">INLINE_PREFIX uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga793784a6b91cacbae2fa20a082ff4d71">get_max_lvl_clusterbasis</a> (pclusterbasis cb, const uint level)</td></tr>
+<tr class="memdesc:ga793784a6b91cacbae2fa20a082ff4d71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the maximum level of a cluster basis.  <a href="#ga793784a6b91cacbae2fa20a082ff4d71">More...</a><br /></td></tr>
+<tr class="separator:ga793784a6b91cacbae2fa20a082ff4d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa9833866d1aa3ca3e4366ec73f7002be"><td class="memItemLeft" align="right" valign="top">INLINE_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gaa9833866d1aa3ca3e4366ec73f7002be">set_on_lvl_info_clusterbasis</a> (pclusterbasis cb, const uint level, uint *on_level)</td></tr>
+<tr class="memdesc:gaa9833866d1aa3ca3e4366ec73f7002be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the number of cluster basis for each level from a given root cluster basis.  <a href="#gaa9833866d1aa3ca3e4366ec73f7002be">More...</a><br /></td></tr>
+<tr class="separator:gaa9833866d1aa3ca3e4366ec73f7002be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6111c55f17f7cd148d459dbce851a78b"><td class="memItemLeft" align="right" valign="top">INLINE_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga6111c55f17f7cd148d459dbce851a78b">set_per_level_clusterbasis</a> (pclusterbasis cb, const uint level, uint *lvl_idx, pclusterbasis **cb_per_level)</td></tr>
+<tr class="memdesc:ga6111c55f17f7cd148d459dbce851a78b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the cluster bases of a given root cluster basis divided into the level they are on.  <a href="#ga6111c55f17f7cd148d459dbce851a78b">More...</a><br /></td></tr>
+<tr class="separator:ga6111c55f17f7cd148d459dbce851a78b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga58e44702c7ffb276ea038b76d8e4fe10"><td class="memItemLeft" align="right" valign="top">INLINE_PREFIX pclustergeometry&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga58e44702c7ffb276ea038b76d8e4fe10">build_clustergeometry_greencross</a> (const void *data, const uint dim, uint **idx)</td></tr>
+<tr class="memdesc:ga58e44702c7ffb276ea038b76d8e4fe10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creats a <a href="http://www.h2lib.org/doc/d8/da5/struct__clustergeometry.html">clustergeometry</a> object from a triangular mesh.  <a href="#ga58e44702c7ffb276ea038b76d8e4fe10">More...</a><br /></td></tr>
+<tr class="separator:ga58e44702c7ffb276ea038b76d8e4fe10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7">init_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc, uint dim)</td></tr>
+<tr class="memdesc:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initilize components related to the dimension of the problem and zero initializes all other components of the given <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object <code>gc</code>.  <a href="#gaf7b77206ac2a93aafc25826e1816cbe7">More...</a><br /></td></tr>
+<tr class="separator:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab91390a2459ee4225c1771540b35e8df"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gab91390a2459ee4225c1771540b35e8df">uninit_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc)</td></tr>
+<tr class="separator:gab91390a2459ee4225c1771540b35e8df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga029743349fb06ab8257482bae8732964"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX <a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964">new_laplace2d_greencross</a> (pcurve2d gr, uint res, void *eta, uint m)</td></tr>
+<tr class="memdesc:ga029743349fb06ab8257482bae8732964"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 2-dimensional <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="#ga029743349fb06ab8257482bae8732964">More...</a><br /></td></tr>
+<tr class="separator:ga029743349fb06ab8257482bae8732964"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9ef0147fc33347859f7774f3bf1aca06"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga9ef0147fc33347859f7774f3bf1aca06">del_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc)</td></tr>
+<tr class="memdesc:ga9ef0147fc33347859f7774f3bf1aca06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory and set pointer to NULL of the corresponding <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a> greencross object <code>gc</code>.  <a href="#ga9ef0147fc33347859f7774f3bf1aca06">More...</a><br /></td></tr>
+<tr class="separator:ga9ef0147fc33347859f7774f3bf1aca06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafe8870a0e4020adade75ef167fdb7001"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gafe8870a0e4020adade75ef167fdb7001">assemble_leaf_row_clusterbasis_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc, pclusterbasis cb)</td></tr>
+<tr class="separator:gafe8870a0e4020adade75ef167fdb7001"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:gab0be1064cd9a6458e8bfcd239658cf41"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a11d147c64891830c9e79b3315b1b2e21">real</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gab0be1064cd9a6458e8bfcd239658cf41">r_minus_two_pi</a> = -0.159154943091895336</td></tr>
+<tr class="memdesc:gab0be1064cd9a6458e8bfcd239658cf41"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(- \frac{1}{2 \pi}\)  <a href="#gab0be1064cd9a6458e8bfcd239658cf41">More...</a><br /></td></tr>
+<tr class="separator:gab0be1064cd9a6458e8bfcd239658cf41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga21c0a0f0a00e9f05ad48581890f27211"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a11d147c64891830c9e79b3315b1b2e21">real</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga21c0a0f0a00e9f05ad48581890f27211">r_four_pi</a> = 0.0795774715459476679</td></tr>
+<tr class="memdesc:ga21c0a0f0a00e9f05ad48581890f27211"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(\frac{1}{4 \pi}\)  <a href="#ga21c0a0f0a00e9f05ad48581890f27211">More...</a><br /></td></tr>
+<tr class="separator:ga21c0a0f0a00e9f05ad48581890f27211"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3424d7a95b266042f9a28f98488068f5"><td class="memItemLeft" align="right" valign="top">const uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga3424d7a95b266042f9a28f98488068f5">greencross_min_dim</a> = 2</td></tr>
+<tr class="separator:ga3424d7a95b266042f9a28f98488068f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadaf7b0abffd8df95e38d12e7fd49a737"><td class="memItemLeft" align="right" valign="top">const uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gadaf7b0abffd8df95e38d12e7fd49a737">greencross_max_dim</a> = 3</td></tr>
+<tr class="separator:gadaf7b0abffd8df95e38d12e7fd49a737"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>Implementation of the green cross approximation. </p>
+<p>Algorithms and functions to perform the Green cross approximation method. </p>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a id="ga1d17309eb2e7c98c0c41f9a7b3ba2d8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">&#9670;&nbsp;</a></span>greencross</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a> <a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="../../d6/dbf/group__greencross.html">greencross</a> is just an abbreviation for the struct <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a>. </p>
+
+</div>
+</div>
+<a id="gad92f5f089090ec57ab6bc477f0695838"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad92f5f089090ec57ab6bc477f0695838">&#9670;&nbsp;</a></span>pcgreencross</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef const <a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a>* <a class="el" href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">pcgreencross</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Pointer to a constant <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object. </p>
+
+</div>
+</div>
+<a id="ga51ce6367fa3525cd9ca0718fdfa9e946"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga51ce6367fa3525cd9ca0718fdfa9e946">&#9670;&nbsp;</a></span>pgreencross</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a>* <a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Pointer to a <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="gafe8870a0e4020adade75ef167fdb7001"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gafe8870a0e4020adade75ef167fdb7001">&#9670;&nbsp;</a></span>assemble_leaf_row_clusterbasis_greencross()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HEADER_PREFIX void assemble_leaf_row_clusterbasis_greencross </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td>
+          <td class="paramname"><em>gc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pclusterbasis&#160;</td>
+          <td class="paramname"><em>cb</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ga58e44702c7ffb276ea038b76d8e4fe10"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga58e44702c7ffb276ea038b76d8e4fe10">&#9670;&nbsp;</a></span>build_clustergeometry_greencross()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">pclustergeometry build_clustergeometry_greencross </td>
+          <td>(</td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint&#160;</td>
+          <td class="paramname"><em>dim</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint **&#160;</td>
+          <td class="paramname"><em>idx</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creats a <a href="http://www.h2lib.org/doc/d8/da5/struct__clustergeometry.html">clustergeometry</a> object from a triangular mesh. </p>
+<p>The geometry is taken from <code>data</code> interpreted as different objects depending on the dimension of the problem <code>dim</code>.</p>
+<dl class="section attention"><dt>Attention</dt><dd>For <code>dim</code> = 2, <code>data</code> is expected to be an object of type <a href="http://www.h2lib.org/doc/d8/df9/struct__curve2d.html">curve2d</a>.</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Pointer to an object containing the informations to construct the cluster geometry. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dim</td><td>Dimension of the cluster geometry. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">idx</td><td>Index set which will be allocated by this method to index each triangle in data. The entries of idx will be 0, 1, ..., N-1, where N is equal to the number of triangles. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A valid cluster geometry object which can be used to construct a cluster tree along with the index set <code>idx</code>. </dd></dl>
+
+</div>
+</div>
+<a id="ga3f8c929c9d0539b39ffdb138765991cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3f8c929c9d0539b39ffdb138765991cd">&#9670;&nbsp;</a></span>dd_laplace_kernel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> dd_laplace_kernel </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *&#160;</td>
+          <td class="paramname"><em>y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint&#160;</td>
+          <td class="paramname"><em>dim</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The directional derivative \(D_nf(x) = \langle \lambda(f)(x), n \rangle\) of a fundamental solution of the negative Laplace operator. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>Point in which to differentiate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>Second argument for the fundamental solution. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Vector to differentiate along. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dim</td><td>Dimension of the problem. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga9ef0147fc33347859f7774f3bf1aca06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga9ef0147fc33347859f7774f3bf1aca06">&#9670;&nbsp;</a></span>del_greencross()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HEADER_PREFIX void del_greencross </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td>
+          <td class="paramname"><em>gc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Free memory and set pointer to NULL of the corresponding <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a> greencross object <code>gc</code>. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">gc</td><td>The greencross object which needs to be deletet. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga793784a6b91cacbae2fa20a082ff4d71"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga793784a6b91cacbae2fa20a082ff4d71">&#9670;&nbsp;</a></span>get_max_lvl_clusterbasis()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint get_max_lvl_clusterbasis </td>
+          <td>(</td>
+          <td class="paramtype">pclusterbasis&#160;</td>
+          <td class="paramname"><em>cb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint&#160;</td>
+          <td class="paramname"><em>level</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retrieve the maximum level of a cluster basis. </p>
+<dl class="section attention"><dt>Attention</dt><dd><code>level</code> should be 0 since it's only used insid the function to keep track of the level of the current viewed cluster basis.</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cb</td><td>The cluster basis of which we search the maximum level. </td></tr>
+    <tr><td class="paramname">level</td><td>The level of the current viewed cluster basis. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gaf7b77206ac2a93aafc25826e1816cbe7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf7b77206ac2a93aafc25826e1816cbe7">&#9670;&nbsp;</a></span>init_greencross()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HEADER_PREFIX void init_greencross </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td>
+          <td class="paramname"><em>gc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint&#160;</td>
+          <td class="paramname"><em>dim</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initilize components related to the dimension of the problem and zero initializes all other components of the given <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object <code>gc</code>. </p>
+<dl class="section note"><dt>Note</dt><dd>Should be called at the beginning of the initialization of each greencross object. </dd>
+<dd>
+Should always be matched with a call of <a class="el" href="../../d6/dbf/group__greencross.html#gab91390a2459ee4225c1771540b35e8df">uninit_greencross</a>.</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">gc</td><td>The greencross object which needs to be initialized. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dim</td><td>The dimension of the problem. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga029743349fb06ab8257482bae8732964"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga029743349fb06ab8257482bae8732964">&#9670;&nbsp;</a></span>new_laplace2d_greencross()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HEADER_PREFIX <a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> new_laplace2d_greencross </td>
+          <td>(</td>
+          <td class="paramtype">pcurve2d&#160;</td>
+          <td class="paramname"><em>gr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint&#160;</td>
+          <td class="paramname"><em>res</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>eta</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint&#160;</td>
+          <td class="paramname"><em>m</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 2-dimensional <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object. </p>
+
+</div>
+</div>
+<a id="gaa9833866d1aa3ca3e4366ec73f7002be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa9833866d1aa3ca3e4366ec73f7002be">&#9670;&nbsp;</a></span>set_on_lvl_info_clusterbasis()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void set_on_lvl_info_clusterbasis </td>
+          <td>(</td>
+          <td class="paramtype">pclusterbasis&#160;</td>
+          <td class="paramname"><em>cb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint&#160;</td>
+          <td class="paramname"><em>level</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint *&#160;</td>
+          <td class="paramname"><em>on_level</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retrieve the number of cluster basis for each level from a given root cluster basis. </p>
+<p>After execution, each entry of <code>on_level</code> with index i will hold the number of cluster bases whose level are i.</p>
+<dl class="section attention"><dt>Attention</dt><dd><code>level</code> should be 0 since it's only used insid the function to keep track of the level of the current viewed cluster basis. </dd>
+<dd>
+<code>on_level</code> should be an zero initialized array of length <a class="el" href="../../d6/dbf/group__greencross.html#ga793784a6b91cacbae2fa20a082ff4d71">get_max_lvl_clusterbasis(cb, level)</a> + 1.</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cb</td><td>The root cluster basis. </td></tr>
+    <tr><td class="paramname">level</td><td>The level of the current viewed cluster basis. </td></tr>
+    <tr><td class="paramname">on_level</td><td>An array whose entries will hold the number of cluster bases for each level. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga6111c55f17f7cd148d459dbce851a78b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6111c55f17f7cd148d459dbce851a78b">&#9670;&nbsp;</a></span>set_per_level_clusterbasis()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void set_per_level_clusterbasis </td>
+          <td>(</td>
+          <td class="paramtype">pclusterbasis&#160;</td>
+          <td class="paramname"><em>cb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint&#160;</td>
+          <td class="paramname"><em>level</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint *&#160;</td>
+          <td class="paramname"><em>lvl_idx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pclusterbasis **&#160;</td>
+          <td class="paramname"><em>cb_per_level</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retrieve the cluster bases of a given root cluster basis divided into the level they are on. </p>
+<p>After execution, each entry of <code>cb_per_level</code> will hold the pointers to all cluster bases whose level is i, where i is the index of the entry inside cb_per_level.</p>
+<dl class="section attention"><dt>Attention</dt><dd><code>level</code> should be 0 since it's only used insid the function to keep track of the level of the current viewed cluster basis. </dd>
+<dd>
+<code>lvl_idx</code> should be an zero initialized array of length <a class="el" href="../../d6/dbf/group__greencross.html#ga793784a6b91cacbae2fa20a082ff4d71">get_max_lvl_clusterbasis(cb, level)</a> + 1. </dd>
+<dd>
+<code>cb_per_level</code> should be an initialized array of length get_max_lvl_clusterbasis(cb, level) + 1, where each entry with index should be an initialized array of length <code>on_level</code>[i], where <code>on_level</code> is retrieved by <a class="el" href="../../d6/dbf/group__greencross.html#gaa9833866d1aa3ca3e4366ec73f7002be">set_on_lvl_info_clusterbasis(cb, 0, on_level)</a>.</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cb</td><td>The root cluster basis. </td></tr>
+    <tr><td class="paramname">level</td><td>The level of the current viewed cluster basis. </td></tr>
+    <tr><td class="paramname">lvl_idx</td><td>The number of cluster bases already found on each level respectively. </td></tr>
+    <tr><td class="paramname">cb_per_level</td><td>An arrays whose entries will hold pointers to all cluster bases of the corresponding level. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gab91390a2459ee4225c1771540b35e8df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab91390a2459ee4225c1771540b35e8df">&#9670;&nbsp;</a></span>uninit_greencross()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HEADER_PREFIX void uninit_greencross </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td>
+          <td class="paramname"><em>gc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="gadaf7b0abffd8df95e38d12e7fd49a737"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gadaf7b0abffd8df95e38d12e7fd49a737">&#9670;&nbsp;</a></span>greencross_max_dim</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint greencross_max_dim = 3</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ga3424d7a95b266042f9a28f98488068f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3424d7a95b266042f9a28f98488068f5">&#9670;&nbsp;</a></span>greencross_min_dim</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint greencross_min_dim = 2</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ga21c0a0f0a00e9f05ad48581890f27211"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga21c0a0f0a00e9f05ad48581890f27211">&#9670;&nbsp;</a></span>r_four_pi</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a11d147c64891830c9e79b3315b1b2e21">real</a> r_four_pi = 0.0795774715459476679</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>\(\frac{1}{4 \pi}\) </p>
+
+</div>
+</div>
+<a id="gab0be1064cd9a6458e8bfcd239658cf41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab0be1064cd9a6458e8bfcd239658cf41">&#9670;&nbsp;</a></span>r_minus_two_pi</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a11d147c64891830c9e79b3315b1b2e21">real</a> r_minus_two_pi = -0.159154943091895336</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>\(- \frac{1}{2 \pi}\) </p>
+
+</div>
+</div>
 </div><!-- contents -->
       <!-- HTML footer for doxygen 1.8.13-->
       <!-- start footer part -->

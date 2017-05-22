@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['main_20page',['Main Page',['../index.html',1,'']]],
-  ['m',['m',['../db/d45/struct__ie1d.html#a82d11e6f403ce1312c6f2150fb8f2ef4',1,'_ie1d']]],
-  ['mmax',['mmax',['../db/d45/struct__ie1d.html#a272b629c59656d083800cd61066b675f',1,'_ie1d']]],
-  ['mvm_5famatrix_5favector',['mvm_amatrix_avector',['../de/dfb/group__amatrix.html#gafe236d191ead8e0a2b2ddfa6133da0c3',1,'clamatrix.cl']]]
+  ['idx',['idx',['../d1/d58/struct__greencross.html#aee1e02772fd9b127c8688955402e90d3',1,'_greencross']]],
+  ['index_2emd',['index.md',['../df/dcf/index_8md.html',1,'']]],
+  ['init_5fgreencross',['init_greencross',['../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7',1,'init_greencross(pgreencross gc, uint dim):&#160;greencross.c'],['../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7',1,'init_greencross(pgreencross gc, uint dim):&#160;greencross.c']]]
 ];

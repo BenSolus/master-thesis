@@ -147,49 +147,62 @@ var searchBox = new SearchBox("searchBox", "../../search",false,'Search');
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
 <div class="title">greencross.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;clusterbasis.h&quot;</code><br />
-<code>#include &quot;h2matrix.h&quot;</code><br />
-<code>#include &quot;CL/cl.h&quot;</code><br />
+<div class="textblock"><code>#include &quot;h2matrix.h&quot;</code><br />
+<code>#include &quot;curve2d.h&quot;</code><br />
 </div>
 <p><a href="../../de/d17/greencross_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dc/dfb/struct__greencross__ocl.html">_greencross_ocl</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main container object for performing the Green cross approximation method.  <a href="../../d1/d58/struct__greencross.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:gab45b108bc4f1c080a0d789ff39cfc036"><td class="memItemLeft" align="right" valign="top">
-typedef struct <a class="el" href="../../dc/dfb/struct__greencross__ocl.html">_greencross_ocl</a>&#160;</td><td class="memItemRight" valign="bottom"><b>greencross_ocl</b></td></tr>
-<tr class="separator:gab45b108bc4f1c080a0d789ff39cfc036"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gadff888e5fb68b46061cc87aa22bf2a54"><td class="memItemLeft" align="right" valign="top">
-typedef <a class="el" href="../../dc/dfb/struct__greencross__ocl.html">greencross_ocl</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pgreencross_ocl</b></td></tr>
-<tr class="separator:gadff888e5fb68b46061cc87aa22bf2a54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1673e53f3cf27b0294ab42b460e93184"><td class="memItemLeft" align="right" valign="top">
-typedef const <a class="el" href="../../dc/dfb/struct__greencross__ocl.html">greencross_ocl</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pcgreencross_ocl</b></td></tr>
-<tr class="separator:ga1673e53f3cf27b0294ab42b460e93184"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1d17309eb2e7c98c0c41f9a7b3ba2d8c"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a></td></tr>
+<tr class="memdesc:ga1d17309eb2e7c98c0c41f9a7b3ba2d8c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="../../d6/dbf/group__greencross.html">greencross</a> is just an abbreviation for the struct <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a>.  <a href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">More...</a><br /></td></tr>
+<tr class="separator:ga1d17309eb2e7c98c0c41f9a7b3ba2d8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga51ce6367fa3525cd9ca0718fdfa9e946"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a></td></tr>
+<tr class="memdesc:ga51ce6367fa3525cd9ca0718fdfa9e946"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to a <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">More...</a><br /></td></tr>
+<tr class="separator:ga51ce6367fa3525cd9ca0718fdfa9e946"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad92f5f089090ec57ab6bc477f0695838"><td class="memItemLeft" align="right" valign="top">typedef const <a class="el" href="../../d6/dbf/group__greencross.html#ga1d17309eb2e7c98c0c41f9a7b3ba2d8c">greencross</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">pcgreencross</a></td></tr>
+<tr class="memdesc:gad92f5f089090ec57ab6bc477f0695838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to a constant <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">More...</a><br /></td></tr>
+<tr class="separator:gad92f5f089090ec57ab6bc477f0695838"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:gac20cecdcc41118f00fe0673d602ba090"><td class="memItemLeft" align="right" valign="top">
-HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><b>init_greencross_ocl</b> ()</td></tr>
-<tr class="separator:gac20cecdcc41118f00fe0673d602ba090"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2f793f0295641e392d6f0b07e7b8b1ee"><td class="memItemLeft" align="right" valign="top">
-HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><b>uninit_greencross_ocl</b> ()</td></tr>
-<tr class="separator:ga2f793f0295641e392d6f0b07e7b8b1ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gadd19ae1a570938aff0929cd78beef1f1"><td class="memItemLeft" align="right" valign="top">
-HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><b>forward_greencross_1</b> (pclusterbasis cb, <a class="el" href="../../de/d6e/group__avector.html#gabc80ad7f0d6ee8784260e889f27861d9">pcavector</a> x, <a class="el" href="../../de/d6e/group__avector.html#ga77756b1a6a289faa445db25bed047aa0">pavector</a> xt)</td></tr>
-<tr class="separator:gadd19ae1a570938aff0929cd78beef1f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7">init_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc, uint dim)</td></tr>
+<tr class="memdesc:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initilize components related to the dimension of the problem and zero initializes all other components of the given <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object <code>gc</code>.  <a href="../../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7">More...</a><br /></td></tr>
+<tr class="separator:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab91390a2459ee4225c1771540b35e8df"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gab91390a2459ee4225c1771540b35e8df">uninit_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc)</td></tr>
+<tr class="separator:gab91390a2459ee4225c1771540b35e8df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga029743349fb06ab8257482bae8732964"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX <a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964">new_laplace2d_greencross</a> (pcurve2d gr, uint res, void *eta, uint m)</td></tr>
+<tr class="memdesc:ga029743349fb06ab8257482bae8732964"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 2-dimensional <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="../../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964">More...</a><br /></td></tr>
+<tr class="separator:ga029743349fb06ab8257482bae8732964"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9ef0147fc33347859f7774f3bf1aca06"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga9ef0147fc33347859f7774f3bf1aca06">del_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc)</td></tr>
+<tr class="memdesc:ga9ef0147fc33347859f7774f3bf1aca06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory and set pointer to NULL of the corresponding <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a> greencross object <code>gc</code>.  <a href="../../d6/dbf/group__greencross.html#ga9ef0147fc33347859f7774f3bf1aca06">More...</a><br /></td></tr>
+<tr class="separator:ga9ef0147fc33347859f7774f3bf1aca06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafe8870a0e4020adade75ef167fdb7001"><td class="memItemLeft" align="right" valign="top">HEADER_PREFIX void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gafe8870a0e4020adade75ef167fdb7001">assemble_leaf_row_clusterbasis_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc, pclusterbasis cb)</td></tr>
+<tr class="separator:gafe8870a0e4020adade75ef167fdb7001"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:ga3424d7a95b266042f9a28f98488068f5"><td class="memItemLeft" align="right" valign="top">const uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga3424d7a95b266042f9a28f98488068f5">greencross_min_dim</a> = 2</td></tr>
+<tr class="separator:ga3424d7a95b266042f9a28f98488068f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadaf7b0abffd8df95e38d12e7fd49a737"><td class="memItemLeft" align="right" valign="top">const uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gadaf7b0abffd8df95e38d12e7fd49a737">greencross_max_dim</a> = 3</td></tr>
+<tr class="separator:gadaf7b0abffd8df95e38d12e7fd49a737"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><dl class="section author"><dt>Author</dt><dd>Bennet Carstensen </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2017 </dd></dl>
+<dl class="section copyright"><dt>Copyright</dt><dd>All rights reserved, Bennet Carstensen 2017 </dd></dl>
 </div></div><!-- contents -->
       <!-- HTML footer for doxygen 1.8.13-->
       <!-- start footer part -->

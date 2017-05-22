@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mvm_5famatrix_5favector',['mvm_amatrix_avector',['../de/dfb/group__amatrix.html#gafe236d191ead8e0a2b2ddfa6133da0c3',1,'clamatrix.cl']]]
+  ['init_5fgreencross',['init_greencross',['../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7',1,'init_greencross(pgreencross gc, uint dim):&#160;greencross.c'],['../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7',1,'init_greencross(pgreencross gc, uint dim):&#160;greencross.c']]]
 ];
