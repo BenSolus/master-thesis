@@ -1,6 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(MasterThesis)
 
+SET(CMAKE_VERBOSE_MAKEFILE OFF)
+
 ################################################################################
 # Policy for relative paths                                                    #
 ################################################################################
@@ -26,6 +28,9 @@ SET(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/Bin")
 FIND_PACKAGE(LAPACK REQUIRED)
 FIND_PACKAGE(OpenMP REQUIRED)
 FIND_PACKAGE(OpenCL REQUIRED)
+FIND_PACKAGE(Cairo)
+FIND_PACKAGE(OpenGL)
+FIND_PACKAGE(GLUT)
 
 ################################################################################
 # Adding various include directories                                           #
@@ -85,12 +90,12 @@ ENDIF()
 # Convert OpenCL source code into a string.                                    #
 ################################################################################
 
-IF(WIN32)
-  # Write windows script to perform conversion.
-else(WIN32)
-  execute_process(COMMAND ${PROJECT_SOURCE_DIR}/.cmake.sh
-                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-ENDIF(WIN32)
+# IF(WIN32)
+#   # Write windows script to perform conversion.
+# else(WIN32)
+#   execute_process(COMMAND ${PROJECT_SOURCE_DIR}/.cmake.sh
+#                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+# ENDIF(WIN32)
 
 ################################################################################
 # Adding various sub directories for compilation                               #

@@ -33,6 +33,7 @@
 *.su
 
 # Folders
+archive
 builds
 
 # Atom Editor (plugins)

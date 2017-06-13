@@ -12,6 +12,8 @@ do
   CL_BASENAME=${CL_SOURCE##*/}
   CL_FILE="${PROJECT_DIR}/Library/$CL_BASENAME"
 
+  echo "${CL_SOURCE}"
+
   if [ -f "$CL_FILE" ]
   then
     rm "$CL_FILE"  # Delete existing source file

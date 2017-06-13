@@ -1,12 +1,13 @@
 /* ------------------------------------------------------------
  * This is the file "ocl_system.h" of this master thesis.
- * All rights reserved, Bennet Carstensen 2015
+ * All rights reserved, Sven Christophersen 2015
  * ------------------------------------------------------------ */
 
 /**
- * @file   ocl_system.h
- * @author Bennet Carstensen
- * @date   2017
+ * @file      ocl_system.h
+ * @author    Bennet Carstensen
+ * @date      2017
+ * @copyright All rights reserved, Sven Christophersen 2015
  */
 
 #ifndef OCL_SYSTEM_H

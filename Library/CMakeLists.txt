@@ -1,11 +1,13 @@
 ADD_LIBRARY(MasterThesis
-            clamatrix.cl
-            clavector.cl
-            ie1d.c
-            ie1d.h
+            greencross.c
+            greencross.h
+            kernels.c
+            kernels.h
             ocl_system.c
             ocl_system.h
 )
+
+TARGET_LINK_LIBRARIES(MasterThesis ${GSL_LIBRARIES})
 
 IF(CMAKE_EXPORT_COMPILE_COMMANDS EQUAL 1)
   ADD_CUSTOM_COMMAND(TARGET MasterThesis

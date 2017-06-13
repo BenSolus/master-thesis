@@ -1,169 +1,157 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE main
 
-/** @defgroup test_module
- *  @brief Test modules for testing this library.
- *
- * @{ */
-
 #include <boost/test/unit_test.hpp>
 
-#include "basic.h"
-#include "ie1d.h"
-#include "opencl.h"
+#include "global_fixture.h"
 
-#include <time.h>
+#include "greencross.h"
+
+#include <iostream>
+#include <limits>
 
 using namespace boost::unit_test::framework;
 
-static const real eta = 1.0;   // Parameter for the accuracy
-static const uint k   = 8;     // Approximation order
-static const uint n   = 1024; // Problem size
-static const uint res = 4 * k; // Cluster resolution
+BOOST_GLOBAL_FIXTURE(global_fixture);
 
-// void
-// forward_leaf(pclusterbasis cb, pcavector x, pavector xt)
-// {
-//   const uint sons = cb->sons;
-//
-//   avector  locxc;
-//   pavector xc   = init_sub_avector(&locxc, xt, cb->k, 0);
-//
-//   clear_avector(xc);
-//
-//   if(sons)
-//   {
-//     uint xtoff = cb->k;
-//
-//     for(uint i = 0; i < sons; ++i)
-//     {
-//       avector  locxt1;
-//       pavector xt1 = init_sub_avector(&locxt1, xt, cb->son[i]->ktree, xtoff);
-//
-//       forward_leaf(cb->son[i], x, xt1);
-//
-//       uninit_avector(xt1);
-//
-//       xtoff += cb->son[i]->ktree;
-//     }
-//
-//     assert(xtoff == cb->ktree);
-//   }
-//   else
-//   {
-//     avector locxp;
-//     /* Permuted entries of x */
-//     pavector xp = init_sub_avector(&locxp, xt, cb->t->size, cb->k);
-//
-//     /* Find and copy entries */
-//     for(size_t i = 0; i < cb->t->size; i++)
-//       xp->v[i] = x->v[cb->t->idx[i]];
-//
-//     /* Multiply by leaf matrix */
-//     mvm_amatrix_avector(1.0, true, &cb->V, xp, xc);
-//
-//     uninit_avector(xp);
-//   }
-//
-//   uninit_avector(xc);
-// }
+/* ------------------------------------------------------------
+ * "Header" for static functions
+ * ------------------------------------------------------------ */
+
+INLINE_PREFIX void
+norm2diff_h2matrix_leafs_amatrix(ph2matrix h2, pamatrix a);
+
+BOOST_AUTO_TEST_CASE(test_leafs)
+{
+  pamatrix    G;
+  pcurve2d    gr;
+  pgreencross gc;
+
+  gr = new_circle_curve2d(n, r_one / (real) 3.0);
+
+  gc = new_laplace2d_greencross(gr, res, (void *) &eta, q, m);
+
+  green_cross_approximation(gc, gc->h2);
+
+  G  = new_amatrix(gc->h2->rb->t->size, gc->h2->cb->t->size);
+
+  nearfield_greencross(gc,
+                       gc->h2->rb->t->size,
+                       gc->h2->rb->t->idx,
+                       gc->h2->cb->t->size,
+                       gc->h2->cb->t->idx,
+                       G);
+
+  norm2diff_h2matrix_leafs_amatrix(gc->h2, G);
+
+  del_amatrix(G);
+  del_greencross(gc);
+}
+
+void
+norm2diff_h2matrix_leafs_amatrix(ph2matrix h2, pamatrix a)
+{
+  if(h2->son)
+  {
+    const uint rsons = h2->rsons;
+    const uint csons = h2->csons;
+
+    uint coff = 0;
+
+    amatrix  tmp;
+    pamatrix asub;
+
+    for(uint j = 0; j < csons; ++j)
+    {
+      const uint cols = h2->cb->son ? h2->cb->son[j]->t->size : h2->cb->t->size;
+
+      uint roff = 0;
+
+      for(uint i = 0; i < rsons; ++i)
+      {
+        const uint rows = h2->rb->son ? h2->rb->son[i]->t->size
+                                      : h2->rb->t->size;
+
+        asub  = init_sub_amatrix(&tmp, a, rows, roff, cols, coff);
+
+        norm2diff_h2matrix_leafs_amatrix(h2->son[i + j * rsons], asub);
+
+        roff += rows;
+      }
+
+      coff += cols;
+    }
+  }
+  else
+  {
+    pamatrix G;
+
+    real     err;
+
+    if(h2->u)
+    {
+      G = new_zero_amatrix(h2->rb->t->size, h2->u->S.cols);
+
+      addmul_amatrix(1.0, false, &h2->rb->V, false, &h2->u->S, G);
+
+      err = norm2diff_amatrix(G, a);
+
+      std::cout << std::scientific
+                << "Far Error: "
+                << err
+                << "\n";
+
+      if(err >= accur)
+        std::cout << std::scientific
+                  << "Error was: "
+                  << err
+                  << ". Maximum fault tolerance: "
+                  << accur
+                  << "\n"
+                  << std::defaultfloat;
+
+      BOOST_REQUIRE_EQUAL(err < accur, true);
+
+      del_amatrix(G);
+
+    }
+    else if(h2->f)
+    {
+      err = norm2diff_amatrix(h2->f, a);
+
+      BOOST_REQUIRE_EQUAL(err < std::numeric_limits<real>::epsilon(), true);
+    }
+  }
+}
 
 /** @brief Test case for testing the whole library in an usual use case.
  *
- * Tests the whole library for segment segmentation faults, double frees or
+ * Tests the whole library for segmentation faults, double frees or
  * corruptions in an usual use case. */
-BOOST_AUTO_TEST_CASE(test_main)
-{
-  avector       locx;
-  pavector      x;
-  pavector      xt_cpu;
-  pavector      xt_gpu;
-  pblock        broot; // Root of the block tree
-  pie1d         ie;    // Problems
-  pcluster      root;  // Root of the cluster tree
-  pclusterbasis rb;    // Row clusterbasis
-  pclusterbasis cb;    // Column clusterbasis
-  ph2matrix     H2;    // H2-matrix
-  pstopwatch    sw;
-
-  size_t        sz;    // Storage requirement
-
-  srand(time(NULL));   // Initialize RNG
-
-  omp_set_num_threads(2);
-
-  init_h2lib(&master_test_suite().argc, &master_test_suite().argv);
-
-  /* Create ie1d (problem description) */
-  ie = new_ie1d(n, 3);
-
-  /* Create cluster tree */
-  printf("Creating cluster tree\n");
-  root = build_ie1d_cluster(ie, res);
-  printf("  %u clusters\n", root->desc);
-
-  /* Prepare ie1d objects */
-  printf("Prepare for interpolation\n");
-  setup_aprx_interpolation_ie1d(ie, root, k, 0.0);
-
-  /* Create block tree */
-  printf("Creating block tree\n");
-  broot = build_nonstrict_block(root,
-                                root,
-                                (void *) &eta,
-                                admissible_2_cluster);
-  printf("  %u blocks\n",broot->desc);
-
-  /* Create cluster basis*/
-  printf("Creating cluster basis\n");
-  rb = build_from_cluster_clusterbasis(root);
-  cb = build_from_cluster_clusterbasis(root);
-
-  /* Filling cluster basis*/
-  printf("Filling cluster basis\n");
-  fill_clusterbasis_ie1d(ie, rb);
-  sz = getsize_clusterbasis(rb);
-  printf("  Row cluster basis %.1f KB (%.1f KB/DoF)\n", sz / 1024.0,
-                                                        sz / 1024.0 / n);
-  fill_clusterbasis_ie1d(ie, cb);
-  sz = getsize_clusterbasis(cb);
-  printf("  Column cluster basis %.1f KB (%.1f KB/DoF)\n", sz / 1024.0,
-                                                           sz / 1024.0 / n);
-
-  /* Create H2-matrix*/
-  printf("Creating H2-matrix\n");
-  H2 = build_from_block_h2matrix(broot, rb, cb);
-
-  /* Fill H2-matrix */
-  printf("Filling H2-matrix\n");
-  fill_h2matrix_ie1d(ie, H2);
-  sz = getsize_h2matrix(H2);
-  printf("  H2-matrix %.1f KB (%.1f KB/DoF)\n", sz / 1024.0, sz / 1024.0 / n);
-
-  sw     = new_stopwatch();
-
-  x      = init_avector(&locx, H2->cb->t->size);
-  xt_cpu = new_coeffs_clusterbasis_avector(H2->cb);
-  xt_gpu = new_coeffs_clusterbasis_avector(H2->cb);
-
-  random_avector(x);
-
-  del_stopwatch(sw);
-  del_avector(xt_gpu);
-  del_avector(xt_cpu);
-  uninit_avector(x);
-  del_h2matrix(H2);
-  del_block(broot);
-  freemem(root->idx);
-  del_cluster(root);
-  del_ie1d(ie);
-
-  printf("  %u vectors, %u matrices and\n"
-	       "  %u cluster basis still allocated\n", getactives_avector(),
-                                                 getactives_amatrix(),
-                                                 getactives_clusterbasis());
-
-  uninit_h2lib();
-}
-
-/** @} */
+// BOOST_AUTO_TEST_CASE(test_main)
+// {
+//   pamatrix    G;
+//   pgreencross gc;
+//   pcurve2d    gr;
+//
+//   real        err;
+//
+//   gr = new_circle_curve2d(n, (real) 1.0 / 3.0);
+//
+//   gc = new_laplace2d_greencross(gr, res, (void *) &eta, q, m);
+//
+//   assemble_leafs_h2matrix_greencross(gc, gc->h2);
+//
+//   G  = new_amatrix(gc->h2->rb->t->size, gc->h2->cb->t->size);
+//
+//   nearfield_greencross(gc, gc->h2->rb, gc->h2->cb, G);
+//
+//   print_amatrix(G);
+//
+//   err = norm2diff_h2matrix_leafs_amatrix(gc->h2, G);
+//
+//   printf("Error: %.5e\n", err);
+//
+//   del_amatrix(G);
+//   del_greencross(gc);
+// }
