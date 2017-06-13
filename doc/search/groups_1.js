@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['basic',['Basic',['../d0/df6/group__basic.html',1,'']]]
+  ['kernels',['kernels',['../de/d8e/group__kernels.html',1,'']]]
 ];

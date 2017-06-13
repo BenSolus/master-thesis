@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['laplace_5fkernel',['laplace_kernel',['../d7/dec/greencross_8c.html#a7ccde440489e2ea970a608d4b77b16a8',1,'greencross.c']]],
-  ['ld',['ld',['../dd/d6c/struct__amatrix.html#a5d928eea2e2ddaa5c22c4bfc8ffd174b',1,'_amatrix']]]
+  ['n',['n',['../d1/d58/struct__greencross.html#a801f362cfcf3e895ad53cf4f0fe3aa23',1,'_greencross']]],
+  ['nearfield_5fgreencross',['nearfield_greencross',['../d6/dbf/group__greencross.html#ga13d2ca0d9932bf9496b98c538c20f5ff',1,'nearfield_greencross(pcgreencross gc, const uint rsize, const uint *ridx, const uint csize, const uint *cidx, pamatrix G):&#160;greencross.c'],['../d6/dbf/group__greencross.html#ga13d2ca0d9932bf9496b98c538c20f5ff',1,'nearfield_greencross(pcgreencross gc, const uint rsize, const uint *ridx, const uint csize, const uint *cidx, pamatrix G):&#160;greencross.c']]],
+  ['new_5flaplace2d_5fgreencross',['new_laplace2d_greencross',['../d6/dbf/group__greencross.html#ga5dd26e1776c4d54f18c066724431ba67',1,'new_laplace2d_greencross(pcurve2d gr, uint res, void *eta, uint q, uint m):&#160;greencross.c'],['../d6/dbf/group__greencross.html#ga5dd26e1776c4d54f18c066724431ba67',1,'new_laplace2d_greencross(pcurve2d c2d, uint res, void *eta, uint q, uint m):&#160;greencross.c']]],
+  ['ng',['ng',['../d1/d58/struct__greencross.html#aaf19e09af2af6747728f5b3c0e842378',1,'_greencross']]],
+  ['nq',['nq',['../d1/d58/struct__greencross.html#afb965ed49dc4649837cecc448cd58e5f',1,'_greencross']]]
 ];

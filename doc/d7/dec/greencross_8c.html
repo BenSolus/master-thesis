@@ -145,20 +145,20 @@ var searchBox = new SearchBox("searchBox", "../../search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">greencross.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="../../de/d17/greencross_8h_source.html">greencross.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="../../d0/d01/kernels_8h_source.html">kernels.h</a>&quot;</code><br />
+<code>#include &quot;aca.h&quot;</code><br />
 <code>#include &quot;gaussquad.h&quot;</code><br />
+<code>#include &quot;singquad1d.h&quot;</code><br />
+<code>#include &quot;singquad2d.h&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga3f8c929c9d0539b39ffdb138765991cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga3f8c929c9d0539b39ffdb138765991cd">dd_laplace_kernel</a> (const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *x, const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *y, <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *n, const uint dim)</td></tr>
-<tr class="memdesc:ga3f8c929c9d0539b39ffdb138765991cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The directional derivative \(D_nf(x) = \langle \lambda(f)(x), n \rangle\) of a fundamental solution of the negative Laplace operator.  <a href="../../d6/dbf/group__greencross.html#ga3f8c929c9d0539b39ffdb138765991cd">More...</a><br /></td></tr>
-<tr class="separator:ga3f8c929c9d0539b39ffdb138765991cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga793784a6b91cacbae2fa20a082ff4d71"><td class="memItemLeft" align="right" valign="top">INLINE_PREFIX uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga793784a6b91cacbae2fa20a082ff4d71">get_max_lvl_clusterbasis</a> (pclusterbasis cb, const uint level)</td></tr>
 <tr class="memdesc:ga793784a6b91cacbae2fa20a082ff4d71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the maximum level of a cluster basis.  <a href="../../d6/dbf/group__greencross.html#ga793784a6b91cacbae2fa20a082ff4d71">More...</a><br /></td></tr>
 <tr class="separator:ga793784a6b91cacbae2fa20a082ff4d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -171,101 +171,53 @@ Functions</h2></td></tr>
 <tr class="memitem:ga58e44702c7ffb276ea038b76d8e4fe10"><td class="memItemLeft" align="right" valign="top">INLINE_PREFIX pclustergeometry&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga58e44702c7ffb276ea038b76d8e4fe10">build_clustergeometry_greencross</a> (const void *data, const uint dim, uint **idx)</td></tr>
 <tr class="memdesc:ga58e44702c7ffb276ea038b76d8e4fe10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creats a <a href="http://www.h2lib.org/doc/d8/da5/struct__clustergeometry.html">clustergeometry</a> object from a triangular mesh.  <a href="../../d6/dbf/group__greencross.html#ga58e44702c7ffb276ea038b76d8e4fe10">More...</a><br /></td></tr>
 <tr class="separator:ga58e44702c7ffb276ea038b76d8e4fe10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ccde440489e2ea970a608d4b77b16a8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/dec/greencross_8c.html#a7ccde440489e2ea970a608d4b77b16a8">laplace_kernel</a> (const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *x, const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *y, const uint dim)</td></tr>
-<tr class="separator:a7ccde440489e2ea970a608d4b77b16a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a753052e9c38f2c5b9abe903a78249e72"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/dec/greencross_8c.html#a753052e9c38f2c5b9abe903a78249e72">pd_laplace_kernel</a> (const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *x, const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *y, const uint dim, const uint i)</td></tr>
-<tr class="separator:a753052e9c38f2c5b9abe903a78249e72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19c32d020ecd39c58461b5cc9cf87a78"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/dec/greencross_8c.html#a19c32d020ecd39c58461b5cc9cf87a78">uipow</a> (uint base, uint exp)</td></tr>
+<tr class="separator:a19c32d020ecd39c58461b5cc9cf87a78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7">init_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc, uint dim)</td></tr>
 <tr class="memdesc:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initilize components related to the dimension of the problem and zero initializes all other components of the given <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object <code>gc</code>.  <a href="../../d6/dbf/group__greencross.html#gaf7b77206ac2a93aafc25826e1816cbe7">More...</a><br /></td></tr>
 <tr class="separator:gaf7b77206ac2a93aafc25826e1816cbe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab91390a2459ee4225c1771540b35e8df"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gab91390a2459ee4225c1771540b35e8df">uninit_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc)</td></tr>
+<tr class="memdesc:gab91390a2459ee4225c1771540b35e8df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Uninitilize a <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="../../d6/dbf/group__greencross.html#gab91390a2459ee4225c1771540b35e8df">More...</a><br /></td></tr>
 <tr class="separator:gab91390a2459ee4225c1771540b35e8df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga029743349fb06ab8257482bae8732964"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964">new_laplace2d_greencross</a> (pcurve2d gr, uint res, void *eta, uint m)</td></tr>
-<tr class="memdesc:ga029743349fb06ab8257482bae8732964"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 2-dimensional <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object.  <a href="../../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964">More...</a><br /></td></tr>
-<tr class="separator:ga029743349fb06ab8257482bae8732964"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5dd26e1776c4d54f18c066724431ba67"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga5dd26e1776c4d54f18c066724431ba67">new_laplace2d_greencross</a> (pcurve2d gr, uint res, void *eta, uint q, uint m)</td></tr>
+<tr class="memdesc:ga5dd26e1776c4d54f18c066724431ba67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prepares a <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a> object for approximating the integral equation \( \int\limits_{\Omega} -\frac{1}{2 \pi} \log{\left \Vert x - y \right \Vert_2} u(y) dy = f(x) \), where \(\Omega \subset \mathbb{R}^2 \).  <a href="../../d6/dbf/group__greencross.html#ga5dd26e1776c4d54f18c066724431ba67">More...</a><br /></td></tr>
+<tr class="separator:ga5dd26e1776c4d54f18c066724431ba67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9ef0147fc33347859f7774f3bf1aca06"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga9ef0147fc33347859f7774f3bf1aca06">del_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc)</td></tr>
 <tr class="memdesc:ga9ef0147fc33347859f7774f3bf1aca06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory and set pointer to NULL of the corresponding <a class="el" href="../../d1/d58/struct__greencross.html">_greencross</a> greencross object <code>gc</code>.  <a href="../../d6/dbf/group__greencross.html#ga9ef0147fc33347859f7774f3bf1aca06">More...</a><br /></td></tr>
 <tr class="separator:ga9ef0147fc33347859f7774f3bf1aca06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gafe8870a0e4020adade75ef167fdb7001"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gafe8870a0e4020adade75ef167fdb7001">assemble_leaf_row_clusterbasis_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#ga51ce6367fa3525cd9ca0718fdfa9e946">pgreencross</a> gc, pclusterbasis cb)</td></tr>
-<tr class="separator:gafe8870a0e4020adade75ef167fdb7001"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:gab0be1064cd9a6458e8bfcd239658cf41"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a11d147c64891830c9e79b3315b1b2e21">real</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gab0be1064cd9a6458e8bfcd239658cf41">r_minus_two_pi</a> = -0.159154943091895336</td></tr>
-<tr class="memdesc:gab0be1064cd9a6458e8bfcd239658cf41"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(- \frac{1}{2 \pi}\)  <a href="../../d6/dbf/group__greencross.html#gab0be1064cd9a6458e8bfcd239658cf41">More...</a><br /></td></tr>
-<tr class="separator:gab0be1064cd9a6458e8bfcd239658cf41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga21c0a0f0a00e9f05ad48581890f27211"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a11d147c64891830c9e79b3315b1b2e21">real</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga21c0a0f0a00e9f05ad48581890f27211">r_four_pi</a> = 0.0795774715459476679</td></tr>
-<tr class="memdesc:ga21c0a0f0a00e9f05ad48581890f27211"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(\frac{1}{4 \pi}\)  <a href="../../d6/dbf/group__greencross.html#ga21c0a0f0a00e9f05ad48581890f27211">More...</a><br /></td></tr>
-<tr class="separator:ga21c0a0f0a00e9f05ad48581890f27211"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga13d2ca0d9932bf9496b98c538c20f5ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga13d2ca0d9932bf9496b98c538c20f5ff">nearfield_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">pcgreencross</a> gc, const uint rsize, const uint *ridx, const uint csize, const uint *cidx, pamatrix G)</td></tr>
+<tr class="memdesc:ga13d2ca0d9932bf9496b98c538c20f5ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs the matrix resulting from the Galerkin discretization of a variational formulation described in <code>gc</code>.  <a href="../../d6/dbf/group__greencross.html#ga13d2ca0d9932bf9496b98c538c20f5ff">More...</a><br /></td></tr>
+<tr class="separator:ga13d2ca0d9932bf9496b98c538c20f5ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae8f279d947c49856820ba11d84265cc8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#gae8f279d947c49856820ba11d84265cc8">fill_green_left_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">pcgreencross</a> gc, pccluster c, pamatrix A)</td></tr>
+<tr class="separator:gae8f279d947c49856820ba11d84265cc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga20ba715be33bde58a2117d4084938d66"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga20ba715be33bde58a2117d4084938d66">fill_green_right_greencross</a> (<a class="el" href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">pcgreencross</a> gc, pccluster t, pccluster s, pamatrix B)</td></tr>
+<tr class="separator:ga20ba715be33bde58a2117d4084938d66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7e5c064cd7474df3edf82c7c9d75aad2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/dbf/group__greencross.html#ga7e5c064cd7474df3edf82c7c9d75aad2">green_cross_approximation</a> (<a class="el" href="../../d6/dbf/group__greencross.html#gad92f5f089090ec57ab6bc477f0695838">pcgreencross</a> gc, ph2matrix h2)</td></tr>
+<tr class="memdesc:ga7e5c064cd7474df3edf82c7c9d75aad2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a Green cross approximation of a problem given by a <a class="el" href="../../d1/d58/struct__greencross.html">greencross</a>, represented as an <a href="http://www.h2lib.org/doc/d7/ddd/group__h2matrix.html">\(\mathcal{H}^{2}\)-Matrix</a> <a class="el" href="../../d0/de3/citelist.html#CITEREF_Börm2016GCA">[1]</a>.  <a href="../../d6/dbf/group__greencross.html#ga7e5c064cd7474df3edf82c7c9d75aad2">More...</a><br /></td></tr>
+<tr class="separator:ga7e5c064cd7474df3edf82c7c9d75aad2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><dl class="section author"><dt>Author</dt><dd>Bennet Carstensen </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2017 </dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>All rights reserved, Bennet Carstensen 2017 </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a7ccde440489e2ea970a608d4b77b16a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7ccde440489e2ea970a608d4b77b16a8">&#9670;&nbsp;</a></span>laplace_kernel()</h2>
+<a id="a19c32d020ecd39c58461b5cc9cf87a78"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19c32d020ecd39c58461b5cc9cf87a78">&#9670;&nbsp;</a></span>uipow()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> laplace_kernel </td>
+          <td class="memname">uint uipow </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
+          <td class="paramtype">uint&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *&#160;</td>
-          <td class="paramname"><em>y</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>dim</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a753052e9c38f2c5b9abe903a78249e72"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a753052e9c38f2c5b9abe903a78249e72">&#9670;&nbsp;</a></span>pd_laplace_kernel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> pd_laplace_kernel </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../da/dd4/cl_2clbasic_8cl.html#a2fd0bd3821b43889effb3cad628849e6">field</a> *&#160;</td>
-          <td class="paramname"><em>y</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>dim</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>i</em>&#160;</td>
+          <td class="paramtype">uint&#160;</td>
+          <td class="paramname"><em>exp</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

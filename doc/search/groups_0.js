@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['amatrix',['amatrix',['../de/dfb/group__amatrix.html',1,'']]],
-  ['avector',['avector',['../de/d6e/group__avector.html',1,'']]]
+  ['greencross',['greencross',['../d6/dbf/group__greencross.html',1,'']]]
 ];

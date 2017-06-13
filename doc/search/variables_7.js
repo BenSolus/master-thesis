@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['kernel_5ffunction',['kernel_function',['../d1/d58/struct__greencross.html#ad28ffaaf3f0c9851f43052df885eafa6',1,'_greencross']]],
-  ['kmax',['kmax',['../d1/d58/struct__greencross.html#a04e4a251e7cf18f3f537bc2bd6e95c6f',1,'_greencross']]]
+  ['r_5ffour_5fpi',['r_four_pi',['../de/d8e/group__kernels.html#ga21c0a0f0a00e9f05ad48581890f27211',1,'kernels.h']]],
+  ['r_5fminus_5fpi',['r_minus_pi',['../de/d8e/group__kernels.html#gac817d1b43f2067ef8a09b8d4f1b667f6',1,'kernels.h']]],
+  ['r_5fminus_5ftwo_5fpi',['r_minus_two_pi',['../de/d8e/group__kernels.html#gab0be1064cd9a6458e8bfcd239658cf41',1,'kernels.h']]]
 ];

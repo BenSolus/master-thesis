@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['uninit_5fgreencross',['uninit_greencross',['../d6/dbf/group__greencross.html#gab91390a2459ee4225c1771540b35e8df',1,'uninit_greencross(pgreencross gc):&#160;greencross.c'],['../d6/dbf/group__greencross.html#gab91390a2459ee4225c1771540b35e8df',1,'uninit_greencross(pgreencross gc):&#160;greencross.c']]]
+  ['zg',['zg',['../d1/d58/struct__greencross.html#a0e6f5ebab3acd60fd947cb0c36bd1024',1,'_greencross']]],
+  ['zq',['zq',['../d1/d58/struct__greencross.html#ae57366d39d4dd911bab5c961362dc8d1',1,'_greencross']]]
 ];

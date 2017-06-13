@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['new_5famatrix',['new_amatrix',['../de/dfb/group__amatrix.html#gab94e273203ac5b85e1bc94375180cf28',1,'clamatrix.cl']]],
-  ['new_5favector',['new_avector',['../de/d6e/group__avector.html#gad5ef1e6f5462e9624c119d9b2c702d7f',1,'clavector.cl']]],
-  ['new_5flaplace2d_5fgreencross',['new_laplace2d_greencross',['../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964',1,'new_laplace2d_greencross(pcurve2d gr, uint res, void *eta, uint m):&#160;greencross.c'],['../d6/dbf/group__greencross.html#ga029743349fb06ab8257482bae8732964',1,'new_laplace2d_greencross(pcurve2d gr, uint res, void *eta, uint m):&#160;greencross.c']]]
+  ['pdx_5flaplace_5fkernel',['pdx_laplace_kernel',['../de/d8e/group__kernels.html#ga55b8a3c9373f42c2bf18c00c20146ad1',1,'pdx_laplace_kernel(const field *x, const field *y, const uint dim, const uint i):&#160;kernels.c'],['../de/d8e/group__kernels.html#ga55b8a3c9373f42c2bf18c00c20146ad1',1,'pdx_laplace_kernel(const field *x, const field *y, const uint dim, const uint i):&#160;kernels.c']]],
+  ['pdy_5flaplace_5fkernel',['pdy_laplace_kernel',['../de/d8e/group__kernels.html#gadb20d7b7b76d29aac760d06e0b2794d0',1,'pdy_laplace_kernel(const field *x, const field *y, const uint dim, const uint i):&#160;kernels.c'],['../de/d8e/group__kernels.html#gadb20d7b7b76d29aac760d06e0b2794d0',1,'pdy_laplace_kernel(const field *x, const field *y, const uint dim, const uint i):&#160;kernels.c']]]
 ];

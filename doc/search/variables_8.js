@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ld',['ld',['../dd/d6c/struct__amatrix.html#a5d928eea2e2ddaa5c22c4bfc8ffd174b',1,'_amatrix']]]
+  ['sq',['sq',['../d1/d58/struct__greencross.html#abbffaa54487726ff1d58d1dc1e47b8bd',1,'_greencross']]]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['pd_5flaplace_5fkernel',['pd_laplace_kernel',['../d7/dec/greencross_8c.html#a753052e9c38f2c5b9abe903a78249e72',1,'greencross.c']]],
-  ['print_5famatrix',['print_amatrix',['../de/dfb/group__amatrix.html#ga9bdbf190f70f09c5e3292915ac5c962d',1,'clamatrix.cl']]],
-  ['print_5favector',['print_avector',['../de/d6e/group__avector.html#ga0fa56d76187673a8288b923f4b2397c7',1,'clavector.cl']]]
+  ['set_5fon_5flvl_5finfo_5fclusterbasis',['set_on_lvl_info_clusterbasis',['../d6/dbf/group__greencross.html#gaa9833866d1aa3ca3e4366ec73f7002be',1,'greencross.c']]],
+  ['set_5fper_5flevel_5fclusterbasis',['set_per_level_clusterbasis',['../d6/dbf/group__greencross.html#ga6111c55f17f7cd148d459dbce851a78b',1,'greencross.c']]],
+  ['setup_5fkernels_5ffix',['setup_kernels_fix',['../d9/d64/group__ocl__system.html#ga0f8a7834e03627f43df8c5222872c80a',1,'setup_kernels_fix(const uint n, const char **src_strs, const uint num_kernels, const char **kernel_names, cl_kernel **kernels):&#160;ocl_system.c'],['../d9/d64/group__ocl__system.html#ga0f8a7834e03627f43df8c5222872c80a',1,'setup_kernels_fix(const uint n, const char **src_strs, const uint num_kernels, const char **kernel_names, cl_kernel **kernels):&#160;ocl_system.c']]]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['ocl_5fsystem',['ocl_system',['../d9/d64/group__ocl__system.html',1,'']]],
-  ['ocl_5fsystem_2ec',['ocl_system.c',['../db/d26/ocl__system_8c.html',1,'']]],
-  ['ocl_5fsystem_2eh',['ocl_system.h',['../d3/d9b/ocl__system_8h.html',1,'']]]
+  ['r_5ffour_5fpi',['r_four_pi',['../de/d8e/group__kernels.html#ga21c0a0f0a00e9f05ad48581890f27211',1,'kernels.h']]],
+  ['r_5fminus_5fpi',['r_minus_pi',['../de/d8e/group__kernels.html#gac817d1b43f2067ef8a09b8d4f1b667f6',1,'kernels.h']]],
+  ['r_5fminus_5ftwo_5fpi',['r_minus_two_pi',['../de/d8e/group__kernels.html#gab0be1064cd9a6458e8bfcd239658cf41',1,'kernels.h']]]
 ];

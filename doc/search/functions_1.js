@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['build_5fclustergeometry_5fgreencross',['build_clustergeometry_greencross',['../d6/dbf/group__greencross.html#ga58e44702c7ffb276ea038b76d8e4fe10',1,'greencross.c']]]
+  ['del_5fgreencross',['del_greencross',['../d6/dbf/group__greencross.html#ga9ef0147fc33347859f7774f3bf1aca06',1,'del_greencross(pgreencross gc):&#160;greencross.c'],['../d6/dbf/group__greencross.html#ga9ef0147fc33347859f7774f3bf1aca06',1,'del_greencross(pgreencross gc):&#160;greencross.c']]]
 ];
