@@ -52,6 +52,12 @@ struct _greencross
   /** @brief Index set */
   uint *idx;
 
+  /** @brief Row cluster */
+  pcluster rc;
+
+  /** @brief Column cluster */
+  pcluster cc;
+
   /** @brief Quadrature order for regular integrals. */
   uint nq;
 
@@ -76,7 +82,7 @@ struct _greencross
   /** @brief Local rank of approximated submatrices. */
   uint K;
 
-  ph2matrix h2;
+  // ph2matrix h2;
 
   /** @brief Kernel function describing the problem. */
   real (*kernel_function) (const field* x, const field* y, const uint dim);
@@ -135,8 +141,6 @@ uninit_greencross(pgreencross gc);
  * @param[in] c2d Geometry describing the subspace
  *                @f$\Omega \subset \mathbb{R}^2 @f$.
  * @param[in] res Maximal size of leaf clusters.
- * @param[in] eta Necessary data for the admissibility condition in the
- *                hierarchical clustering.
  * @param[in] q   Quadratur order.
  * @param[in] m   Approximation order.
  * @result        A @ref _greencross "greencross" object ready for
@@ -144,7 +148,7 @@ uninit_greencross(pgreencross gc);
  *                @f$ \int\limits_{\Omega} -\frac{1}{2 \pi}
  *                \log{\left \Vert x - y \right \Vert_2} u(y) dy = f(x) @f$. */
 HEADER_PREFIX pgreencross
-new_laplace2d_greencross(pcurve2d c2d, uint res, void *eta, uint q, uint m);
+new_laplace2d_greencross(pcurve2d c2d, uint res, uint q, uint m);
 
 /** @brief Free memory and set pointer to NULL of the corresponding
  *         @ref _greencross greencross object @p gc.
@@ -244,6 +248,9 @@ fill_green_right_greencross(pcgreencross gc,
                             pccluster    s,
                             pamatrix     B);
 
+HEADER_PREFIX phmatrix
+fill_green_hmatrix_greencross(pcgreencross gc, void *eta);
+
 /** @brief Constructs a Green cross approximation of a problem given by a
  *         @ref _greencross "greencross", represented as
  *         an <a href="http://www.h2lib.org/doc/d7/ddd/group__h2matrix.html">
@@ -262,15 +269,13 @@ fill_green_right_greencross(pcgreencross gc,
  * matrix and @f$\hat{s}@f$ given by @p s, we have an approximation
  * @f$G|_{\hat{t} \times \hat{s}} \approx V_{t} S_{ts} V_{s}^{*}.
  *
- * @param[in]  gc The @ref _greencross "greencross" object contains the problem
+ * @param[in] gc The @ref _greencross "greencross" object contains the problem
  *                description and several data to perform the approximation.
- * @param[out] H2 <a
- *                href="http://www.h2lib.org/doc/d7/ddd/group__h2matrix.html">
- *                @f$\mathcal{H}^{2}@f$-Matrix</a> object which will be filled
- *                according to the Green cross approximation method. */
-HEADER_PREFIX void
-green_cross_approximation(pcgreencross gc, ph2matrix H2);
-
+ * @result    H2 <a href="http://www.h2lib.org/doc/d7/ddd/group__h2matrix.html">
+ *               @f$\mathcal{H}^{2}@f$-Matrix</a> object which will be filled
+ *               according to the Green cross approximation method. */
+HEADER_PREFIX ph2matrix
+green_cross_approximation(pcgreencross gc, void *eta);
 
 /** @} */
 

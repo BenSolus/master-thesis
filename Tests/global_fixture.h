@@ -28,8 +28,8 @@ static real eta   = 1.0;     // Parameter for the accuracy of hierarchical
                              // clustering
 static real accur = 1.0e-02; // Fault tolerance
 static uint n     = 128;     // Problem size
-static uint m     = 4;       // Approximation order
-static uint q     = 8;       // Quadratur order
+static uint m     = 16;      // Approximation order
+static uint q     = 16;      // Quadratur order
 static uint res   = 16;      // Cluster resolution
 
 

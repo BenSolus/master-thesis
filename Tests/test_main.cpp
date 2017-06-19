@@ -7,6 +7,8 @@
 
 #include "greencross.h"
 
+#include "matrixnorms.h"
+
 #include <iostream>
 #include <limits>
 
@@ -21,30 +23,61 @@ BOOST_GLOBAL_FIXTURE(global_fixture);
 INLINE_PREFIX void
 norm2diff_h2matrix_leafs_amatrix(ph2matrix h2, pamatrix a);
 
+BOOST_AUTO_TEST_CASE(test_green)
+{
+  pamatrix    G;
+  pcurve2d    c2d;
+  pgreencross gc;
+  phmatrix    H;
+
+  c2d = new_circle_curve2d(n, r_one / 3.0);
+
+  gc  = new_laplace2d_greencross(c2d, res, q, m);
+
+  H   = fill_green_hmatrix_greencross(gc, (void *) &eta);
+
+  G   = new_amatrix(gc->rc->size, gc->cc->size);
+
+  nearfield_greencross(gc,
+                       gc->rc->size,
+                       gc->rc->idx,
+                       gc->cc->size,
+                       gc->cc->idx,
+                       G);
+
+  std::cout << norm2diff_amatrix_hmatrix(H, G) / norm2_amatrix(G) << "\n";
+
+  del_amatrix(G);
+  del_hmatrix(H);
+  del_greencross(gc);
+}
+
 BOOST_AUTO_TEST_CASE(test_leafs)
 {
   pamatrix    G;
   pcurve2d    gr;
   pgreencross gc;
+  ph2matrix   h2;
 
   gr = new_circle_curve2d(n, r_one / (real) 3.0);
 
-  gc = new_laplace2d_greencross(gr, res, (void *) &eta, q, m);
+  gc = new_laplace2d_greencross(gr, res, q, m);
 
-  green_cross_approximation(gc, gc->h2);
+  h2 = green_cross_approximation(gc, (void *) &eta);
 
-  G  = new_amatrix(gc->h2->rb->t->size, gc->h2->cb->t->size);
+  G  = new_amatrix(gc->rc->size, gc->cc->size);
 
   nearfield_greencross(gc,
-                       gc->h2->rb->t->size,
-                       gc->h2->rb->t->idx,
-                       gc->h2->cb->t->size,
-                       gc->h2->cb->t->idx,
+                       gc->rc->size,
+                       gc->rc->idx,
+                       gc->cc->size,
+                       gc->cc->idx,
                        G);
 
-  norm2diff_h2matrix_leafs_amatrix(gc->h2, G);
+  norm2diff_h2matrix_leafs_amatrix(h2, G);
 
   del_amatrix(G);
+  del_h2matrix(h2);
   del_greencross(gc);
 }
 
@@ -96,19 +129,13 @@ norm2diff_h2matrix_leafs_amatrix(ph2matrix h2, pamatrix a)
 
       err = norm2diff_amatrix(G, a);
 
-      std::cout << std::scientific
-                << "Far Error: "
-                << err
-                << "\n";
-
       if(err >= accur)
         std::cout << std::scientific
                   << "Error was: "
                   << err
                   << ". Maximum fault tolerance: "
                   << accur
-                  << "\n"
-                  << std::defaultfloat;
+                  << "\n";
 
       BOOST_REQUIRE_EQUAL(err < accur, true);
 

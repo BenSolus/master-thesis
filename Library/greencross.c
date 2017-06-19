@@ -27,6 +27,12 @@
  *
  * @{*/
 
+INLINE_PREFIX void
+fill_green_recursive_hmatrix_greencross(pcgreencross gc, phmatrix h);
+
+INLINE_PREFIX void
+green_cross_approximation_recursive_greencross(pcgreencross gc, ph2matrix h2);
+
 /** @brief Retrieve the maximum level of a cluster basis.
  *
  *  @attention @p level should be 0 since it's only used insid the function to
@@ -114,6 +120,166 @@ build_clustergeometry_greencross(const void *data, const uint dim, uint **idx);
 /* ------------------------------------------------------------
  * Source of static functions.
  * ------------------------------------------------------------ */
+
+INLINE_PREFIX void
+fill_green_recursive_hmatrix_greencross(pcgreencross gc, phmatrix h)
+{
+  if(h->son)
+  {
+    const uint rsons = h->rsons;
+    const uint csons = h->csons;
+
+    /* Approximate sons. */
+    for(uint j = 0; j < csons; ++j)
+      for(uint i = 0; i < rsons; ++i)
+        fill_green_recursive_hmatrix_greencross(gc, h->son[i + j * rsons]);
+  }
+  else if(h->f) // Can't approximate matrix, use full matrix.
+    nearfield_greencross(gc,
+                         h->rc->size,
+                         h->rc->idx,
+                         h->cc->size,
+                         h->cc->idx,
+                         h->f);
+  else if(h->r) // Approximate with greens degenerated approximation.
+  {
+    fill_green_left_greencross(gc, h->rc, &h->r->A);
+    fill_green_right_greencross(gc, h->rc, h->cc, &h->r->B);
+  }
+}
+
+uint
+fill_green_cross_leaf_cluster_greencross(bool         row,
+                                         pcgreencross gc,
+                                         pccluster    c,
+                                         uint         **pidx,
+                                         pamatrix     V)
+{
+  avector   tmpb;
+
+  pamatrix  A, Ai;
+  pavector  b;
+  prkmatrix RK;
+
+  uint l;
+
+  /* Get the matrix from greens formula we want to approximate. */
+  A    = new_amatrix(0, 0);
+
+  fill_green_left_greencross(gc, c, A);
+
+  /* Get a rank factorization and the corresponding row pivot indices of *
+   * the previously calculated matrix.                                   */
+  RK   = new_rkmatrix(0, 0, 0);
+
+  decomp_fullaca_rkmatrix(A, 0.0, row ? pidx : NULL, row ? NULL : pidx, RK);
+
+  /* Permute the left factor of the rank factorization by the row pivot *
+   * indices. This matrix is lower triangular with diagonal elements    *
+   * equal to one.                                                      */
+  l = RK->k;
+
+  resize_amatrix(A, l, l);
+
+  for(uint j = 0; j < l; ++j)
+    for(uint i = 0; i < l; ++i)
+      setentry_amatrix(A, i, j, getentry_amatrix(&RK->A, (*pidx)[i], j));
+
+  /* Invert the permuted factor of the rank factorization. */
+  Ai = new_identity_amatrix(l, l);
+
+  for(uint i = 0; i < l; ++i)
+  {
+    b = init_column_avector(&tmpb, Ai, i);
+
+    triangularsolve_amatrix_avector(true, true, false, A, b);
+
+    uninit_avector(b);
+  }
+
+  /* Multiply the left factor of the rank factorization with its permuted *
+   * inverse and use this as the leaf matrix of the current row           *
+   * clusterbasis.                                                        */
+  resize_amatrix(V, c->size, l);
+  clear_amatrix(V);
+
+  addmul_amatrix(f_one, false, &RK->A, false, Ai, V);
+
+  del_rkmatrix(RK);
+  del_amatrix(Ai);
+  del_amatrix(A);
+
+  return l;
+}
+
+void
+green_cross_approximation_recursive_greencross(pcgreencross gc, ph2matrix h2)
+{
+  if(h2->son)
+  {
+    const uint rsons = h2->rsons;
+    const uint csons = h2->csons;
+
+    for(uint j = 0; j < csons; ++j)
+      for(uint i = 0; i < rsons; ++i)
+        green_cross_approximation_recursive_greencross(gc,
+                                                       h2->son[i + j * rsons]);
+  }
+  else
+  {
+    if(h2->f)
+      nearfield_greencross(gc,
+                           h2->rb->t->size,
+                           h2->rb->t->idx,
+                           h2->cb->t->size,
+                           h2->cb->t->idx,
+                           h2->f);
+    else if(h2->u)
+    {
+      pamatrix  A;
+
+      uint csize, lr, lc;
+      uint *rpidx, *cpidx;
+
+      lr = fill_green_cross_leaf_cluster_greencross(true,
+                                                    gc,
+                                                    h2->rb->t,
+                                                    &rpidx,
+                                                    &h2->rb->V);
+
+      lc = fill_green_cross_leaf_cluster_greencross(false,
+                                                    gc,
+                                                    h2->cb->t,
+                                                    &cpidx,
+                                                    &h2->cb->V);
+
+      A = new_amatrix(0, 0);
+
+      nearfield_greencross(gc,
+                           h2->rb->t->size,
+                           h2->rb->t->idx,
+                           h2->cb->t->size,
+                           h2->cb->t->idx,
+                           A);
+
+      csize = h2->cb->t->size;
+
+      resize_amatrix(&h2->u->S, lr, csize);
+
+      for(uint j = 0; j < csize; ++j)
+        for(uint i = 0; i < lr; ++i)
+          setentry_amatrix(&h2->u->S,
+                           i,
+                           j,
+                           getentry_amatrix(A, rpidx[i], j));
+
+      freemem(cpidx);
+      freemem(rpidx);
+
+      del_amatrix(A);
+    }
+  }
+}
 
 uint
 get_max_lvl_clusterbasis(pclusterbasis cb, const uint level)
@@ -254,9 +420,10 @@ init_greencross(pgreencross gc, uint dim)
 
   /* Pointer components */
   gc->idx                 = NULL;
+  gc->rc                  = NULL;
+  gc->cc                  = NULL;
   gc->zg                  = NULL;
   gc->wg                  = NULL;
-  gc->h2                  = NULL;
   gc->kernel_function     = NULL;
   gc->pdx_kernel_function = NULL;
   gc->pdy_kernel_function = NULL;
@@ -267,9 +434,12 @@ uninit_greencross(pgreencross gc)
 {
   assert(gc != NULL);
 
-  pcluster rc, cc;
-
-  rc = cc = NULL;
+  if(gc->geom != NULL)
+  {
+    gc->dim == 2 ? del_curve2d((pcurve2d) gc->geom)
+                 : del_surface3d((psurface3d) gc->geom);
+    gc->geom = NULL;
+  }
 
   if(gc->idx != NULL)
   {
@@ -277,11 +447,19 @@ uninit_greencross(pgreencross gc)
     gc->idx = NULL;
   }
 
-  if(gc->geom != NULL)
+  if(gc->rc == gc->cc)
+    gc->cc = NULL; // Only delete cluster once if row cluster = column cluster.
+
+  if(gc->rc != NULL)
   {
-    gc->dim == 2 ? del_curve2d((pcurve2d) gc->geom)
-                 : del_surface3d((psurface3d) gc->geom);
-    gc->geom = NULL;
+    del_cluster(gc->rc);
+    gc->rc = NULL;
+  }
+
+  if(gc->cc != NULL)
+  {
+    del_cluster(gc->cc);
+    gc->cc = NULL;
   }
 
   if(gc->zq != NULL)
@@ -315,84 +493,63 @@ uninit_greencross(pgreencross gc)
     gc->wg = NULL;
   }
 
-  if(gc->h2 != NULL)
-  {
-    rc = (pcluster) gc->h2->rb->t;
-    cc = (pcluster) gc->h2->cb->t;
-
-    del_h2matrix(gc->h2);
-    gc->h2 = NULL;
-  }
-
-  if(rc == cc)
-    cc = NULL; // Only delete cluster once if row cluster = column cluster.
-
-  if(rc != NULL)
-  {
-    del_cluster(rc);
-    rc = NULL;
-  }
-
-  if(cc != NULL)
-  {
-    del_cluster(cc);
-    cc = NULL;
-  }
-
   gc->kernel_function     = NULL;
   gc->pdx_kernel_function = NULL;
   gc->pdy_kernel_function = NULL;
 }
 
 pgreencross
-new_laplace2d_greencross(pcurve2d gr, uint res, void *eta, uint q, uint m)
+new_laplace2d_greencross(pcurve2d gr, uint res, uint q, uint m)
 {
-  pblock           broot;
-  pcluster         root;
-  pclusterbasis    cb, rb;
   pclustergeometry cg;
   pgreencross      gc;
 
-  /* Allocate and init object */
+  /* Allocate and init object. */
 
   gc = (pgreencross) allocmem(sizeof(greencross));
 
   init_greencross(gc, 2);
 
-  gc->geom = (void *) gr;
+  /* Set and get cluster from geometry. */
 
-  /* Set up basis data structures for H2-matrix approximations */
+  gc->geom = (void *) gr;
 
   gc->n  = gr->edges;
 
   cg     = build_clustergeometry_greencross((const void *) gr, 2, &gc->idx);
 
-  root   = build_adaptive_cluster(cg, gr->edges, gc->idx, res);
+  gc->rc = gc->cc = build_adaptive_cluster(cg, gc->n, gc->idx, res);
 
-  broot  = build_strict_block(root, root, eta, admissible_2_cluster);
-
-  cb     = build_from_cluster_clusterbasis(root);
-  rb     = build_from_cluster_clusterbasis(root);
-
-  gc->h2 = build_from_block_h2matrix(broot, cb, rb);
+  /* Get regular quadrature points. */
 
   gc->nq = q;
   gc->zq = allocreal(q);
   gc->wq = allocreal(q);
   assemble_gauss(q, gc->zq, gc->wq);
 
+  /* Get quadrature for singular integrals. */
+
   /* TODO: 3d and DLP case implementation */
   gc->sq = (void *) build_log_singquad1d(q, gc->zq, gc->wq); //
+
+  /* Get green quadrature points. */
 
   gc->ng = m;
   gc->zg = allocreal(m);
   gc->wg = allocreal(m);
   assemble_gauss(m, gc->zg, gc->wg);
 
+  /* Local rank of greens degenerated approximation. */
+
   gc->K                   = 4 * m;
+
+  /* Kernel function and partial derivatives. */
+
   gc->kernel_function     = laplace_kernel;
   gc->pdx_kernel_function = pdx_laplace_kernel;
   gc->pdy_kernel_function = pdy_laplace_kernel;
+
+  /* Clean up */
 
   del_clustergeometry(cg);
 
@@ -502,13 +659,13 @@ nearfield_greencross(pcgreencross gc,
         a0 = r_one - a1;
 
         for(uint d = 0; d < dim; ++d)
-          e0[d] = a0 * x[pe0[0]][d] + a1 * x[pe1[1]][d];
+          e0[d] = a0 * x[pe0[0]][d] + a1 * x[pe0[1]][d];
 
         a1 = e1q[q];
         a0 = r_one - a1;
 
         for(uint d = 0; d < dim; ++d)
-          e1[d] = a0 * x[pe0[0]][d] + a1 * x[pe1[1]][d];
+          e1[d] = a0 * x[pe1[0]][d] + a1 * x[pe1[1]][d];
 
         sum += wq[q] * gc->kernel_function(e0, e1, dim);
       }
@@ -519,18 +676,20 @@ nearfield_greencross(pcgreencross gc,
 }
 
 void
-fill_green_left_greencross(pcgreencross gc, pccluster c, pamatrix A)
+fill_green_left_greencross(pcgreencross gc, pccluster t, pamatrix A)
 {
-  const uint dim  = gc->dim;
-  const uint K    = gc->K;
-  const uint ng   = gc->ng;
-  const uint nq   = gc->nq;
-  const uint size = c->size;
+  const uint dim  = gc->dim; // Dimension of the problem
+  const uint dim2 = 2 * dim;
+  const uint K    = gc->K;   // Local rank of greens low-rank approximation.
+  const uint m    = gc->ng;  // Approximation order in 1st dimension.
+  const uint m1   = dim == 2 ? 1 : m; // Approximation order in 2nd dimension
+  const uint nq   = gc->nq;  // Number of regular quadrature points/weigts.
+  const uint size = t->size; // Number of base functions.
 
-  pcreal wg = gc->wg;
-  pcreal wq = gc->wq;
-  pcreal zg = gc->zg;
-  pcreal zq = gc->zq;
+  pcreal wg = gc->wg; // Green quadrature weights.
+  pcreal wq = gc->wq; // Regular quadrature weights.
+  pcreal zg = gc->zg; // Green quadrature points in [-1, 1].
+  pcreal zq = gc->zq; // Regular quadrature points in [-1, 1].
 
   amatrix tmp1, tmp2;
 
@@ -539,11 +698,12 @@ fill_green_left_greencross(pcgreencross gc, pccluster c, pamatrix A)
 
   real delta;
 
+  /* Affine mapping factors */
   field bpa[greencross_max_dim], bma[greencross_max_dim];
-  field xx[greencross_max_dim];
-  field z[greencross_max_dim];
+  field xx[greencross_max_dim];   // Transformed regular quadrature points
+  field z[greencross_max_dim];    // Transformed green quadrature points
 
-  uint M[greencross_max_dim - 1];
+  uint M[greencross_max_dim - 1]; // Index set for green quadrature points.
 
   real *g;
 
@@ -562,15 +722,16 @@ fill_green_left_greencross(pcgreencross gc, pccluster c, pamatrix A)
     // TODO: 3d case
   }
 
+  /* Get mapping factors for boundary domain. */
   delta = r_zero;
 
   for(uint d = 0; d < dim; ++d)
   {
-    const real diam = REAL_ABS(c->bmax[d] - c->bmin[d]);
+    const real diam = REAL_ABS(t->bmax[d] - t->bmin[d]);
 
     delta  = delta < diam ? diam : delta;
 
-    bpa[d] = (c->bmax[d] + c->bmax[d]) * 0.5;
+    bpa[d] = (t->bmax[d] + t->bmax[d]) * 0.5;
     bma[d] = diam;
   }
 
@@ -584,61 +745,75 @@ fill_green_left_greencross(pcgreencross gc, pccluster c, pamatrix A)
   A1 = init_sub_amatrix(&tmp1, A, size, 0, K, 0);
   A2 = init_sub_amatrix(&tmp2, A, size, 0, K, K);
 
-  for(uint ny = 0; ny < K; ++ny)
+  for(uint iota = 0; iota < dim2; ++iota)
   {
-    const uint iota   = ny % (2 * dim);
+    /* Quadrature point we induce for greens representation formula. */
     const real z_iota = iota & 1 ? r_one : r_minusone;
+    /* Position in which we induce the quadrature point. */
+    const uint l      = iota >> 1;
 
-    uint l, tmp;
-    real det, w;
-
-    tmp = ny / (2 * dim);
-
-    for(uint d = 0; d < (dim - 1); ++d)
+    for(uint mu0 = 0; mu0 < m; ++mu0)
     {
-      M[d] = tmp % ng;
-      tmp /= ng;
-    }
+      M[0] = mu0;
 
-    l   = iota >> 1;
-
-    det = w = r_one;
-
-    for(uint d = 0; d < dim; ++d)
-    {
-      z[d] = bpa[d] + bma[d] * (d == l ? z_iota : zg[M[d - (d > l ? 1 : 0)]]);
-
-      w   *= d == l ? r_one : wg[M[d - (d > l ? 1 : 0)]];
-
-      det *= d == l ? r_one : bma[d] * bma[d];
-    }
-
-    w *= REAL_SQRT(det);
-    w  = REAL_SQRT(w);
-
-    for(uint i = 0; i < size; ++i)
-    {
-      const uint ii = c->idx[i];
-
-      real int_kernel, int_pdx_kernel;
-
-      int_kernel = int_pdx_kernel = r_zero;
-
-      for(uint q = 0; q < nq; ++q)
+      for(uint mu1 = 0; mu1 < m1; ++mu1)
       {
-        const real a1 = zq[q];
-        const real a0 = r_one - a1;
+        real det, w;
 
+        M[1] = mu1;
+
+        det  = w = r_one;
+
+        /* Get green quadrature points and weight */
         for(uint d = 0; d < dim; ++d)
-          // TODO: 3d case
-          xx[d] = a0 * x[e[ii][0]][d] + a1 * x[e[ii][1]][d];
+        {
+          z[d] = bpa[d] +
+                 bma[d] * (d == l ? z_iota : zg[M[(d > l ? d - 1 : d)]]);
 
-        int_kernel     += wq[q] * gc->kernel_function(xx, z, dim);
-        int_pdx_kernel += wq[q] * gc->pdx_kernel_function(xx, z, dim, l);
+          w   *= d == l ? r_one : wg[M[(d > l ? d - 1 : d)]];
+
+          det *= d == l ? r_one : bma[d] * bma[d];
+        }
+
+        w *= REAL_SQRT(det);
+        w  = REAL_SQRT(w);
+
+        for(uint i = 0; i < size; ++i)
+        {
+          const uint ii = t->idx[i];
+
+          real int_kernel, int_pdx_kernel;
+
+          int_kernel = int_pdx_kernel = r_zero;
+
+          for(uint q = 0; q < nq; ++q)
+          {
+            const real a1 = zq[q];
+            const real a0 = r_one - a1;
+
+            for(uint d = 0; d < dim; ++d)
+              // TODO: 3d case
+              xx[d] = a0 * x[e[ii][0]][d] + a1 * x[e[ii][1]][d];
+
+            int_kernel     += wq[q] * gc->kernel_function(xx, z, dim);
+            int_pdx_kernel += wq[q] * gc->pdx_kernel_function(xx, z, dim, l);
+          }
+
+          setentry_amatrix(A1,
+                           i,
+                           iota + dim2 * (mu0 + m * mu1),
+                           w * g[ii] * int_kernel);
+          /*
+           * Since our faces are axially parallel, the outer normal vectors are
+           * the (negative) l-th unit vectors and thus we can reduce the
+           * directionl derivative to the l-th partial derivative * z_iota.
+           */
+          setentry_amatrix(A2,
+                           i,
+                           iota + dim2 * (mu0 + m * mu1),
+                           delta * w * g[ii] * z_iota * int_pdx_kernel);
+        }
       }
-
-      setentry_amatrix(A1, i, ny, w * g[ii] * int_kernel);
-      setentry_amatrix(A2, i, ny, delta * w * g[ii] * z_iota * int_pdx_kernel);
     }
   }
 
@@ -652,29 +827,32 @@ fill_green_right_greencross(pcgreencross gc,
                             pccluster    s,
                             pamatrix     B)
 {
-  const uint dim  = gc->dim;
-  const uint K    = gc->K;
-  const uint ng   = gc->ng;
-  const uint nq   = gc->nq;
-  const uint size = s->size;
+  const uint dim  = gc->dim; // Dimension of the problem
+  const uint dim2 = 2 * dim;
+  const uint K    = gc->K;   // Local rank of greens low-rank approximation.
+  const uint m    = gc->ng;  // Approximation order in 1st dimension.
+  const uint m1   = dim == 2 ? 1 : gc->ng; // Approximation order in 2nd dimension
+  const uint nq   = gc->nq;  // Number of regular quadrature points/weigts.
+  const uint size = s->size; // Number of base functions.
 
-  pcreal wg = gc->wg;
-  pcreal wq = gc->wq;
-  pcreal zg = gc->zg;
-  pcreal zq = gc->zq;
+  pcreal wg = gc->wg; // Green quadrature weights.
+  pcreal wq = gc->wq; // Regular quadrature weights.
+  pcreal zg = gc->zg; // Green quadrature points in [-1, 1].
+  pcreal zq = gc->zq; // Regular quadrature points in [-1, 1].
 
-  amatrix  tmp1, tmp2;
+  amatrix tmp1, tmp2;
 
   pamatrix B1, B2;
   pcurve2d c2d;
 
   real delta;
 
+  /* Affine mapping factors. */
   field bpa[greencross_max_dim], bma[greencross_max_dim];
-  field yy[greencross_max_dim];
-  field z[greencross_max_dim];
+  field yy[greencross_max_dim]; // Transformed regular quadrature points.
+  field z[greencross_max_dim];  // Transformed green quadrature points.
 
-  uint M[greencross_max_dim - 1];
+  uint M[greencross_max_dim - 1]; // Index set for green quadrature points.
 
   real *g;
 
@@ -693,13 +871,14 @@ fill_green_right_greencross(pcgreencross gc,
     // TODO: 3d case
   }
 
+  /* Get mapping factors for boundary domain. */
   delta = r_zero;
 
   for(uint d = 0; d < dim; ++d)
   {
-    const real diam = t->bmax[d] - t->bmin[d];
+    const real diam = REAL_ABS(t->bmax[d] - t->bmin[d]);
 
-    delta = delta < diam ? diam : delta;
+    delta  = delta < diam ? diam : delta;
 
     bpa[d] = (t->bmax[d] + t->bmax[d]) * 0.5;
     bma[d] = diam;
@@ -715,61 +894,75 @@ fill_green_right_greencross(pcgreencross gc,
   B1 = init_sub_amatrix(&tmp1, B, size, 0, K, 0);
   B2 = init_sub_amatrix(&tmp2, B, size, 0, K, K);
 
-  for(uint ny = 0; ny < K; ++ny)
+  for(uint iota = 0; iota < dim2; ++iota)
   {
-    const uint iota   = ny % (2 * dim);
+    /* Quadrature point we induce for greens representation formula. */
     const real z_iota = iota & 1 ? r_one : r_minusone;
+    /* Position in which we induce the quadrature point. */
+    const uint l      = iota >> 1;
 
-    uint l, tmp;
-    real det, w;
-
-    tmp = ny / (2 * dim);
-
-    for(uint d = 0; d < (dim - 1); ++d)
+    for(uint mu0 = 0; mu0 < m; ++mu0)
     {
-      M[d] = tmp % ng;
-      tmp /= ng;
-    }
+      M[0] = mu0;
 
-    l   = iota >> 1;
-
-    det = w = r_one;
-
-    for(uint d = 0; d < dim; ++d)
-    {
-      z[d] = bpa[d] + bma[d] * (d == l ? z_iota : zg[M[d - (d > l ? 1 : 0)]]);
-
-      w   *= d == l ? r_one : wg[M[d - (d > l ? 1 : 0)]];
-
-      det *= d == l ? r_one : bma[d] * bma[d];
-    }
-
-    w *= REAL_SQRT(det);
-    w  = REAL_SQRT(w);
-
-    for(uint i = 0; i < size; ++i)
-    {
-      const uint ii = s->idx[i];
-
-      real int_kernel, int_pdy_kernel;
-
-      int_kernel = int_pdy_kernel = r_zero;
-
-      for(uint q = 0; q < nq; ++q)
+      for(uint mu1 = 0; mu1 < m1; ++mu1)
       {
-        const real a1 = zq[q];
-        const real a0 = r_one - a1;
+        real det, w;
 
+        M[1] = mu1;
+
+        det  = w = r_one;
+
+        /* Get green quadrature points and weight */
         for(uint d = 0; d < dim; ++d)
-          // TODO: 3d case
-          yy[d] = a0 * x[e[ii][0]][d] + a1 * x[e[ii][1]][d];
+        {
+          z[d] = bpa[d] +
+                 bma[d] * (d == l ? z_iota : zg[M[(d > l ? d - 1 : d)]]);
 
-        int_kernel     += wq[q] * gc->kernel_function(z, yy, dim);
-        int_pdy_kernel += wq[q] * gc->pdy_kernel_function(z, yy, dim, l);
+          w   *= d == l ? r_one : wg[M[(d > l ? d - 1 : d)]];
+
+          det *= d == l ? r_one : bma[d] * bma[d];
+        }
+
+        w *= REAL_SQRT(det);
+        w  = REAL_SQRT(w);
+
+        for(uint i = 0; i < size; ++i)
+        {
+          const uint ii = s->idx[i];
+
+          real int_kernel, int_pdy_kernel;
+
+          int_kernel = int_pdy_kernel = r_zero;
+
+          for(uint q = 0; q < nq; ++q)
+          {
+            const real a1 = zq[q];
+            const real a0 = r_one - a1;
+
+            for(uint d = 0; d < dim; ++d)
+              // TODO: 3d case
+              yy[d] = a0 * x[e[ii][0]][d] + a1 * x[e[ii][1]][d];
+
+            int_pdy_kernel += wq[q] * gc->pdx_kernel_function(z, yy, dim, l);
+            int_kernel     += wq[q] * gc->kernel_function(z, yy, dim);
+          }
+
+          /*
+           * Since our faces are axially parallel, the outer normal vectors are
+           * the (negative) l-th unit vectors and thus we can reduce the
+           * directionl derivative to the l-th partial derivative * z_iota.
+           */
+          setentry_amatrix(B1,
+                           i,
+                           iota + dim2 * (mu0 + m * mu1),
+                           w * g[ii] * z_iota * int_pdy_kernel);
+          setentry_amatrix(B2,
+                           i,
+                           iota + dim2 * (mu0 + m * mu1),
+                           - w * g[ii] * int_kernel / delta);
+        }
       }
-
-      setentry_amatrix(B1, i, ny, w * g[ii] * z_iota * int_pdy_kernel);
-      setentry_amatrix(B2, i, ny, - w * g[ii] * int_kernel / delta);
     }
   }
 
@@ -777,102 +970,36 @@ fill_green_right_greencross(pcgreencross gc,
   uninit_amatrix(B2);
 }
 
-void
-green_cross_approximation(pcgreencross gc, ph2matrix h2)
+phmatrix
+fill_green_hmatrix_greencross(pcgreencross gc, void *eta)
 {
-  if(h2->son)
-  {
-    const uint rsons = h2->rsons;
-    const uint csons = h2->csons;
+  pblock   broot;
+  phmatrix h;
 
-    for(uint j = 0; j < csons; ++j)
-      for(uint i = 0; i < rsons; ++i)
-        green_cross_approximation(gc, h2->son[i + j * rsons]);
-  }
-  else
-    if(h2->f)
-      nearfield_greencross(gc,
-                           h2->rb->t->size,
-                           h2->rb->t->idx,
-                           h2->cb->t->size,
-                           h2->cb->t->idx,
-                           h2->f);
-    else if(h2->u)
-    {
-      avector  tmpb;
+  broot = build_strict_block(gc->rc, gc->cc, eta, admissible_2_cluster);
 
-      pamatrix A, Ai;
-      pavector b;
-      prkmatrix RK;
+  h     = build_from_block_hmatrix(broot, gc->K);
 
-      uint csize, k;
+  fill_green_recursive_hmatrix_greencross(gc, h);
 
-      uint *rpidx;
+  return h;
+}
 
-      /* Get the matrix from greens formula we want to approximate. */
-      A  = new_amatrix(0, 0);
+ph2matrix
+green_cross_approximation(pcgreencross gc, void *eta)
+{
+  pblock        broot;
+  pclusterbasis rb, cb;
+  ph2matrix     h2;
 
-      fill_green_left_greencross(gc, h2->rb->t, A);
+  broot = build_strict_block(gc->rc, gc->cc, eta, admissible_2_cluster);
 
-      /* Get a rank factorization and the corresponding row pivot indices of *
-       * the previously calculated matrix.                                   */
-      RK  = new_rkmatrix(0, 0, 0);
+  rb    = build_from_cluster_clusterbasis(gc->rc);
+  cb    = build_from_cluster_clusterbasis(gc->cc);
 
-      decomp_fullaca_rkmatrix(A, 0.0, &rpidx, NULL, RK);
+  h2    = build_from_block_h2matrix(broot, rb, cb);
 
-      /* Permute the left factor of the rank factorization by the row pivot *
-       * indices. This matrix is lower triangular with diagonal elements    *
-       * equal to one.                                                      */
-      k   = RK->k;
+  green_cross_approximation_recursive_greencross(gc, h2);
 
-      resize_amatrix(A, k, k);
-
-      for(uint j = 0; j < k; ++j)
-        for(uint i = 0; i < k; ++i)
-          setentry_amatrix(A, i, j, getentry_amatrix(&RK->A, rpidx[i], j));
-
-      /* Invert the permuted factor of the rank factorization. */
-      Ai = new_identity_amatrix(k, k);
-
-      for(uint i = 0; i < k; ++i)
-      {
-        b = init_column_avector(&tmpb, Ai, i);
-
-        triangularsolve_amatrix_avector(true, true, false, A, b);
-
-        uninit_avector(b);
-      }
-
-      /* Multiply the left factor of the rank factorization with its permuted *
-       * inverse and use this as the leaf matrix of the current row           *
-       * clusterbasis.                                                        */
-      resize_amatrix(&h2->rb->V, h2->rb->t->size, k);
-      clear_amatrix(&h2->rb->V);
-
-      addmul_amatrix(f_one, false, &RK->A, false, Ai, &h2->rb->V);
-
-      nearfield_greencross(gc,
-                           h2->rb->t->size,
-                           h2->rb->t->idx,
-                           h2->cb->t->size,
-                           h2->cb->t->idx,
-                           A);
-
-      csize = h2->cb->t->size;
-
-      resize_amatrix(&h2->u->S, k, csize);
-
-      for(uint j = 0; j < csize; ++j)
-        for(uint i = 0; i < k; ++i)
-          setentry_amatrix(&h2->u->S,
-                           i,
-                           j,
-                           getentry_amatrix(A, rpidx[i], j));
-
-      freemem(rpidx);
-
-      del_rkmatrix(RK);
-      del_amatrix(Ai);
-      del_amatrix(A);
-    }
+  return h2;
 }
