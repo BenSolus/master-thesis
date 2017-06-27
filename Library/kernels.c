@@ -39,18 +39,15 @@ pdx_laplace_kernel(const field *x, const field *y, const uint dim, const uint i)
 {
   assert(i < dim);
 
-  real rnorm = r_zero;
+  real rnorm = dim == 2 ? REAL_NORMSQR2(x[0] - y[0], x[1] - y[1])
+                        : REAL_NORMSQR3(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
 
-  for(uint d = 0; d < dim; ++d)
-    rnorm += (x[d] - y[d]) * (x[d] - y[d]);
-
-  if(rnorm < 1e-15)
+  if(rnorm < 1e-16)
     return r_zero;
 
-  rnorm = r_one / (dim == 2 ? rnorm : REAL_SQRT(rnorm * rnorm * rnorm));
+  rnorm = dim == 2 ? r_one / rnorm : REAL_RSQRT(rnorm * rnorm * rnorm);
 
-
-  return dim == 2 ? (x[i] - y[i]) * r_minus_pi * rnorm
+  return dim == 2 ? (x[i] - y[i]) * r_minus_two_pi * rnorm
                   : - (x[i] - y[i]) * r_four_pi * rnorm;
 }
 

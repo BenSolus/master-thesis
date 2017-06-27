@@ -248,6 +248,15 @@ fill_green_right_greencross(pcgreencross gc,
                             pccluster    s,
                             pamatrix     B);
 
+HEADER_PREFIX void
+assemble_green_rkmatrix_greencross(pcgreencross gc,
+                                   pccluster    row,
+                                   pccluster    col,
+                                   prkmatrix    AB);
+
+HEADER_PREFIX prkmatrix
+build_green_rkmatrix_greencross(pcgreencross gc, pccluster row, pccluster col);
+
 HEADER_PREFIX phmatrix
 fill_green_hmatrix_greencross(pcgreencross gc, void *eta);
 

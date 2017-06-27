@@ -19,6 +19,8 @@
 #include "singquad1d.h"
 #include "singquad2d.h"
 
+#include <string.h>
+
 /* ------------------------------------------------------------
  * "Header" for static functions
  * ------------------------------------------------------------ */
@@ -143,6 +145,7 @@ fill_green_recursive_hmatrix_greencross(pcgreencross gc, phmatrix h)
                          h->f);
   else if(h->r) // Approximate with greens degenerated approximation.
   {
+    setrank_rkmatrix(h->r, gc->K);
     fill_green_left_greencross(gc, h->rc, &h->r->A);
     fill_green_right_greencross(gc, h->rc, h->cc, &h->r->B);
   }
@@ -262,16 +265,8 @@ green_cross_approximation_recursive_greencross(pcgreencross gc, ph2matrix h2)
                            h2->cb->t->idx,
                            A);
 
-      csize = h2->cb->t->size;
-
-      resize_amatrix(&h2->u->S, lr, csize);
-
-      for(uint j = 0; j < csize; ++j)
-        for(uint i = 0; i < lr; ++i)
-          setentry_amatrix(&h2->u->S,
-                           i,
-                           j,
-                           getentry_amatrix(A, rpidx[i], j));
+      resize_amatrix(&h2->u->S, lr, lc);
+      nearfield_greencross(gc, lr, rpidx, lc, cpidx, &h2->u->S);
 
       freemem(cpidx);
       freemem(rpidx);
@@ -371,16 +366,16 @@ build_clustergeometry_greencross(const void *data, const uint dim, uint **idx)
   {
     (*idx)[i] = i;
 
-    for(uint j = 0; j < dim; ++j)
+    for(uint d = 0; d < dim; ++d)
     {
       /* Center of gravity as characteristic point */
-      cg->x[i][j] = (x[e[i][0]][j] + x[e[i][1]][j]) * 0.5;
+      cg->x[i][d] = (x[e[i][0]][d] + x[e[i][1]][d]) * 0.5;
 
       /* Lower front left corner of bounding box */
-      cg->smin[i][j] = REAL_MIN(x[e[i][0]][j], x[e[i][1]][j]);
+      cg->smin[i][d] = REAL_MIN(x[e[i][0]][d], x[e[i][1]][d]);
 
       /* Upper back right corner of bounding box */
-      cg->smax[i][j] = REAL_MAX(x[e[i][0]][j], x[e[i][1]][j]);
+      cg->smax[i][d] = REAL_MAX(x[e[i][0]][d], x[e[i][1]][d]);
     }
   }
 
@@ -612,65 +607,107 @@ nearfield_greencross(pcgreencross gc,
 
   for(uint j = 0; j < csize; ++j)
   {
-    const uint jj = cidx ? cidx[j] : j;
+    const uint jj = cidx != NULL ? cidx[j] : j;
 
     for(uint i = 0; i < rsize; ++i)
     {
-      const uint ii = ridx ? ridx[i] : i;
+      const uint ii = ridx != NULL ? ridx[i] : i;
+      const uint c  = select_quadrature_singquad1d(sq1d,
+                                                   e[ii],
+                                                   e[jj],
+                                                   pe0,
+                                                   pe1,
+                                                   &e0q,
+                                                   &e1q,
+                                                   &wq,
+                                                   &nq,
+                                                   &base);
 
       real sum;
 
-      if(ii < jj)
-        select_quadrature_singquad1d(sq1d,
-                                     e[ii],
-                                     e[jj],
-                                     pe0,
-                                     pe1,
-                                     &e0q,
-                                     &e1q,
-                                     &wq,
-                                     &nq,
-                                     &base);
-      else
-        select_quadrature_singquad1d(sq1d,
-                                     e[jj],
-                                     e[ii],
-                                     pe1,
-                                     pe0,
-                                     &e1q,
-                                     &e0q,
-                                     &wq,
-                                     &nq,
-                                     &base);
-
-      for(uint d = 0; d < dim; ++d)
+      switch(c)
       {
-        pe0[d] = e[ii][pe0[d]];
-        pe1[d] = e[jj][pe1[d]];
+        case 0: case 2:
+          for(uint d = 0; d < dim; ++d)
+          {
+            pe0[d] = e[ii][pe0[d]];
+            pe1[d] = e[jj][pe1[d]];
+          }
+
+          sum = r_minus_two_pi * base;
+
+          for(uint q = 0; q < nq; ++q)
+          {
+            real a0, a1;
+
+            a1 = e0q[q];
+            a0 = r_one - a1;
+
+            for(uint d = 0; d < dim; ++d)
+              e0[d] = a0 * x[pe0[0]][d] + a1 * x[pe0[1]][d];
+
+            a1 = e1q[q];
+            a0 = r_one - a1;
+
+            for(uint d = 0; d < dim; ++d)
+              e1[d] = a0 * x[pe1[0]][d] + a1 * x[pe1[1]][d];
+
+            sum += wq[q] * gc->kernel_function(e0, e1, dim);
+          }
+          setentry_amatrix(G, i, j, g[ii] * g[jj] * sum);
+          break;
+        case 1:
+          // TODO: 3D-Case
+          if(e[ii][0] == e[jj][0])
+          {
+            pe0[0] = e[ii][1];
+            pe0[1] = e[ii][0];
+            pe1[0] = e[jj][1];
+          }
+          else if(e[ii][0] == e[jj][1])
+          {
+            pe0[0] = e[ii][1];
+            pe0[1] = e[ii][0];
+            pe1[0] = e[jj][0];
+          }
+          else if(e[ii][1] == e[jj][0])
+          {
+            pe0[0] = e[ii][0];
+            pe0[1] = e[ii][1];
+            pe1[0] = e[jj][1];
+          }
+          else if(e[ii][1] == e[jj][1])
+          {
+            pe0[0] = e[ii][0];
+            pe0[1] = e[ii][1];
+            pe1[0] = e[jj][0];
+          }
+          else
+          {
+            printf("ERROR!\n");
+            exit(0);
+          }
+
+          sum = 0.0;
+
+          for(uint q = 0; q < nq; ++q) {
+
+            real dx, dy, tx, ty;
+
+            tx = e0q[q];
+            ty = e1q[q];
+
+            dx = x[pe0[0]][0] * (-tx) + x[pe0[1]][0] * (tx + ty) + x[pe1[0]][0] * (-ty);
+            dy = x[pe0[0]][1] * (-tx) + x[pe0[1]][1] * (tx + ty) + x[pe1[0]][1] * (-ty);
+
+            sum += wq[q] * REAL_LOG(dx * dx + dy * dy);
+          }
+          setentry_amatrix(G, i, j, (2.0 * base + sum) * r_minus_two_pi * g[ii] * g[jj] * 0.5);
+          break;
+
+        default:
+          break;
       }
-
-      sum = r_minus_two_pi * base;
-
-      for(uint q = 0; q < nq; ++q)
-      {
-        real a0, a1;
-
-        a1 = e0q[q];
-        a0 = r_one - a1;
-
-        for(uint d = 0; d < dim; ++d)
-          e0[d] = a0 * x[pe0[0]][d] + a1 * x[pe0[1]][d];
-
-        a1 = e1q[q];
-        a0 = r_one - a1;
-
-        for(uint d = 0; d < dim; ++d)
-          e1[d] = a0 * x[pe1[0]][d] + a1 * x[pe1[1]][d];
-
-        sum += wq[q] * gc->kernel_function(e0, e1, dim);
-      }
-
-      setentry_amatrix(G, i, j, g[ii] * g[jj] * sum);
     }
   }
 }
@@ -699,15 +736,15 @@ fill_green_left_greencross(pcgreencross gc, pccluster t, pamatrix A)
   real delta;
 
   /* Affine mapping factors */
-  field bpa[greencross_max_dim], bma[greencross_max_dim];
-  field xx[greencross_max_dim];   // Transformed regular quadrature points
-  field z[greencross_max_dim];    // Transformed green quadrature points
+  field bpa[dim], bma[dim];
+  field xx[dim];   // Transformed regular quadrature points
+  field z[dim];    // Transformed green quadrature points
 
-  uint M[greencross_max_dim - 1]; // Index set for green quadrature points.
+  uint M[dim - 1]; // Index set for green quadrature points.
 
   real *g;
 
-  real (*x)[greencross_max_dim];
+  real (*x)[dim];
   uint (*e)[2];
 
   if(dim == 2)
@@ -727,7 +764,7 @@ fill_green_left_greencross(pcgreencross gc, pccluster t, pamatrix A)
 
   for(uint d = 0; d < dim; ++d)
   {
-    const real diam = REAL_ABS(t->bmax[d] - t->bmin[d]);
+    const real diam = t->bmax[d] - t->bmin[d];
 
     delta  = delta < diam ? diam : delta;
 
@@ -738,9 +775,10 @@ fill_green_left_greencross(pcgreencross gc, pccluster t, pamatrix A)
   delta *= 0.5;
 
   for(uint d = 0; d < dim; ++d)
-    bma[d] = (bma[d] + 2.0 * delta) * 0.5;
+    bma[d] = bma[d] * 0.5 + delta;
 
   resize_amatrix(A, size, 2 * K);
+
 
   A1 = init_sub_amatrix(&tmp1, A, size, 0, K, 0);
   A2 = init_sub_amatrix(&tmp2, A, size, 0, K, K);
@@ -811,7 +849,7 @@ fill_green_left_greencross(pcgreencross gc, pccluster t, pamatrix A)
           setentry_amatrix(A2,
                            i,
                            iota + dim2 * (mu0 + m * mu1),
-                           delta * w * g[ii] * z_iota * int_pdx_kernel);
+                           w * g[ii] * z_iota * int_pdx_kernel);
         }
       }
     }
@@ -848,15 +886,15 @@ fill_green_right_greencross(pcgreencross gc,
   real delta;
 
   /* Affine mapping factors. */
-  field bpa[greencross_max_dim], bma[greencross_max_dim];
-  field yy[greencross_max_dim]; // Transformed regular quadrature points.
-  field z[greencross_max_dim];  // Transformed green quadrature points.
+  field bpa[dim], bma[dim];
+  field yy[dim]; // Transformed regular quadrature points.
+  field z[dim];  // Transformed green quadrature points.
 
-  uint M[greencross_max_dim - 1]; // Index set for green quadrature points.
+  uint M[dim - 1]; // Index set for green quadrature points.
 
   real *g;
 
-  real (*x)[greencross_max_dim];
+  real (*x)[dim];
   uint (*e)[2];
 
   if(dim == 2)
@@ -944,7 +982,7 @@ fill_green_right_greencross(pcgreencross gc,
               // TODO: 3d case
               yy[d] = a0 * x[e[ii][0]][d] + a1 * x[e[ii][1]][d];
 
-            int_pdy_kernel += wq[q] * gc->pdx_kernel_function(z, yy, dim, l);
+            int_pdy_kernel += wq[q] * gc->pdy_kernel_function(z, yy, dim, l);
             int_kernel     += wq[q] * gc->kernel_function(z, yy, dim);
           }
 
@@ -960,7 +998,7 @@ fill_green_right_greencross(pcgreencross gc,
           setentry_amatrix(B2,
                            i,
                            iota + dim2 * (mu0 + m * mu1),
-                           - w * g[ii] * int_kernel / delta);
+                           - w * g[ii] * int_kernel);
         }
       }
     }
@@ -968,6 +1006,29 @@ fill_green_right_greencross(pcgreencross gc,
 
   uninit_amatrix(B1);
   uninit_amatrix(B2);
+}
+
+void
+assemble_green_rkmatrix_greencross(pcgreencross gc,
+                                   pccluster    row,
+                                   pccluster    col,
+                                   prkmatrix    AB)
+{
+  setrank_rkmatrix(AB, 2 * gc->K);
+  fill_green_left_greencross(gc, row, &AB->A);
+  fill_green_right_greencross(gc, row, col, &AB->B);
+}
+
+prkmatrix
+build_green_rkmatrix_greencross(pcgreencross gc, pccluster row, pccluster col)
+{
+  prkmatrix AB;
+
+  AB = new_rkmatrix(row->size, col->size, 2 * gc->K);
+
+  assemble_green_rkmatrix_greencross(gc, row, col, AB);
+
+  return AB;
 }
 
 phmatrix

@@ -47,22 +47,6 @@
 
 {
    <insert_a_suppression_name_here>
-   Memcheck:Value8
-   ...
-   fun:laplace_kernel
-   ...
-}
-
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Cond
-   ...
-   fun:laplace_kernel
-   ...
-}
-
-{
-   <insert_a_suppression_name_here>
    Memcheck:Leak
    match-leak-kinds: possible
    ...
