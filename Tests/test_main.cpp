@@ -69,49 +69,23 @@ BOOST_AUTO_TEST_CASE(test_full_laplace2d)
 
 BOOST_AUTO_TEST_CASE(test_rk_laplace2d)
 {
-  pamatrix    G, Gbem;
-  pbem2d      b2d;
-  pblock      broot;
-  pcluster    root;
+  pamatrix    G;
   pcurve2d    c2d;
   pgreencross gc;
-  prkmatrix   RKbem, RKgc;
+  prkmatrix   RK;
 
   real        rel_err;
 
-  c2d   = new_circle_curve2d(n, 0.333);
+  c2d     = new_circle_curve2d(n, 0.333);
 
-  gc    = new_laplace2d_greencross(c2d, res, q, m);
+  gc      = new_laplace2d_greencross(c2d, res, q, m);
 
-  b2d   = new_slp_laplace_bem2d(c2d, q, BASIS_CONSTANT_BEM2D);
+  RK      = build_green_rkmatrix_greencross(gc, gc->rc, gc->cc);
 
-  root  = build_bem2d_cluster(b2d, res, BASIS_CONSTANT_BEM2D);
-
-  broot = build_nonstrict_block(root, root, &eta, admissible_max_cluster);
-
-  setup_hmatrix_aprx_green_row_bem2d(b2d,
-                                     root,
-                                     root,
-                                     broot,
-                                     m,
-                                     1,
-                                     0.5,
-                                     build_bem2d_rect_quadpoints);
-
-  RKbem = build_bem2d_rkmatrix(root, root, (void *) b2d);
-
-  Gbem = new_amatrix(n, n);
-  b2d->nearfield(NULL, NULL, b2d, false, Gbem);
-
-  // print_amatrix(&RKbem->A);
-  // print_amatrix(&RKbem->B);
-
-  RKgc  = build_green_rkmatrix_greencross(gc, gc->rc, gc->cc);
-
-  G     = new_amatrix(n, n);
+  G       = new_amatrix(n, n);
   nearfield_greencross(gc, n, NULL, n, NULL, G);
 
-  rel_err = norm2diff_amatrix_rkmatrix(RKgc, G) / norm2_amatrix(G);
+  rel_err = norm2diff_amatrix_rkmatrix(RK, G) / norm2_amatrix(G);
 
   std::cout << "\n-----------------------------------------------------------\n"
             << "\nTesting constructing low-rank approximation of the "
@@ -121,17 +95,13 @@ BOOST_AUTO_TEST_CASE(test_rk_laplace2d)
             << "\n\nTest "
             << ((rel_err - r_one <= 10e-07) ? "succeeded"
                                             : ("failed (Relative Error - 1 > " +
-                                              std::to_string(10e-07)))
+                                              std::to_string(10e-07) + ")"))
             << ".\n";
 
   BOOST_REQUIRE_EQUAL(rel_err - r_one <= 10e-07, true);
 
   del_amatrix(G);
-  del_rkmatrix(RKbem);
-  del_rkmatrix(RKgc);
-  del_block(broot);
-  del_cluster(root);
-  del_bem2d(b2d);
+  del_rkmatrix(RK);
   del_greencross(gc);
 }
 

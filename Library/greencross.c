@@ -768,7 +768,7 @@ fill_green_left_greencross(pcgreencross gc, pccluster t, pamatrix A)
 
     delta  = delta < diam ? diam : delta;
 
-    bpa[d] = (t->bmax[d] + t->bmax[d]) * 0.5;
+    bpa[d] = (t->bmax[d] + t->bmin[d]) * 0.5;
     bma[d] = diam;
   }
 
@@ -918,7 +918,7 @@ fill_green_right_greencross(pcgreencross gc,
 
     delta  = delta < diam ? diam : delta;
 
-    bpa[d] = (t->bmax[d] + t->bmax[d]) * 0.5;
+    bpa[d] = (t->bmax[d] + t->bmin[d]) * 0.5;
     bma[d] = diam;
   }
 

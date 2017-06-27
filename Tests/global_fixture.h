@@ -31,10 +31,10 @@ static const real eps = std::numeric_limits<real>::epsilon();
 static real eta   = 1.0;     // Parameter for the accuracy of hierarchical
                              // clustering
 static real accur = 1.0e-02; // Fault tolerance
-static uint n     = 1024;     // Problem size
+static uint n     = 512;     // Problem size
 static uint m     = 16;      // Approximation order
 static uint q     = 2;       // Quadratur order
-static uint res   = 64;      // Cluster resolution
+static uint res   = 16;      // Cluster resolution
 
 
 /** @brief Global fixture for the
