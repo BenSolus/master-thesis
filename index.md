@@ -9,7 +9,7 @@ comments: false
 ## Home
 
 This is the website of my master thesis with the working title *"An efficient
-implementation of the Green cross approximation method on GPUs"* based on the
+solver for the Green cross approximation method on GPUs"* based on the
 article
 [Approximation of integral operators by Green quadrature and nested cross approximation](https://link.springer.com/article/10.1007/s00211-015-0757-y)
 [\[1\]]({{ site.baseurl }}/refs). Here I am going to collect ideas and

@@ -46,3 +46,6 @@ Hackbusch, W., Khoromskij, B., & Sauter, S. A. (2000). On $$\mathcal{H}^2$$-matr
 
 [\[10\]](https://link.springer.com/article/10.1007%2Fs00607-002-1450-4?LI=true)
 Hackbusch, W., & Börm, S. (2002). Data-sparse approximation by adaptive $$\mathcal{H}^2$$-matrices. *Computing, 69(1)*, 1-35.
+
+[\[11\]](https://www.springer.com/de/book/9783540548225)
+Hackbusch, W. (1992). Elliptic differential equations : theory and numerical treatment. *Springer series in computational mathematics*, Springer-Verlag Berlin Heidelberg.

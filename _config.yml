@@ -1,6 +1,6 @@
 title:              My master thesis
-tagline:            An efficient implementation of the Green cross
-                    approximation method on GPUs
+tagline:            An efficient solver for the Green cross approximation
+                    method on GPUs
 baseurl:            "/master-thesis"
 url:                "https://bensolus.github.io/master-thesis"
 markdown:           kramdown

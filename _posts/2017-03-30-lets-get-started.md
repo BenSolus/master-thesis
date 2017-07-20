@@ -8,8 +8,8 @@ comments:  true
 ---
 
 In this blog I will collect ideas for my master thesis with the working title
-*"An efficient implementation of the Green cross approximation method on
-GPUs"* based on the article
+*"An efficient solver for the Green cross approximation method on GPUs"* based
+on the article
 [Approximation of integral operators by Green quadrature and nested cross approximation](https://link.springer.com/article/10.1007/s00211-015-0757-y) [\[1\]]({{ site.baseurl }}/refs).
 
 We consider integral equations e.g. of the form
@@ -18,7 +18,7 @@ We consider integral equations e.g. of the form
 
 $$
 \int\limits_{\Omega} g(x, y)\ u(y)\ dy = f(x) \qquad
-\text{for all } x \in \Omega := [0, 1]^d.
+\text{for all } x \in \Omega \subseteq mathbb{R}^d.
 $$
 
 <!-- lint enable no-shortcut-reference-link no-undefined-references-->
@@ -45,7 +45,7 @@ $$
 
 as an sample *kernel function* for a fundamental solution of the negative
 Laplace operator $$-\Delta$$, e.g. occurring in the interpretation of
-Poisson's equations in differential form.
+Poisson's equations in integral formulation.
 
 <!--more-->
 
@@ -158,8 +158,7 @@ non-local, in other words we have $$g(x, y) \neq 0$$ for almost all $$x, y \in
 For this kind of matrices, we summarize common techniques proposed to handle
 them into three categories: kernel-based, matrix-based and hybrid techniques.
 
-The first category replaces the kernel function $$g$$ by a degenerated
-approximation $$\tilde{g}$$ which the corresponding method handles efficiently.
+The first category replaces the kernel function $$g$$ by a degeneratedapproximation $$\tilde{g}$$ which the corresponding method handles efficiently.
 The panel clustering method [\[2\]]({{ site.baseurl }}/refs) for example uses
 Taylor expansion or interpolation [\[3\]]({{ site.baseurl }}/refs) to
 approximate the kernel function.
@@ -198,4 +197,4 @@ by analyzing the algorithm as well as proposing techniques which divide the
 upcoming tasks between CPU and GPU along with taking advantage of the architecture of the latter one for computationally expensive operations.
 
 --------------------------------------------------------------------------------
-<b id="1">$$^1$$</b> Available at [http://www.h2lib.org](http://www.h2lib.org)
+<b id="1">$$^1$$</b> Available at [http://www.h0lib.org](http://www.h0lib.org)
