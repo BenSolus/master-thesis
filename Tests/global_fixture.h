@@ -16,7 +16,10 @@
 
 #include "amatrix.h"
 #include "basic.h"
+#include "clusterbasis.h"
+#include "opencl.h"
 
+#include <iostream>
 #include <limits>
 
 using namespace boost::unit_test::framework;
@@ -30,11 +33,11 @@ static const real eps = std::numeric_limits<real>::epsilon();
 
 static real eta   = 1.0;     // Parameter for the accuracy of hierarchical
                              // clustering
-static real accur = 1.0e-02; // Fault tolerance
+static real accur = 10e-05; // Fault tolerance
 static uint n     = 512;     // Problem size
-static uint m     = 16;      // Approximation order
+static uint m     = 12;      // Approximation order
 static uint q     = 2;       // Quadratur order
-static uint res   = 16;      // Cluster resolution
+static uint res   = 24;      // Cluster resolution
 
 
 /** @brief Global fixture for the
@@ -48,20 +51,24 @@ struct global_fixture
   {
     init_h2lib(&master_test_suite().argc, &master_test_suite().argv);
 
-    // cl_device_id *devices;
-    // cl_uint      ndevices;
+    std::cout << "\nMachine epsilon: " << eps << "\n\n";
+
+    cl_device_id *devices;
+    cl_uint      ndevices;
 
 
 
-    // get_opencl_devices(&devices, &ndevices);
-    //
-    // set_opencl_devices(devices, ndevices, 2);
+    get_opencl_devices(&devices, &ndevices);
+
+    set_opencl_devices(devices, ndevices, 1);
   }
 
   ~global_fixture()
   {
-    printf("  %u vectors, %u matrices and\n", getactives_avector(),
-                                              getactives_amatrix());
+    printf("  %u vectors, %u matrices and %u clusterbasis\n",
+      getactives_avector(),
+      getactives_amatrix(),
+      getactives_clusterbasis());
 
     uninit_h2lib();
   }

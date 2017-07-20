@@ -13,9 +13,13 @@
 #ifndef GREENCROSS_H
 #define GREENCROSS_H
 
-#include "curve2d.h"
 #include "h2matrix.h"
-#include "surface3d.h"
+
+#ifdef __APPLE__
+    #include "OpenCL/opencl.h"
+#else
+    #include "CL/cl.h"
+#endif
 
 /** @defgroup greencross greencross
  *  @brief Algorithms and functions to perform the Green cross approximation
@@ -23,8 +27,8 @@
  *
  * @{*/
 
-const uint greencross_min_dim = 2;
-const uint greencross_max_dim = 3;
+static const uint greencross_min_dim = 2;
+static const uint greencross_max_dim = 3;
 
 /** @brief @ref greencross is just an abbreviation for the struct @ref
                 _greencross. */
@@ -36,15 +40,26 @@ typedef greencross *pgreencross;
 /** @brief Pointer to a constant @ref _greencross "greencross" object. */
 typedef const greencross *pcgreencross;
 
+typedef struct _gcopencl gcopencl;
+
+/**
+ * Pointer to a @ref gcopencl object.
+ */
+typedef gcopencl *pgcopencl;
+/**
+ * Pointer to a constant @ref gcopencl object.
+ */
+typedef const gcopencl *pcgcopencl;
+
 /** @brief Main container object for performing the Green cross approximation
  *         method. */
 struct _greencross
 {
-  /** @brief Geometry of the problem. */
-  void *geom;
-
   /** @brief Dimension of the problem. */
   uint dim;
+
+  /** @brief Geometry of the problem. */
+  void *geom;
 
   /** @brief Number of basis functions */
   uint n;
@@ -52,54 +67,24 @@ struct _greencross
   /** @brief Index set */
   uint *idx;
 
+  /** @brief Approximation order of Green's formula. */
+  uint m;
+
+  uint K;
+
   /** @brief Row cluster */
   pcluster rc;
 
   /** @brief Column cluster */
   pcluster cc;
 
-  /** @brief Quadrature order for regular integrals. */
-  uint nq;
+  pclusterbasis rb;
 
-  /** @brief Quadrature points in @f$[-1,1]@f$ for regular integrals */
-  preal zq;
+  pclusterbasis cb;
 
-  /** @brief Quadrature weights for regular integrals. */
-  preal wq;
+  void *bem;
 
-  /** @brief Quadrature for singular integrals based on @p q, @p zq and @ wq. */
-  void *sq;
-
-  /** @brief Approximation order / quadrature order for Green's formula. */
-  uint ng;
-
-  /** @brief Quadrature points in @f$[-1,1]@f$ for Green's formula. */
-  preal zg;
-
-  /** @brief Quadrature weights for Green's formula. */
-  preal wg;
-
-  /** @brief Local rank of approximated submatrices. */
-  uint K;
-
-  // ph2matrix h2;
-
-  /** @brief Kernel function describing the problem. */
-  real (*kernel_function) (const field* x, const field* y, const uint dim);
-
-  /** @brief Partial derivative of the kernel function describing the problem
-             in the i-th component of @p x. */
-  real (*pdx_kernel_function) (const field* x,
-                               const field* y,
-                               const uint   dim,
-                               const uint   i);
-
-  /** @brief Partial derivative of the kernel function describing the problem
-             in the i-th component of @p y. */
-  real (*pdy_kernel_function) (const field* x,
-                               const field* y,
-                               const uint   dim,
-                               const uint   i);
+  pgcopencl gcocl;
 };
 
 /** @brief Initilize components related to the dimension of the problem and
@@ -126,36 +111,34 @@ init_greencross(pgreencross gc, uint dim);
 HEADER_PREFIX void
 uninit_greencross(pgreencross gc);
 
-/** @brief Prepares a @ref _greencross "greencross" object for approximating the
- *         integral equation @f$ \int\limits_{\Omega} -\frac{1}{2 \pi}
- *         \log{\left \Vert x - y \right \Vert_2} u(y) dy = f(x) @f$, where
- *         @f$\Omega \subset \mathbb{R}^2 @f$.
- *
- * Given a subspace @f$\Omega \subset \mathbb{R}^2 @f$ by @p c2d, an object
- * to approximate the integral equation @f$ \int\limits_{\Omega}
- * -\frac{1}{2 \pi} \log{\left \Vert x - y \right \Vert_2} u(y) dy = f(x) @f$
- * is given with an approximation order @p m, a quadrature order @p q,
- * necessary data for the admissibility condition in the hierarchical
- * clustering @p eta and a maximal size of leaf clusters @p res.
- *
- * @param[in] c2d Geometry describing the subspace
- *                @f$\Omega \subset \mathbb{R}^2 @f$.
- * @param[in] res Maximal size of leaf clusters.
- * @param[in] q   Quadratur order.
- * @param[in] m   Approximation order.
- * @result        A @ref _greencross "greencross" object ready for
- *                approximating the integral equation
- *                @f$ \int\limits_{\Omega} -\frac{1}{2 \pi}
- *                \log{\left \Vert x - y \right \Vert_2} u(y) dy = f(x) @f$. */
-HEADER_PREFIX pgreencross
-new_laplace2d_greencross(pcurve2d c2d, uint res, uint q, uint m);
-
 /** @brief Free memory and set pointer to NULL of the corresponding
  *         @ref _greencross greencross object @p gc.
  *
  *  @param gc The greencross object which needs to be deleted. */
 HEADER_PREFIX void
 del_greencross(pgreencross gc);
+
+/** @brief Creats a <a href="http://www.h2lib.org/doc/d8/da5/struct__clustergeometry.html">
+ *         clustergeometry</a> object from a triangular mesh.
+ *
+ *  The geometry is taken from @p data interpreted as different objects
+ *  depending on the dimension of the problem @p dim.
+ *
+ *  @attention For @p dim = 2, @p data is expected to be an object of type
+ *             <a href="http://www.h2lib.org/doc/d8/df9/struct__curve2d.html">
+ *             curve2d</a>.
+ *
+ *  @param[in]  data Pointer to an object containing the informations to
+ *                   construct the cluster geometry.
+ *  @param[in]  dim  Dimension of the cluster geometry.
+ *  @param[out] idx  Index set which will be allocated by this method to index
+ *                   each triangle in data. The entries of idx will be
+ *                   0, 1, ..., N-1, where N is equal to the number of
+ *                   triangles.
+ *  @return          A valid cluster geometry object which can be used to
+ *                   construct a cluster tree along with the index set @p idx.*/
+HEADER_PREFIX pclustergeometry
+build_clustergeometry_greencross(const void *data, const uint dim, uint **idx);
 
 /** @brief Constructs the matrix resulting from the Galerkin discretization of a
  *         variational formulation described in @p gc.
@@ -249,6 +232,21 @@ fill_green_right_greencross(pcgreencross gc,
                             pamatrix     B);
 
 HEADER_PREFIX void
+assemble_amatrix_greencross(pcgreencross gc,
+                            const uint   *ridx,
+                            const uint   *cidx,
+                            bool         ntrans,
+                            pamatrix     G);
+
+HEADER_PREFIX pamatrix
+build_amatrix_greencross(pcgreencross gc,
+                         const uint rows,
+                         const uint *ridx,
+                         const uint cols,
+                         const uint *cidx,
+                         bool       ntrans);
+
+HEADER_PREFIX void
 assemble_green_rkmatrix_greencross(pcgreencross gc,
                                    pccluster    row,
                                    pccluster    col,
@@ -257,8 +255,25 @@ assemble_green_rkmatrix_greencross(pcgreencross gc,
 HEADER_PREFIX prkmatrix
 build_green_rkmatrix_greencross(pcgreencross gc, pccluster row, pccluster col);
 
+HEADER_PREFIX void
+assemble_green_hmatrix_greencross(pgreencross gc, pcblock b, phmatrix H);
+
 HEADER_PREFIX phmatrix
-fill_green_hmatrix_greencross(pcgreencross gc, void *eta);
+build_green_hmatrix_greencross(pgreencross gc, void *eta);
+
+uint
+assemble_green_cross_leaf_clusterbasis_greencross(pcgreencross  gc,
+                                                  const bool    row,
+                                                  pclusterbasis c,
+                                                  uint          **pidx);
+
+HEADER_PREFIX void
+assemble_green_cross_uniform_greencross(pcgreencross gc, puniform u);
+
+HEADER_PREFIX void
+assemble_green_cross_h2matrix_greencross(pgreencross gc,
+                                         pcblock     b,
+                                         ph2matrix   H2);
 
 /** @brief Constructs a Green cross approximation of a problem given by a
  *         @ref _greencross "greencross", represented as
@@ -284,7 +299,26 @@ fill_green_hmatrix_greencross(pcgreencross gc, void *eta);
  *               @f$\mathcal{H}^{2}@f$-Matrix</a> object which will be filled
  *               according to the Green cross approximation method. */
 HEADER_PREFIX ph2matrix
-green_cross_approximation(pcgreencross gc, void *eta);
+build_green_cross_h2matrix_greencross(pgreencross gc, void *eta);
+
+HEADER_PREFIX void
+addeval_h2matrix_avector_greencross(field      alpha,
+                                    pch2matrix H2,
+                                    pcavector  x,
+                                    pavector   y);
+
+HEADER_PREFIX void
+addevaltrans_h2matrix_avector_greencross(field      alpha,
+                                         pch2matrix H2,
+                                         pcavector  x,
+			                                   pavector   y);
+
+HEADER_PREFIX void
+mvm_h2matrix_avector_greencross(field      alpha,
+                                bool       h2trans,
+                                pch2matrix H2,
+                                pcavector  x,
+		                            pavector   y);
 
 /** @} */
 

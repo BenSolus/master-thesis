@@ -1,8 +1,10 @@
 ADD_LIBRARY(MasterThesis
             greencross.c
             greencross.h
-            kernels.c
-            kernels.h
+            laplace2d.c
+            laplace2d.h
+            laplace3d.c
+            laplace3d.h
             ocl_system.c
             ocl_system.h
 )
