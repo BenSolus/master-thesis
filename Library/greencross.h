@@ -27,9 +27,6 @@
  *
  * @{*/
 
-static const uint greencross_min_dim = 2;
-static const uint greencross_max_dim = 3;
-
 /** @brief @ref greencross is just an abbreviation for the struct @ref
                 _greencross. */
 typedef struct _greencross greencross;
@@ -40,16 +37,28 @@ typedef greencross *pgreencross;
 /** @brief Pointer to a constant @ref _greencross "greencross" object. */
 typedef const greencross *pcgreencross;
 
+/** @brief @ref gcopencl is just an abbreviation for the struct @ref
+                _gcopencl. */
 typedef struct _gcopencl gcopencl;
 
-/**
- * Pointer to a @ref gcopencl object.
- */
+/** @brief Pointer to a @ref gcopencl object. */
 typedef gcopencl *pgcopencl;
-/**
- * Pointer to a constant @ref gcopencl object.
- */
+
+/** @brief Pointer to a constant @ref gcopencl object. */
 typedef const gcopencl *pcgcopencl;
+
+/** @brief @ref gcopencl is just an abbreviation for the struct @ref
+                _gcopencl. */
+typedef struct _oclwork oclwork;
+
+/** @brief Pointer to a @ref gcopencl object. */
+typedef oclwork *poclwork;
+
+/** @brief Pointer to a constant @ref gcopencl object. */
+typedef const oclwork *pcoclwork;
+
+static const uint greencross_min_dim = 2;
+static const uint greencross_max_dim = 3;
 
 /** @brief Main container object for performing the Green cross approximation
  *         method. */
@@ -61,6 +70,14 @@ struct _greencross
   /** @brief Geometry of the problem. */
   void *geom;
 
+  cl_mem *buf_x;
+
+  cl_mem *buf_p;
+
+  cl_event *event_p;
+
+  cl_mem *buf_g;
+
   /** @brief Number of basis functions */
   uint n;
 
@@ -71,6 +88,8 @@ struct _greencross
   uint m;
 
   uint K;
+
+  real accur;
 
   /** @brief Row cluster */
   pcluster rc;
@@ -84,7 +103,15 @@ struct _greencross
 
   void *bem;
 
+  cl_mem *buf_qx;
+
+  cl_mem *buf_qy;
+
+  cl_mem *buf_w;
+
   pgcopencl gcocl;
+
+  poclwork  oclwrk;
 };
 
 /** @brief Initilize components related to the dimension of the problem and
@@ -140,6 +167,7 @@ del_greencross(pgreencross gc);
 HEADER_PREFIX pclustergeometry
 build_clustergeometry_greencross(const void *data, const uint dim, uint **idx);
 
+
 /** @brief Constructs the matrix resulting from the Galerkin discretization of a
  *         variational formulation described in @p gc.
  *
@@ -163,74 +191,6 @@ build_clustergeometry_greencross(const void *data, const uint dim, uint **idx);
  *                   _greencross.geom "greencross::geom" for the column of the
  *                   Galerkin discretization matrix.
  * @param[out] G     Matrix which will contain the Galerkin discretization. */
-HEADER_PREFIX void
-nearfield_greencross(pcgreencross gc,
-                     const uint   rsize,
-                     const uint   *ridx,
-                     const uint   csize,
-                     const uint   *cidx,
-                     pamatrix     G);
-
-/** Constructs the first factor resulting of using Green's representation
- *  formula as a degenerated approximation of the Galerkin discretization
- *  \cite Börm2016GCA.
- *
- * Constructs the matrix @f$A_{t} = (A_{t+} \ A_{t-}) \in
- * \mathbb{R^{\hat{t} \times K}}@f$, where @f$\hat{t}@f$ and K are given by
- * @p t and @p gc respectively, and
- * \f[
- *   \begin{align*}
- *   a_{t+, i \nu} &:= \sqrt{w_{\nu}} \int\limits_{\Omega} \Phi_{i}(x)
- *   g(x, z_{\nu}) dx, \\
- *   a_{t-, i \nu} &:= \delta_{t} \sqrt{w_{\nu}} \int\limits_{\Omega}
- *   \varphi_{i}(x) \frac{\partial g}{\partial n_{\iota}}(x, z_{\nu}) dx,
- *   \end{align*}
- * \f]
- *
- * where @f$w_{\nu}, \delta{t}, \Omega, \varphi_i, n_{\iota}, z_{\nu}@f$ and
- * the quadrature rules can be obtained or calculated from @p gc and @p t.
- *
- * @param[in]  gc The @ref _greencross "greencross" contains the problem
- *                description and several data to approximate the integral.
- * @param[in]  t  Cluster containing the indices of the base functions needed to
- *                discretize the integral and mapping informations for the
- *                green quadrature points.
- * @param[out] A  Matrix object which will be filled with @f$A_{t}@f$. */
-HEADER_PREFIX void
-fill_green_left_greencross(pcgreencross gc, pccluster t, pamatrix A);
-
-/** Constructs the second factor resulting of using Green's representation
- *  formula as a degenerated approximation of the Galerkin discretization
- *  \cite Börm2016GCA.
- *
- * Constructs the matrix @f$B_{ts} = (B_{ts+} \ B_{ts-}) \in
- * \mathbb{R^{\hat{s} \times K}}@f$, where @f$\hat{s}@f$ and K are given by
- * @p s and @p gc respectively, and
- * \f[
- *   \begin{align*}
- *   b_{t+, j \nu} &:= \sqrt{w_{\nu}} \int\limits_{\Omega}
- *   \varphi_{j}(y) \frac{\partial g}{\partial n_{\iota}}(z_{\nu}, y) dy, \\
- *   b_{t-, j \nu} &:= -\frac{\sqrt{w_{\nu}}}{\delta_{t}}\int\limits_{\Omega}
- *   \Phi_{j}(y) g(z_{\nu}, y) dy, \\
- *   \end{align*}
- * \f]
- *
- * where @f$w_{\nu}, \delta{t}, \Omega, \varphi_i, n_{\iota}, z_{\nu}@f$ and
- * the quadrature rules can obtained or calculated from @p gc, @p t and @p s.
- *
- * @param[in]  gc The @ref _greencross "greencross" object contains the problem
- *                description and several data to approximate the integral.
- * @param[in]  t  Cluster containing mapping informations for the green
- *                quadrature points.
- * @param[in]  s  Cluster containing the indices of the base functions needed to
- *                discretize the integral.
- * @param[out] B  Matrix object which will be filled with @f$A_{t}@f$. */
-HEADER_PREFIX void
-fill_green_right_greencross(pcgreencross gc,
-                            pccluster    t,
-                            pccluster    s,
-                            pamatrix     B);
-
 HEADER_PREFIX void
 assemble_amatrix_greencross(pcgreencross gc,
                             const uint   *ridx,
@@ -267,14 +227,6 @@ assemble_green_cross_leaf_clusterbasis_greencross(pcgreencross  gc,
                                                   pclusterbasis c,
                                                   uint          **pidx);
 
-HEADER_PREFIX void
-assemble_green_cross_uniform_greencross(pcgreencross gc, puniform u);
-
-HEADER_PREFIX void
-assemble_green_cross_h2matrix_greencross(pgreencross gc,
-                                         pcblock     b,
-                                         ph2matrix   H2);
-
 /** @brief Constructs a Green cross approximation of a problem given by a
  *         @ref _greencross "greencross", represented as
  *         an <a href="http://www.h2lib.org/doc/d7/ddd/group__h2matrix.html">
@@ -302,23 +254,26 @@ HEADER_PREFIX ph2matrix
 build_green_cross_h2matrix_greencross(pgreencross gc, void *eta);
 
 HEADER_PREFIX void
-addeval_h2matrix_avector_greencross(field      alpha,
-                                    pch2matrix H2,
-                                    pcavector  x,
-                                    pavector   y);
+addeval_h2matrix_avector_greencross(pgreencross gc,
+                                    field       alpha,
+                                    pch2matrix  H2,
+                                    pcavector   x,
+                                    pavector    y);
 
 HEADER_PREFIX void
-addevaltrans_h2matrix_avector_greencross(field      alpha,
-                                         pch2matrix H2,
-                                         pcavector  x,
-			                                   pavector   y);
+addevaltrans_h2matrix_avector_greencross(pgreencross gc,
+                                         field       alpha,
+                                         pch2matrix  H2,
+                                         pcavector   x,
+			                                   pavector    y);
 
 HEADER_PREFIX void
-mvm_h2matrix_avector_greencross(field      alpha,
-                                bool       h2trans,
-                                pch2matrix H2,
-                                pcavector  x,
-		                            pavector   y);
+mvm_h2matrix_avector_greencross(pgreencross gc,
+                                field       alpha,
+                                bool        h2trans,
+                                pch2matrix  H2,
+                                pcavector   x,
+		                            pavector    y);
 
 /** @} */
 

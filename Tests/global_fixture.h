@@ -33,11 +33,11 @@ static const real eps = std::numeric_limits<real>::epsilon();
 
 static real eta   = 1.0;     // Parameter for the accuracy of hierarchical
                              // clustering
-static real accur = 10e-05; // Fault tolerance
-static uint n     = 512;     // Problem size
-static uint m     = 12;      // Approximation order
+static real accur = 10e-04; // Fault tolerance
+static uint n     = 8192;     // Problem size
+static uint m     = 8;      // Approximation order
 static uint q     = 2;       // Quadratur order
-static uint res   = 24;      // Cluster resolution
+static uint res   = 256;      // Cluster resolution
 
 
 /** @brief Global fixture for the
@@ -65,6 +65,9 @@ struct global_fixture
 
   ~global_fixture()
   {
+    for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseContext(ocl_system.contexts[i]));
+
     printf("  %u vectors, %u matrices and %u clusterbasis\n",
       getactives_avector(),
       getactives_amatrix(),

@@ -9,7 +9,19 @@ ADD_LIBRARY(MasterThesis
             ocl_system.h
 )
 
-TARGET_LINK_LIBRARIES(MasterThesis ${GSL_LIBRARIES})
+################################################################################
+# Convert OpenCL source code into a string.                                    #
+################################################################################
+
+IF(WIN32)
+  # Write windows script to perform conversion.
+else(WIN32)
+  ADD_CUSTOM_TARGET(OPENCL_SRC
+                    COMMAND ${PROJECT_SOURCE_DIR}/.cmake.sh
+                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+ENDIF(WIN32)
+
+ADD_DEPENDENCIES(MasterThesis OPENCL_SRC)
 
 IF(CMAKE_EXPORT_COMPILE_COMMANDS EQUAL 1)
   ADD_CUSTOM_COMMAND(TARGET MasterThesis

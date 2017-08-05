@@ -42,7 +42,7 @@
  *                approximating the integral equation
  */
 HEADER_PREFIX pgreencross
-new_greencross_laplace3d(psurface3d s3d, uint res, uint q, uint m);
+new_greencross_laplace3d(psurface3d s3d, uint res, uint q, uint m, real accur);
 
 /** @} */
 

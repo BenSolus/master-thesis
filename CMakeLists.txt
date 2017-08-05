@@ -87,17 +87,6 @@ IF(CMAKE_COMPILER_IS_GNUCC)
 ENDIF()
 
 ################################################################################
-# Convert OpenCL source code into a string.                                    #
-################################################################################
-
-# IF(WIN32)
-#   # Write windows script to perform conversion.
-# else(WIN32)
-#   execute_process(COMMAND ${PROJECT_SOURCE_DIR}/.cmake.sh
-#                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-# ENDIF(WIN32)
-
-################################################################################
 # Adding various sub directories for compilation                               #
 ################################################################################
 
@@ -107,8 +96,5 @@ IF(DOC MATCHES ON)
   ADD_SUBDIRECTORY(Doc)
 ENDIF()
 
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
-  ENABLE_TESTING()
+ADD_SUBDIRECTORY(Tests)
 
-  ADD_SUBDIRECTORY(Tests)
-ENDIF()

@@ -182,47 +182,47 @@ BOOST_AUTO_TEST_CASE(test_green_cross)
   del_greencross(gc);
 }
 
-BOOST_AUTO_TEST_CASE(test_green_cross_mvm_laplace2d)
-{
-  pavector    x, y_gc, y_ref;
-  pcurve2d    gr;
-  pgreencross gc;
-  ph2matrix   H2;
-
-  real        rel_err;
-
-  gr = new_circle_curve2d(n, r_one / (real) 3.0);
-
-  gc = new_greencross_laplace2d(gr, res, q, m);
-
-  H2 = build_green_cross_h2matrix_greencross(gc, (void *) &eta);
-
-  x  = new_avector(n);
-  random_avector(x);
-
-  y_gc  = new_avector(n);
-  clear_avector(y_gc);
-  y_ref = new_avector(n);
-  clear_avector(y_ref);
-
-  std::cout << "\n-----------------------------------------------------------\n"
-            << "\nTesting calculating the Matrix-Vector-Product of an "
-            << "H^2-matrix resulting from a greencross \nobject describing the "
-            << "fundamental solution of the 2D Laplace equation...\n";
-
-  mvm_h2matrix_avector_greencross(1.0, false, H2, x, y_gc);
-  mvm_h2matrix_avector(1.0, false, H2, x, y_ref);
-
-  add_avector(r_minusone, y_ref, y_gc);
-
-  rel_err = norm2_avector(y_gc) / norm2_avector(y_ref);
-
-  std::cout << "\nRelative error: "
-            << rel_err;
-
-  del_avector(y_ref);
-  del_avector(y_gc);
-  del_avector(x);
-  del_h2matrix(H2);
-  del_greencross(gc);
-}
+// BOOST_AUTO_TEST_CASE(test_green_cross_mvm_laplace2d)
+// {
+//   pavector    x, y_gc, y_ref;
+//   pcurve2d    gr;
+//   pgreencross gc;
+//   ph2matrix   H2;
+//
+//   real        rel_err;
+//
+//   gr = new_circle_curve2d(n, r_one / (real) 3.0);
+//
+//   gc = new_greencross_laplace2d(gr, res, q, m);
+//
+//   H2 = build_green_cross_h2matrix_greencross(gc, (void *) &eta);
+//
+//   x  = new_avector(n);
+//   random_avector(x);
+//
+//   y_gc  = new_avector(n);
+//   clear_avector(y_gc);
+//   y_ref = new_avector(n);
+//   clear_avector(y_ref);
+//
+//   std::cout << "\n-----------------------------------------------------------\n"
+//             << "\nTesting calculating the Matrix-Vector-Product of an "
+//             << "H^2-matrix resulting from a greencross \nobject describing the "
+//             << "fundamental solution of the 2D Laplace equation...\n";
+//
+//   mvm_h2matrix_avector_greencross(1.0, false, H2, x, y_gc);
+//   mvm_h2matrix_avector(1.0, false, H2, x, y_ref);
+//
+//   add_avector(r_minusone, y_ref, y_gc);
+//
+//   rel_err = norm2_avector(y_gc) / norm2_avector(y_ref);
+//
+//   std::cout << "\nRelative error: "
+//             << rel_err;
+//
+//   del_avector(y_ref);
+//   del_avector(y_gc);
+//   del_avector(x);
+//   del_h2matrix(H2);
+//   del_greencross(gc);
+// }

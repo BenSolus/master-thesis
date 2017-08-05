@@ -37,9 +37,20 @@
 HEADER_PREFIX void
 setup_kernels_fix(const uint n,
                   const char **src_strs,
+                  const char *add_flags,
                   const uint num_kernels,
                   const char **kernel_names,
                   cl_kernel **kernels);
+
+HEADER_PREFIX void
+create_and_fill_buffer(cl_context       context,
+                       cl_mem_flags     flags,
+                       cl_command_queue queue,
+                       size_t           num,
+                       size_t           size,
+                       void             *src,
+                       cl_event         *event,
+                       cl_mem           *buffer);
 
 /** @} */
 

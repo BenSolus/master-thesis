@@ -43,3 +43,6 @@ builds
 .gcc-flags.json
 .opencl-config.json
 compile_commands.json
+
+# CLion
+.idea

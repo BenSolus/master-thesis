@@ -8,9 +8,19 @@
 
 #include <string.h>
 
+const char *default_flags = "-Werror -cl-mad-enable -cl-fast-relaxed-math"
+#ifdef USE_COMPLEX
+                            " -DUSE_COMPLEX"
+#endif
+#ifdef USE_FLOAT
+                            " -DUSE_FLOAT"
+#endif
+;
+
 void
 setup_kernels_fix(const uint n,
                   const char **src_strs,
+                  const char *add_flags,
                   const uint num_kernels,
                   const char **kernel_names,
                   cl_kernel **kernels)
@@ -18,6 +28,7 @@ setup_kernels_fix(const uint n,
   cl_uint   num_devices = ocl_system.num_devices;
   cl_uint   num_queues = ocl_system.queues_per_device;
   const char **srcs;
+  char      *flags;
   size_t    size_src_str[n + 1];
   cl_int    res;
   cl_uint    i, j, k;
@@ -39,6 +50,11 @@ setup_kernels_fix(const uint n,
     (cl_kernel *) allocmem(num_queues * num_kernels * num_devices *
                            sizeof(cl_kernel));
 
+  flags = (char *) malloc(strlen(default_flags) + strlen(add_flags) + 2);
+  strcpy(flags, default_flags);
+  strcat(flags, " ");
+  strcat(flags, add_flags);
+
   for (k = 0; k < num_devices; ++k) {
 
     program = clCreateProgramWithSource(ocl_system.contexts[k], n + 1, srcs,
@@ -48,15 +64,12 @@ setup_kernels_fix(const uint n,
     /****************************************************
      * Compile OpenCL program object.
      ****************************************************/
-      res = clBuildProgram(program, 1, ocl_system.devices + k,
-         "-Werror -cl-mad-enable -cl-fast-relaxed-math"
-#ifdef USE_COMPLEX
-         " -DUSE_COMPLEX"
-#endif
-#ifdef USE_FLOAT
-         " -DUSE_FLOAT"
-#endif
-         , NULL, NULL);
+      res = clBuildProgram(program,
+                           1,
+                           ocl_system.devices + k,
+                           flags,
+                           NULL,
+                           NULL);
 
     if (res != CL_SUCCESS) {
       cl_device_id dev_id = ocl_system.devices[k];
@@ -97,6 +110,18 @@ setup_kernels_fix(const uint n,
       abort();
     }
 
+    cl_device_id dev_id = ocl_system.devices[k];
+    size_t       len;
+    char         buffer[204800];
+
+    if(clGetProgramBuildInfo(program, dev_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len) != CL_SUCCESS)
+    {
+      printf("Build Log error %d: %s\n", res, get_error_string(res));
+      exit(1);
+    }
+
+    printf("Build Log:\n%s\n", buffer);
+
     /****************************************************
      * Build kernels
      ****************************************************/
@@ -112,5 +137,33 @@ setup_kernels_fix(const uint n,
     clReleaseProgram(program);
   }
 
+  freemem(flags);
+
   freemem(srcs);
+}
+
+void
+create_and_fill_buffer(cl_context       context,
+                       cl_mem_flags     flags,
+                       cl_command_queue queue,
+                       size_t           num,
+                       size_t           size,
+                       void             *src,
+                       cl_event         *event,
+                       cl_mem           *buffer)
+{
+  cl_int res;
+
+  *buffer = clCreateBuffer(context, flags, num * size, NULL, &res);
+
+  CL_CHECK(res);
+
+  CL_CHECK(clEnqueueWriteBuffer(queue,
+                                *buffer,
+                                false,
+                                0,
+                                num * size, src,
+                                0,
+                                NULL,
+                                event));
 }
