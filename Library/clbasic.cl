@@ -1,0 +1,140 @@
+/* ------------------------------------------------------------
+ This is the file "clbasic.cl" of this master thesis.
+ All rights reserved, Sven Christophersen 2015
+ ------------------------------------------------------------ */
+
+/**
+ * @file      cl/clbasic.cl
+ * @author    Bennet Carstensen
+ * @date      2017
+ * @copyright All rights reserved, Sven Christophersen 2015
+ */
+
+#ifndef CLBASIC_CL
+#define CLBASIC_CL
+
+/** @addtogroup basic
+ *  @{ */
+
+/*  @brief The source code to performe operations on the module
+ *         @ref basic via OpenCL as a string. */
+static const char clbasic_src[] =
+{
+  "#ifndef CLBASIC_CL\n"
+  "#define CLBASIC_CL\n"
+  "\n"
+  "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
+  "\n"
+  "#if USE_OPENCL\n"
+  "#define OCL_SYNTAX_HIGHLIGHT 1\n"
+  "#endif\n"
+  "\n"
+  "#if OCL_SYNTAX_HIGHLIGHT\n"
+  "#define __kernel\n"
+  "#define __global\n"
+  "#define __local\n"
+  "#define __constant\n"
+  "#endif\n"
+  "\n"
+  "#ifdef USE_FLOAT\n"
+  "typedef float real;\n"
+  "#else\n"
+  "typedef double real;\n"
+  "#endif\n"
+  "\n"
+  "#ifdef USE_FLOAT\n"
+  "#ifdef USE_COMPLEX\n"
+  "typedef float2 field;\n"
+  "#else\n"
+  "typedef float field;\n"
+  "#endif\n"
+  "#else\n"
+  "#ifdef USE_COMPLEX\n"
+  "typedef double2 field;\n"
+  "#else\n"
+  "typedef double field;\n"
+  "#endif\n"
+  "#endif\n"
+  "\n"
+  "#ifdef USE_FLOAT\n"
+  "#ifdef USE_COMPLEX\n"
+  "#define I ((field)(0.0f,1.0f))\n"
+  "#else\n"
+  "\n"
+  "#endif\n"
+  "#else\n"
+  "#ifdef USE_COMPLEX\n"
+  "#define I ((field)(0.0,1.0))\n"
+  "#else\n"
+  "#endif\n"
+  "#endif\n"
+  "\n"
+  "__constant static real r_zero;\n"
+  "\n"
+  "__constant static real r_one;\n"
+  "\n"
+  "__constant static real r_minusone;\n"
+  "\n"
+  "__constant static real r_two;\n"
+  "\n"
+  "__constant static field f_zero;\n"
+  "\n"
+  "__constant static field f_one;\n"
+  "\n"
+  "__constant static field f_minusone;\n"
+  "\n"
+  "#ifdef USE_FLOAT\n"
+  "__constant static real r_zero = 0.0f;\n"
+  "__constant static real r_one = 1.0f;\n"
+  "__constant static real r_minusone = -1.0f;\n"
+  "__constant static real r_two = 2.0f;\n"
+  "\n"
+  "#ifdef USE_COMPLEX\n"
+  "__constant static field f_zero = (field) (0.0f,0.0f);\n"
+  "__constant static field f_one = (field) (1.0f, 0.0f);\n"
+  "__constant static field f_minusone = (field) (-1.0f, 0.0f);\n"
+  "#else\n"
+  "__constant static field f_zero = 0.0f;\n"
+  "__constant static field f_one = 1.0f;\n"
+  "__constant static field f_minusone = -1.0f;\n"
+  "#endif\n"
+  "#else\n"
+  "__constant static real r_zero = 0.0;\n"
+  "__constant static real r_one = 1.0;\n"
+  "__constant static real r_minusone = -1.0;\n"
+  "__constant static real r_two = 2.0;\n"
+  "\n"
+  "#ifdef USE_COMPLEX\n"
+  "__constant static field f_zero = (field) (0.0, 0.0);\n"
+  "__constant static field f_one = (field) (1.0, 0.0);\n"
+  "__constant static field f_minusone = (field) (-1.0, 0.0);\n"
+  "#else\n"
+  "__constant static field f_zero = 0.0;\n"
+  "__constant static field f_one = 1.0;\n"
+  "__constant static field f_minusone = -1.0;\n"
+  "#endif\n"
+  "#endif\n"
+  "\n"
+  "\n"
+  "#ifdef USE_COMPLEX\n"
+  "inline real REAL(field z) {\n"
+  "  return z.x;\n"
+  "}\n"
+  "\n"
+  "inline real IMAG(field z) {\n"
+  "  return z.y;\n"
+  "}\n"
+  "\n"
+  "inline field cmul(field x, field y) {\n"
+  "  return (field) (x.x * y.x - x.y * y.y, x.x * y.y + x.y * y.x);\n"
+  "}\n"
+  "#else\n"
+  "\n"
+  "#endif\n"
+  "\n"
+  "#endif // CLBASIC_CL\n"
+};
+
+/** @} */
+
+#endif // CLBASIC_CL
