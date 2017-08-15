@@ -12,6 +12,14 @@
 
 #include "clbasic.cl"
 
+#ifdef USE_FLOAT
+typedef float2 real2;
+typedef float3 real3;
+#else
+typedef double3 real2;
+typedef double3 real3;
+#endif
+
 /** @brief @ref quad is just an abbreviation for the struct @ref _quad. */
 typedef struct _geom geom;
 
@@ -29,25 +37,30 @@ struct _geom
 
    global const real *v;
 
+   local        void *v_tmp;
+
    global const uint *p;
 
    global const real *g;
+
+   local        real *g_tmp;
 };
 
-pgeom
-new_geom(       const uint dim,
-                const uint n,
-         global const real *v,
-         global const uint *p,
-         global const real *g)
+void
+init_geom(       pgeom      sur,
+                 const uint dim,
+                 const uint n,
+          global const real *v,
+          global const uint *p,
+          global const real *g,
+          local        void *v_tmp,
+          local        real *g_tmp)
 {
-  geom gr;
-
-  gr.dim = dim;
-  gr.n   = n;
-  gr.v   = v;
-  gr.p   = p;
-  gr.g   = g;
-
-  return &gr;
+  sur->dim   = dim;
+  sur->n     = n;
+  sur->g     = g;
+  sur->g_tmp = g_tmp;
+  sur->v     = v;
+  sur->v_tmp = v_tmp;
+  sur->p     = p;
 }

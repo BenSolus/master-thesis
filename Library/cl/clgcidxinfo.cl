@@ -43,8 +43,6 @@ struct _gcidxinfo
 
   global const uint *cidx;
 
-  local        uint *cidx_tmp;
-
                uint xt_off;
 
   global const real *xt;
@@ -52,36 +50,31 @@ struct _gcidxinfo
   local        real *xt_tmp;
 };
 
-pgcidxinfo
-new_row_gcidxinfo(       const uint num_h2_leafs,
-                         const uint idx_off,
-                         const uint ridx_size,
-                         const uint ridx_off,
-                  global const uint *ridxs,
-                         const uint yt_off,
-                  global       real *yts,
-                  local        uint *cidx_tmp,
-                  local        real *xt_tmp)
+void
+init_row_gcidxinfo(       pgcidxinfo gcii,
+                          const uint num_h2_leafs,
+                          const uint idx_off,
+                          const uint ridx_size,
+                          const uint ridx_off,
+                   global const uint *ridxs,
+                          const uint yt_off,
+                   global       real *yts,
+                   local        real *xt_tmp)
 {
-  gcidxinfo gcii;
+  gcii->num_h2_leafs = num_h2_leafs;
+  gcii->idx_off      = idx_off;
+  gcii->ridx_size    = ridx_size;
+  gcii->ridx_off     = ridx_off;
+  gcii->ridx         = ridxs + ridx_off;
+  gcii->yt_off       = yt_off;
+  gcii->yt           = yts + yt_off;
 
-  gcii.num_h2_leafs = num_h2_leafs;
-  gcii.idx_off      = idx_off;
-  gcii.ridx_size    = ridx_size;
-  gcii.ridx_off     = ridx_off;
-  gcii.ridx         = ridxs + ridx_off;
-  gcii.yt_off       = yt_off;
-  gcii.yt           = yts + yt_off;
-
-  gcii.cidx_size    = 0;
-  gcii.cidx_off     = 0;
-  gcii.cidx         = 0;
-  gcii.cidx_tmp     = cidx_tmp;
-  gcii.xt_off       = 0;
-  gcii.xt           = 0;
-  gcii.xt_tmp       = xt_tmp;
-
-  return &gcii;
+  gcii->cidx_size    = 0;
+  gcii->cidx_off     = 0;
+  gcii->cidx         = 0;
+  gcii->xt_off       = 0;
+  gcii->xt           = 0;
+  gcii->xt_tmp       = xt_tmp;
 }
 
 void

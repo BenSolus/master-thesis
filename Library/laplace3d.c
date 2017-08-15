@@ -89,6 +89,23 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
                            gr->g,
                            NULL,
                            &gc->buf_g[i]);
+
+    for(uint j = 0; i < num_kernels; ++i)
+    {
+      for(uint k = 0; j < ocl_system.queues_per_device; ++j)
+      {
+        cl_kernel kernel = gc->gcocl->kernels[k +
+                                              i * ocl_system.queues_per_device +
+                                              j * ocl_system.num_devices *
+                                              ocl_system.queues_per_device];
+
+        CL_CHECK(clSetKernelArg(kernel, 0, sizeof(uint), &gc->dim));
+        CL_CHECK(clSetKernelArg(kernel, 1, sizeof(uint), &gc->n));
+        CL_CHECK(clSetKernelArg(kernel, 2, sizeof(cl_mem), &gc->buf_x[i]));
+        CL_CHECK(clSetKernelArg(kernel, 3, sizeof(cl_mem), &gc->buf_p[i]));
+        CL_CHECK(clSetKernelArg(kernel, 4, sizeof(cl_mem), &gc->buf_g[i]));
+      }
+    }
   }
 
   gc->n  = gr->triangles;
@@ -177,6 +194,22 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
                 0,
                 NULL,
                 NULL));
+
+    for(uint j = 0; i < num_kernels; ++i)
+    {
+      for(uint k = 0; j < ocl_system.queues_per_device; ++j)
+      {
+        cl_kernel kernel = gc->gcocl->kernels[k +
+                                              i * ocl_system.queues_per_device +
+                                              j * ocl_system.num_devices *
+                                              ocl_system.queues_per_device];
+
+        CL_CHECK(clSetKernelArg(kernel, 5, sizeof(uint), &((pbem3d) gc->bem)->sq->n_dist));
+        CL_CHECK(clSetKernelArg(kernel, 6, sizeof(cl_mem), &gc->buf_qx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 7, sizeof(cl_mem), &gc->buf_qy[i]));
+        CL_CHECK(clSetKernelArg(kernel, 8, sizeof(cl_mem), &gc->buf_w[i]));
+      }
+    }
   }
 
   /* Clean up */

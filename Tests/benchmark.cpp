@@ -22,6 +22,34 @@ static pavector y_ref;
 
 BOOST_AUTO_TEST_CASE(reference)
 {
+  for(uint i = 0; i < ocl_system.num_devices; ++i)
+  {
+    cl_ulong                 cache_size;
+    cl_device_mem_cache_type cache_type;
+
+    CL_CHECK(clGetDeviceInfo(ocl_system.devices[i],
+                             CL_DEVICE_GLOBAL_MEM_CACHE_SIZE,
+                             sizeof(cl_ulong),
+                             &cache_size,
+                             NULL));
+
+    CL_CHECK(clGetDeviceInfo(ocl_system.devices[i],
+                             CL_DEVICE_GLOBAL_MEM_CACHE_TYPE,
+                             sizeof(cl_device_mem_cache_type),
+                             &cache_type,
+                             NULL));
+
+    printf("Device %u: Global memory cache of type %s with %lu bytes in size\n",
+           i,
+           cache_type == CL_NONE
+             ? "CL_NONE"
+             : cache_type == CL_READ_ONLY_CACHE
+               ? "CL_READ_ONLY_CACHE"
+               : cache_type == CL_READ_WRITE_CACHE
+                 ? "CL_READ_WRITE_CACHE"
+                 : "UNKNOWN",
+           cache_size);
+  }
   pmacrosurface3d mg;
   psurface3d      gr;
 
@@ -29,9 +57,16 @@ BOOST_AUTO_TEST_CASE(reference)
 
   gr      = build_from_macrosurface3d_surface3d(mg, REAL_SQRT((real) n * 0.125));
 
-  gc      = new_greencross_laplace3d(gr, res, q, m, 10e-15);
+  gc      = new_greencross_laplace3d(gr, res, q, m, aca);
+
+  printf("Cluster resolution: %u\n", res);
 
   H2      = build_green_cross_h2matrix_greencross(gc, (void *) &eta);
+
+  printf("H2-Matrix): %u blocks\n"
+         "            %.5f GB\n",
+         H2->desc,
+         getsize_h2matrix(H2) / (1024.0 * 1024.0 * 1024.0));
 
   x       = new_avector(n);
   random_avector(x);
@@ -45,7 +80,7 @@ BOOST_AUTO_TEST_CASE(reference)
 
   auto end(std::chrono::high_resolution_clock::now());
 
-  std::cout << "Reference H2-MVM: "
+  std::cout << "Reference H2-MVM:  "
             << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()
             << " ns\n";
 

@@ -1,4 +1,6 @@
 ADD_LIBRARY(MasterThesis
+            gcopencl.c
+            gcopencl.h
             greencross.c
             greencross.h
             laplace2d.c

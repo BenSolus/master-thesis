@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(test_green_cross)
 
   gr      = build_from_macrosurface3d_surface3d(mg, REAL_SQRT((real) n * 0.125));
 
-  gc      = new_greencross_laplace3d(gr, res, q, m, 10e-15);
+  gc      = new_greencross_laplace3d(gr, res, q, m, aca);
 
   H2      = build_green_cross_h2matrix_greencross(gc, (void *) &eta);
 
@@ -186,13 +186,13 @@ BOOST_AUTO_TEST_CASE(test_green_cross)
             << "\nRelative error: "
             << std::scientific << rel_err;
 
-  if(rel_err < accur)
+  if(rel_err < std::numeric_limits<float>::epsilon())
     std::cout << " (Test succeeded)\n\n";
   else
     std::cout << "\n\n";
 
   if(sizeof(real) == 8) // real = double
-    BOOST_CHECK_EQUAL(rel_err < accur, true);
+    BOOST_CHECK_EQUAL(rel_err < std::numeric_limits<float>::epsilon(), true);
 
   // TODO: Error tolerance for real = float
 

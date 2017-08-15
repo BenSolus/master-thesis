@@ -32,15 +32,15 @@ struct _quad
   constant real *w;
 };
 
-pquad
-new_quad(const uint nq, constant real *qx, constant real *qy, constant real *w)
+void
+init_quad(         pquad      q,
+                   const uint nq,
+          constant       real *qx,
+          constant       real *qy,
+          constant       real *w)
 {
-  quad q;
-
-  q.nq = nq;
-  q.qx = qx;
-  q.qy = qy;
-  q.w  = w;
-
-  return &q;
+  q->nq = nq;
+  q->qx = qx;
+  q->qy = qy;
+  q->w  = w;
 }

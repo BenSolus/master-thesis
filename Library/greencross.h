@@ -13,6 +13,7 @@
 #ifndef GREENCROSS_H
 #define GREENCROSS_H
 
+#include "gcopencl.h"
 #include "h2matrix.h"
 
 #ifdef __APPLE__
@@ -36,16 +37,6 @@ typedef greencross *pgreencross;
 
 /** @brief Pointer to a constant @ref _greencross "greencross" object. */
 typedef const greencross *pcgreencross;
-
-/** @brief @ref gcopencl is just an abbreviation for the struct @ref
-                _gcopencl. */
-typedef struct _gcopencl gcopencl;
-
-/** @brief Pointer to a @ref gcopencl object. */
-typedef gcopencl *pgcopencl;
-
-/** @brief Pointer to a constant @ref gcopencl object. */
-typedef const gcopencl *pcgcopencl;
 
 /** @brief @ref gcopencl is just an abbreviation for the struct @ref
                 _gcopencl. */

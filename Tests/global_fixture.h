@@ -33,12 +33,11 @@ static const real eps = std::numeric_limits<real>::epsilon();
 
 static real eta   = 1.0;     // Parameter for the accuracy of hierarchical
                              // clustering
-static real accur = 10e-04; // Fault tolerance
-static uint n     = 8192;     // Problem size
-static uint m     = 8;      // Approximation order
+static uint n     = 8192;    // Problem size
+static uint m     = 16;       // Approximation order
 static uint q     = 2;       // Quadratur order
-static uint res   = 256;      // Cluster resolution
-
+static uint res   = 8 * m * m;     // Cluster resolution
+static real aca   = 10e-4;   // ACA resolution
 
 /** @brief Global fixture for the
   *        <a href="https://boost.org/libs/test">Boost Test Library</a>
