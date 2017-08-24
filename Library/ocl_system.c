@@ -167,3 +167,34 @@ create_and_fill_buffer(cl_context       context,
                                 NULL,
                                 event));
 }
+
+cl_kernel*
+delete_kernels(const uint num_kernels, cl_kernel** kernels)
+{
+  if(*kernels != NULL)
+  {
+    for(uint k = 0; k < ocl_system.num_devices; ++k)
+    {
+      for (uint i = 0; i < num_kernels; ++i)
+      {
+        for (uint j = 0; j < ocl_system.queues_per_device; ++j)
+        {
+          if(*kernels[j + k * ocl_system.queues_per_device +
+                      i * ocl_system.num_devices *
+                      ocl_system.queues_per_device] != NULL)
+          {
+            CL_CHECK(clReleaseKernel
+                       (*kernels[j + k * ocl_system.queues_per_device +
+                                 i * ocl_system.num_devices *
+                                 ocl_system.queues_per_device]));
+          }
+        }
+      }
+    }
+
+    freemem(*kernels);
+    *kernels = NULL;
+  }
+
+  return *kernels;
+}
