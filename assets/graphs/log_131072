@@ -1,0 +1,101 @@
+Machine epsilon: 2.22045e-16
+
+Problem size: 131072
+
+Cluster resolution: 64
+
+Number of tests for benchmarks performed: 100
+
+3 platforms found:
+  platform[0]:	"Intel(R) OpenCL"
+		"OpenCL 1.2 LINUX"
+  platform[1]:	"NVIDIA CUDA"
+		"OpenCL 1.1 CUDA 7.0.28"
+    device[0]:	"Tesla K20Xm"
+    device[1]:	"Tesla K20Xm"
+    device[2]:	"Tesla K20Xm"
+    device[3]:	"Tesla K20Xm"
+  platform[2]:	"Intel(R) OpenCL"
+		"OpenCL 1.2 LINUX"
+Using device "Tesla K20Xm"
+Using device "Tesla K20Xm"
+Using device "Tesla K20Xm"
+Using device "Tesla K20Xm"
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+Number of row clusters: 5904
+Maximum number of H^2-matrix-leafs per row cluster: 63
+Build Log:
+
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function 'fastaddeval_h2matrix_avector_2' for 'sm_35'
+ptxas info    : Function properties for fastaddeval_h2matrix_avector_2
+ptxas         .     0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 92 registers, 2024 bytes smem, 416 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : Compiling entry function 'fastaddeval_h2matrix_avector_0' for 'sm_35'
+ptxas info    : Function properties for fastaddeval_h2matrix_avector_0
+ptxas         .     0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 92 registers, 3616 bytes smem, 416 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : Compiling entry function 'fastaddeval_h2matrix_avector_1' for 'sm_35'
+ptxas info    : Function properties for fastaddeval_h2matrix_avector_1
+ptxas         .     0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 93 registers, 1272 bytes smem, 416 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : Compiling entry function 'fastaddeval_h2matrix_avector_x' for 'sm_35'
+ptxas info    : Function properties for fastaddeval_h2matrix_avector_x
+ptxas         .     0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 96 registers, 14144 bytes smem, 416 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : Compiling entry function 'fastaddeval_h2matrix_avector_3' for 'sm_35'
+ptxas info    : Function properties for fastaddeval_h2matrix_avector_3
+ptxas         .     0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 92 registers, 1824 bytes smem, 416 bytes cmem[0], 8 bytes cmem[2]
+Build Log:
+
+
+Build Log:
+
+
+Build Log:
+
+
+
+H2-Matrix: 346197 blocks
+             size: 1.8384358063 GB
+             farfield: 0.4447510540 GB
+             neafield: 1.3064798713 GB
+
+OpenCL informations:
+  farfield: 0.0052182451 GB
+Reference H2-MVM:
+  762 ms
+
+Reference fastaddeval:
+  639.6 ms
+
+farfield greencross:
+  Writing xt to devices:
+    0.9 ms
+
+  farfield (GPU):
+    536.6 ms
+
+  nearfield (CPU):
+    438.7 ms
+
+  farfield (CPU):
+    228 ms
+
+  Reading yt from devices:
+    203.9 ms
+
+Greencross H2-MVM:
+  1303.1 ms, rel. error: 1.309225e-08

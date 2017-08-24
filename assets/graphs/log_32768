@@ -1,0 +1,81 @@
+Machine epsilon: 2.22045e-16
+
+Problem size: 32768
+
+Cluster resolution: 64
+
+Number of tests for benchmarks performed: 100
+
+3 platforms found:
+  platform[0]:	"Intel(R) OpenCL"
+		"OpenCL 1.2 LINUX"
+  platform[1]:	"NVIDIA CUDA"
+		"OpenCL 1.1 CUDA 7.0.28"
+    device[0]:	"Tesla K20Xm"
+    device[1]:	"Tesla K20Xm"
+    device[2]:	"Tesla K20Xm"
+    device[3]:	"Tesla K20Xm"
+  platform[2]:	"Intel(R) OpenCL"
+		"OpenCL 1.2 LINUX"
+Using device "Tesla K20Xm"
+Using device "Tesla K20Xm"
+Using device "Tesla K20Xm"
+Using device "Tesla K20Xm"
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+
+Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
+Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+Number of row clusters: 1488
+Maximum number of H^2-matrix-leafs per row cluster: 46
+Build Log:
+
+
+Build Log:
+
+
+Build Log:
+
+
+Build Log:
+
+
+
+H2-Matrix: 84373 blocks
+             size: 0.4453484192 GB
+             farfield: 0.1015820801 GB
+             neafield: 0.3214820921 GB
+
+OpenCL informations:
+  farfield: 0.0012257360 GB
+Reference H2-MVM:
+  183.8 ms
+
+Reference fastaddeval:
+  130.3 ms
+
+farfield greencross:
+  Writing xt to devices:
+    0.2 ms
+
+  farfield (GPU):
+    136.3 ms
+
+  nearfield (CPU):
+    95.4 ms
+
+  farfield (CPU):
+    41.3 ms
+
+  Reading yt from devices:
+    60 ms
+
+Greencross H2-MVM:
+  331.5 ms, rel. error: 9.679343e-09

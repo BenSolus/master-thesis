@@ -148,30 +148,6 @@ mapping a vector to the first $$\gamma$$-th selected pivot elements. Interpeted
 as an algebraic interpolation, the pivot elements play the role of interpolation
 points.
 
-<!-- For an equivalent of Lagrange polynomials, we first need to realize that we
-can interprete $$L$$ and $$U$$ as an array of column and row vectors,
-respectively:
-
-$$
-  \begin{align*}
-    L = \left ( l^{(1)} \cdots l^{(k)} \right )
-      &= \left (
-    \begin{pmatrix} l_{1, j_{1}} \\ \vdots \\ \vdots \\ l_{k, j_{1}} \end{pmatrix}
-    \begin{pmatrix} 0 \\ l_{2, j_{2}} \\ \vdots \\ l_{k, j_{2}} \end{pmatrix}
-    \cdots
-    \begin{pmatrix} 0 \\ \vdots \\ 0 \\ l_{k, j_{k}} \end{pmatrix}
-    \right ) \\
-
-
-    U = \begin{pmatrix} u^{(1)} \\ \vdots \\ u^{(k)} \end{pmatrix}
-      &= \begin{pmatrix}
-          ( & u_{i_{1}, 1} & \cdots & \cdots & u_{i_{1}, k} & ) \\
-          ( & 0 & u_{i_{2}, 2} & \cdots & u_{i_{2}, k} & ) \\
-          ( & 0 & \cdots & 0 & u_{i_{k}, k} & )
-        \end{pmatrix}.
-  \end{align*}
-$$ -->
-
 For an equivalent of Lagrange polynomials, we first need to realize that the
 algorithm effectively sets all entries of the $$i$$-th row and
 $$j$$-th column, $$i \in \{ i_1, \cdots, i_{\gamma} \}, j \in
@@ -188,7 +164,33 @@ $$
     0_{\gamma \times \gamma} & 0_{\gamma \times (m - \gamma)} \\
     0_{(n - \gamma) \times \gamma} & \hat{X}
   \end{pmatrix} \qquad \hat{X} \in
-  \mathbb{R}^{(n - \gamma) \times (m - \gamma)}  
+  \mathbb{R}^{(n - \gamma) \times (m - \gamma)}.
+$$
+
+Interpreting $$L$$ and $$U$$ as an array of column and row vectors,
+respectively results in
+
+<!-- TODO: Either get a the general representation of LU for non-square
+           matrices or we limit ourselve to the square case.-->
+
+$$
+  \begin{align*}
+    L = \left ( l^{(1)} \cdots l^{(k)} \right )
+      &= \left (
+    \begin{pmatrix} l_{1, j_{1}} \\ \vdots \\ \vdots \\ l_{k, j_{1}} \end{pmatrix}
+    \begin{pmatrix} 0 \\ l_{2, j_{2}} \\ \vdots \\ l_{k, j_{2}} \end{pmatrix}
+    \begin{pmatrix} \cdots \\ \ddots \\ \ddots \\ \cdots \end{pmatrix}
+    \begin{pmatrix} 0 \\ \vdots \\ 0 \\ l_{k, j_{k}} \end{pmatrix}
+    \right ), \\
+
+    U = \begin{pmatrix} u^{(1)} \\ \vdots \\ u^{(k)} \end{pmatrix}
+      &= \begin{pmatrix}
+          ( & u_{i_{1}, 1} & \cdots & \cdots & u_{i_{1}, k} & ) \\
+          ( & 0 & u_{i_{2}, 2} & \cdots & u_{i_{2}, k} & ) \\
+          ( & \vdots & \ddots & \ddots & \vdots & ) \\
+          ( & 0 & \cdots & 0 & u_{i_{k}, k} & )
+        \end{pmatrix},
+  \end{align*}
 $$
 
 and thus with
@@ -202,14 +204,14 @@ we can describe the entries of $$PL \in \mathbb{R}^{k \times k}$$ by
 
 $$
   (PL)_{\nu \mu} = l_{i_{\nu}}^{(\mu)} \qquad \text{for all } \nu, \mu \in
-  {1, \cdots, k}.
+  \{ 1, \cdots, k \}.
 $$
 
 This matrix is lower triangular and due to our choice of scaling, the diagonal
 entries are equal to one, ergo the matrix is also invertible, resulting in
 
 $$
-  V := L(PL)^{-1} \in \mathbb{\mathcal{I} \times k}
+  V := L(PL)^{-1} \in \mathbb{\mathcal{I}} \times k
 $$
 
 being well-defined. The columns are now acting as the Lagrange polynomials, and
