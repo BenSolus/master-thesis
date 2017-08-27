@@ -4,7 +4,7 @@ Problem size: 32768
 
 Cluster resolution: 64
 
-Number of tests for benchmarks performed: 100
+Number of tests for benchmarks performed: 1000
 
 3 platforms found:
   platform[0]:	"Intel(R) OpenCL"
@@ -33,49 +33,36 @@ Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
 
 Tesla K20Xm: CL_DEVICE_LOCAL_MEM_SIZE: 49151
 Tesla K20Xm: CL_DEVICE_MAX_COMPUTE_UNITS: 14
+
 Number of row clusters: 1488
+
 Maximum number of H^2-matrix-leafs per row cluster: 46
 Build Log:
 
 
+0
 Build Log:
 
 
+1
 Build Log:
 
 
+2
 Build Log:
 
 
+3
 
 H2-Matrix: 84373 blocks
-             size: 0.4453484192 GB
-             farfield: 0.1015820801 GB
-             neafield: 0.3214820921 GB
+             size: 0.44535 GB
+             farfield: 0.10158 GB
+             neafield: 0.32148 GB
 
 OpenCL informations:
-  farfield: 0.0012257360 GB
+  farfield: 1.25515 MB
 Reference H2-MVM:
-  183.8 ms
-
-Reference fastaddeval:
-  130.3 ms
-
-farfield greencross:
-  Writing xt to devices:
-    0.2 ms
-
-  farfield (GPU):
-    136.3 ms
-
-  nearfield (CPU):
-    95.4 ms
-
-  farfield (CPU):
-    41.3 ms
-
-  Reading yt from devices:
-    60 ms
+  186.94 ms
 
 Greencross H2-MVM:
-  331.5 ms, rel. error: 9.679343e-09
+  287.37 ms, rel. error: 9.679343e-09
