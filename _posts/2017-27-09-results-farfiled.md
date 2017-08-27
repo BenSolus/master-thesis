@@ -2,8 +2,8 @@
 layout:    post
 author:    Bennet Carstensen
 title:     First results - Substituting the farfield
-date:      August 24, 2017
-permalink: /blog/results/nearfield
+date:      August 27, 2017
+permalink: /blog/results/farfield
 comments:  true
 ---
 
