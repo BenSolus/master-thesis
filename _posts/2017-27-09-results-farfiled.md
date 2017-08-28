@@ -36,7 +36,7 @@ differrent dimensions:
 
 {:.center}
 **Figure 1**: Memory requirements of $$\mathcal{H}^2$$-matrices and their
-proportion of neafield and farfield matrices.
+proportion of neafield and farfield coupling matrices.
 
 For our current algorithm, we concentrate on the farfield part of
 $$\mathcal{H}^2$$-matrix which occupies the 20-26% of memory we want save.
@@ -50,7 +50,7 @@ multiplying them with the input vector.
 
 {:.center}
 **Figure 2**: Memory requirements for saving the coupling matrices compared to
-              those needed to computing those matrices.
+              the informations needed to compute those matrices.
 
 The information needed to compute the coupling matrices and to perform the
 follwing matrix vector multiplication, including the
@@ -78,9 +78,8 @@ GPU accelerator.
 
 {:.center}
 **Figure 2**: Time needed to perform the standard $$\mathcal{H}^2$$-matrix
-              vector multiplication  
-              compared to same task while computing the farfield matrices and
-              their part of the product on the GPU.
+              vector multiplication compared to the same task while computing
+              the farfield matrices and their part of the product on the GPU.
 
 As already mentioned, computing the coupling matrices on-the-fly, even when done
 on the GPU, performes slightly worse than solely performing the matrix vector

@@ -41,5 +41,5 @@ set style fill solid
 
 set boxwidth 0.75
 
-plot 'memory.csv' u 3:xtic(1) t 'farfield matrices' ls 4, \
+plot 'memory.csv' u 3:xtic(1) t 'farfield coupling matrices' ls 4, \
      ''           u 5 t         'farfield informations' ls 2
