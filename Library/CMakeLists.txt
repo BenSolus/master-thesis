@@ -9,7 +9,7 @@ ADD_LIBRARY(MasterThesis
             laplace3d.h
             ocl_system.c
             ocl_system.h
-)
+  oclworkpkgs.h oclworkpkgs.c)
 
 ################################################################################
 # Convert OpenCL source code into a string.                                    #

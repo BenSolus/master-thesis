@@ -29,57 +29,35 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
   pclustergeometry cg;
   pgreencross      gc;
 
-  cl_int           err = 0;
-
   /* Allocate and init object. */
 
   gc = (pgreencross) allocmem(sizeof(greencross));
 
   init_greencross(gc, 3);
 
-  /* Set and get cluster from geometry. */
-
   gc->geom = (void *) gr;
+
+  /* Upload geometry data to OpenCL devices. */
 
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
-    gc->buf_x[i] = clCreateBuffer(ocl_system.contexts[i],
-                                  CL_MEM_READ_ONLY,
-                                  ocl_system.max_package_size,
-                                  NULL,
-                                  &err);
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           3 * gr->vertices,
+                           sizeof(real),
+                           gr->x,
+                           NULL,
+                           &gc->buf_x[i]);
 
-    CL_CHECK(err);
-
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->buf_x[i],
-                false,
-                0,
-                3 * gr->vertices * sizeof(real),
-                gr->x,
-                0,
-                NULL,
-                NULL));
-
-    gc->buf_p[i] = clCreateBuffer(ocl_system.contexts[i],
-                                  CL_MEM_READ_ONLY,
-                                  3 * gr->triangles * sizeof(uint),
-                                  NULL,
-                                  &err);
-
-    CL_CHECK(err);
-
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->buf_p[i],
-                false,
-                0,
-                3 * gr->triangles * sizeof(uint),
-                gr->t,
-                0,
-                NULL,
-                &gc->event_p[i]));
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           3 * gr->triangles,
+                           sizeof(uint),
+                           gr->t,
+                           NULL,
+                           &gc->buf_p[i]);
 
     create_and_fill_buffer(ocl_system.contexts[i],
                            CL_MEM_READ_ONLY,
@@ -90,22 +68,6 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
                            NULL,
                            &gc->buf_g[i]);
 
-    for(uint j = 0; i < num_kernels; ++i)
-    {
-      for(uint k = 0; j < ocl_system.queues_per_device; ++j)
-      {
-        cl_kernel kernel = gc->gcocl->kernels[k +
-                                              i * ocl_system.queues_per_device +
-                                              j * ocl_system.num_devices *
-                                              ocl_system.queues_per_device];
-
-        CL_CHECK(clSetKernelArg(kernel, 0, sizeof(uint), &gc->dim));
-        CL_CHECK(clSetKernelArg(kernel, 1, sizeof(uint), &gc->n));
-        CL_CHECK(clSetKernelArg(kernel, 2, sizeof(cl_mem), &gc->buf_x[i]));
-        CL_CHECK(clSetKernelArg(kernel, 3, sizeof(cl_mem), &gc->buf_p[i]));
-        CL_CHECK(clSetKernelArg(kernel, 4, sizeof(cl_mem), &gc->buf_g[i]));
-      }
-    }
   }
 
   gc->n  = gr->triangles;
@@ -119,6 +81,8 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
                                           q + 2,
                                           BASIS_CONSTANT_BEM3D,
                                           BASIS_CONSTANT_BEM3D);
+
+  /* Set and get cluster(basis) from geometry. */
 
   cg     = build_bem3d_const_clustergeometry((pbem3d) gc->bem, &gc->idx);
 
@@ -138,78 +102,37 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
                                         accur,
                                         build_bem3d_cube_quadpoints);
 
+  /* Upload quadrature data to OpenCL devices. */
+
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
-    gc->buf_qx[i] = clCreateBuffer(ocl_system.contexts[i],
-                                   CL_MEM_READ_ONLY,
-                                   2 * ((pbem3d) gc->bem)->sq->n_dist * sizeof(real),
-                                   NULL,
-                                   &err);
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           2 * ((pbem3d) gc->bem)->sq->n_dist,
+                           sizeof(real),
+                           ((pbem3d) gc->bem)->sq->x_dist,
+                           NULL,
+                           &gc->buf_qx[i]);
 
-    CL_CHECK(err);
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           2 * ((pbem3d) gc->bem)->sq->n_dist,
+                           sizeof(real),
+                           ((pbem3d) gc->bem)->sq->y_dist,
+                           NULL,
+                           &gc->buf_qy[i]);
 
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->buf_qx[i],
-                false,
-                0,
-                2 * ((pbem3d) gc->bem)->sq->n_dist * sizeof(real),
-                ((pbem3d) gc->bem)->sq->x_dist,
-                0,
-                NULL,
-                NULL));
-
-    gc->buf_qy[i] = clCreateBuffer(ocl_system.contexts[i],
-                                   CL_MEM_READ_ONLY,
-                                   2 * ((pbem3d) gc->bem)->sq->n_dist * sizeof(real),
-                                   NULL,
-                                   &err);
-
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->buf_qy[i],
-                false,
-                0,
-                2 * ((pbem3d) gc->bem)->sq->n_dist * sizeof(real),
-                ((pbem3d) gc->bem)->sq->y_dist,
-                0,
-                NULL,
-                NULL));
-
-    gc->buf_w[i]  = clCreateBuffer(ocl_system.contexts[i],
-                                   CL_MEM_READ_ONLY,
-                                   ((pbem3d) gc->bem)->sq->n_dist * sizeof(real),
-                                   NULL,
-                                   &err);
-
-    CL_CHECK(err);
-
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->buf_w[i],
-                false,
-                0,
-                ((pbem3d) gc->bem)->sq->n_dist * sizeof(real),
-                ((pbem3d) gc->bem)->sq->w_dist + 9 * ((pbem3d) gc->bem)->sq->n_dist,
-                0,
-                NULL,
-                NULL));
-
-    for(uint j = 0; i < num_kernels; ++i)
-    {
-      for(uint k = 0; j < ocl_system.queues_per_device; ++j)
-      {
-        cl_kernel kernel = gc->gcocl->kernels[k +
-                                              i * ocl_system.queues_per_device +
-                                              j * ocl_system.num_devices *
-                                              ocl_system.queues_per_device];
-
-        CL_CHECK(clSetKernelArg(kernel, 5, sizeof(uint), &((pbem3d) gc->bem)->sq->n_dist));
-        CL_CHECK(clSetKernelArg(kernel, 6, sizeof(cl_mem), &gc->buf_qx[i]));
-        CL_CHECK(clSetKernelArg(kernel, 7, sizeof(cl_mem), &gc->buf_qy[i]));
-        CL_CHECK(clSetKernelArg(kernel, 8, sizeof(cl_mem), &gc->buf_w[i]));
-      }
-    }
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           ((pbem3d) gc->bem)->sq->n_dist,
+                           sizeof(real),
+                           ((pbem3d) gc->bem)->sq->w_dist +
+                           9 * ((pbem3d) gc->bem)->sq->n_dist,
+                           NULL,
+                           &gc->buf_w[i]);
   }
 
   /* Clean up */

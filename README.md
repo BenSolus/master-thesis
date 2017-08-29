@@ -12,10 +12,8 @@ building on the implementation of the [Green cross approximation for boundary el
 # Dependencies
 
 *   [Cairo](https://cairographics.org/) (1.14.10+)
-*   [freeglut](http://freeglut.sourceforge.net/) (3.0.0+)
 *   [H2Lib](http://www.h2lib.org/) (3.0+)
 *   [LAPACK](http://www.netlib.org/lapack/) (3.7.0+)
-*   [OpenGL](https://www.opengl.org/) (NVIDIA 381.22+)
 *   [OpenMP](http://www.openmp.org/) (gcc 7.1.1+)
 *   [OpenCL](https://www.khronos.org/opencl/) (NVIDIA 1.2+)
 

@@ -52,6 +52,9 @@ create_and_fill_buffer(cl_context       context,
                        cl_event         *event,
                        cl_mem           *buffer);
 
+HEADER_PREFIX cl_kernel*
+delete_kernels(const uint num_kernels, cl_kernel** kernels);
+
 /** @} */
 
 #endif // OCL_SYSTEM_H

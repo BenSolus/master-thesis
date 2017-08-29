@@ -15,16 +15,11 @@
 
 #include "gcopencl.h"
 #include "h2matrix.h"
-
-#ifdef __APPLE__
-    #include "OpenCL/opencl.h"
-#else
-    #include "CL/cl.h"
-#endif
+#include "oclworkpkgs.h"
 
 /** @defgroup greencross greencross
- *  @brief Algorithms and functions to perform the Green cross approximation
- *         method.
+ *  @brief Algorithms and functions to solve problems descriebed by the
+ *         Green cross approximation method.
  *
  * @{*/
 
@@ -38,21 +33,13 @@ typedef greencross *pgreencross;
 /** @brief Pointer to a constant @ref _greencross "greencross" object. */
 typedef const greencross *pcgreencross;
 
-/** @brief @ref gcopencl is just an abbreviation for the struct @ref
-                _gcopencl. */
-typedef struct _oclwork oclwork;
-
-/** @brief Pointer to a @ref gcopencl object. */
-typedef oclwork *poclwork;
-
-/** @brief Pointer to a constant @ref gcopencl object. */
-typedef const oclwork *pcoclwork;
-
 static const uint greencross_min_dim = 2;
 static const uint greencross_max_dim = 3;
 
+static const size_t num_kernels = 1;
+
 /** @brief Main container object for performing the Green cross approximation
- *         method. */
+ *         (GCA) method. */
 struct _greencross
 {
   /** @brief Dimension of the problem. */
@@ -61,12 +48,17 @@ struct _greencross
   /** @brief Geometry of the problem. */
   void *geom;
 
+  /** @brief OpenCL buffer objects for the vertices coordinates. */
   cl_mem *buf_x;
 
+  /** @brief OpenCL buffer objects for the vertices indices of the polygons. */
   cl_mem *buf_p;
 
+  /** @brief OpenCL events describing the status of loading the vertices indices
+    *        to the devices. */
   cl_event *event_p;
 
+  /** @brief OpenCL buffer objects for the Gram determinants of the polygons. */
   cl_mem *buf_g;
 
   /** @brief Number of basis functions */
@@ -78,31 +70,51 @@ struct _greencross
   /** @brief Approximation order of Green's formula. */
   uint m;
 
+  /** @brief Inner dimension of Green's second identity as a low-rank
+    *        approximation of a matrix. */
   uint K;
 
-  real accur;
+  /** @brief Accuracy of ACA relative to the input matrix. */
+  real aca_accur;
 
-  /** @brief Row cluster */
+  /** @brief Row cluster for the GCA method. */
   pcluster rc;
 
-  /** @brief Column cluster */
+  /** @brief Column cluster for the GCA method. */
   pcluster cc;
 
+  /** @brief Row clusterbasis for the GCA method. */
   pclusterbasis rb;
 
+  /** @brief Column clusterbasis for the GCA method. */
   pclusterbasis cb;
 
+  /** @brief Module to construct oundary element method problems. */
   void *bem;
 
+  /** @brief OpenCL buffer objects for the quadratur points in the
+    *        x-Coordinate. */
   cl_mem *buf_qx;
 
+  /** @brief OpenCL buffer objects for the quadratur points in the
+    *        y-Coordinate. */
   cl_mem *buf_qy;
 
+  /** @brief OpenCL buffer objects for the quadratur weights. */
   cl_mem *buf_w;
 
+  cl_kernel *kernels;
+
+  /** @brief Set of informations for OpenCL devices to calculate the MVM part
+    *        of leaf-matrices. */
   pgcopencl gcocl;
 
-  poclwork  oclwrk;
+  uint      num_levels;
+
+  pgcopencl *gcocl_t;
+
+  /** @brief Object which distributes the work described in @p gcocl. */
+  poclworkpgs  oclwrk;
 };
 
 /** @brief Initilize components related to the dimension of the problem and
@@ -245,11 +257,30 @@ HEADER_PREFIX ph2matrix
 build_green_cross_h2matrix_greencross(pgreencross gc, void *eta);
 
 HEADER_PREFIX void
+fastaddeval_nearfield_h2matrix_avector_greencross(field      alpha,
+                                                  pch2matrix h2,
+                                                  pavector   xt,
+                                                  pavector   yt);
+
+HEADER_PREFIX void
+fastaddeval_farfield_h2matrix_avectors(field      alpha,
+                                       pch2matrix h2,
+                                       pavector   xt,
+                                       pavector   yt);
+
+HEADER_PREFIX void
+fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,
+                                                      field        alpha,
+                                                      pavector     xt,
+                                                      pavector     yt);
+
+HEADER_PREFIX void
 addeval_h2matrix_avector_greencross(pgreencross gc,
                                     field       alpha,
                                     pch2matrix  H2,
                                     pcavector   x,
-                                    pavector    y);
+                                    pavector    y,
+                                    uint        kernel_idx);
 
 HEADER_PREFIX void
 addevaltrans_h2matrix_avector_greencross(pgreencross gc,
@@ -264,7 +295,8 @@ mvm_h2matrix_avector_greencross(pgreencross gc,
                                 bool        h2trans,
                                 pch2matrix  H2,
                                 pcavector   x,
-		                            pavector    y);
+		                            pavector    y,
+                                uint        kernel_idx);
 
 /** @} */
 

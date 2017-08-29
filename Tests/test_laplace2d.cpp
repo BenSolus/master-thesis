@@ -14,6 +14,8 @@ using namespace boost::unit_test::framework;
 
 BOOST_GLOBAL_FIXTURE(global_fixture);
 
+static const real accur = 10e-04;
+
 BOOST_AUTO_TEST_CASE(test_full)
 {
   pamatrix    Gbem, Ggc;

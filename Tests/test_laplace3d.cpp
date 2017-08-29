@@ -14,6 +14,8 @@
 
 using namespace boost::unit_test::framework;
 
+static const real accur = 10e-04;
+
 BOOST_GLOBAL_FIXTURE(global_fixture);
 
 // BOOST_AUTO_TEST_CASE(test_full)
@@ -219,7 +221,7 @@ BOOST_AUTO_TEST_CASE(test_green_cross_mvm)
             << "H^2-matrix resulting from a greencross \nobject describing the "
             << "fundamental solution of the 3D Laplace equation...\n";
 
-  mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y_gc);
+  mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y_gc, 0);
   mvm_h2matrix_avector(1.0, false, H2, x, y_ref);
 
   add_avector(r_minusone, y_ref, y_gc);

@@ -31,13 +31,14 @@ using namespace boost::unit_test::framework;
 
 static const real eps = std::numeric_limits<real>::epsilon();
 
-static real eta   = 1.0;     // Parameter for the accuracy of hierarchical
-                             // clustering
-static uint n     = 8192;    // Problem size
-static uint m     = 16;       // Approximation order
-static uint q     = 2;       // Quadratur order
-static uint res   = 8 * m * m;     // Cluster resolution
-static real aca   = 10e-4;   // ACA resolution
+static real eta   = 2.0;       // Parameter for the accuracy of hierarchical
+                               // clustering
+static uint n     = 8192;      // Problem size
+static uint m     = 8;         // Approximation order
+static uint q     = 3;         // Quadratur order
+static uint res   = m * m; // Cluster resolution
+static real aca   = 10e-4;     // ACA resolution
+static uint tests = 100;
 
 /** @brief Global fixture for the
   *        <a href="https://boost.org/libs/test">Boost Test Library</a>
@@ -50,7 +51,15 @@ struct global_fixture
   {
     init_h2lib(&master_test_suite().argc, &master_test_suite().argv);
 
-    std::cout << "\nMachine epsilon: " << eps << "\n\n";
+    std::cout << "\nMachine epsilon: " << eps << "\n";
+
+    std::cout << "\nProblem size: " << n << "\n";
+
+    std::cout << "\nCluster resolution: " << res << "\n";
+
+    std::cout << "\nNumber of tests for benchmarks performed: "
+              << tests
+              << "\n\n";
 
     cl_device_id *devices;
     cl_uint      ndevices;

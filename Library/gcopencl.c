@@ -14,14 +14,6 @@
 
 #include "ocl_system.h"
 
-#include "clgreencross.cl"
-#include "clgeom.cl"
-#include "clquad.cl"
-#include "clgcidxinfo.cl"
-
-const char *src_code_strs[] = { clgeom_src, clquad_src, clgcidxinfo_src, clgreencross_src };
-const char *kernel_names[1]  = { "fastaddeval_h2matrix_avector_3" };
-
 void
 init_gcopencl(pgcopencl gcocl)
 {
@@ -29,11 +21,12 @@ init_gcopencl(pgcopencl gcocl)
 
   cl_int res;
 
-  gcocl->num_row_leafs = 0;
-  gcocl->size_ridx     = 0;
-  gcocl->size_cidx     = 0;
-  gcocl->roff          = 0;
-  gcocl->coff          = 0;
+  gcocl->num_row_leafs            = 0;
+  gcocl->max_num_h2_leafs_per_row = 0;
+  gcocl->size_ridx                = 0;
+  gcocl->size_cidx                = 0;
+  gcocl->roff                     = 0;
+  gcocl->coff                     = 0;
 
   gcocl->names_row_leafs          = NULL;
   gcocl->num_h2_leafs_per_row     = NULL;
@@ -70,14 +63,16 @@ init_gcopencl(pgcopencl gcocl)
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
   gcocl->buf_xt                   =
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  gcocl->xt_events                =
+    (cl_event *) calloc(ocl_system.num_devices, sizeof(cl_event));
   gcocl->ytoffs                   = NULL;
   gcocl->buf_ytoffs               =
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
   gcocl->buf_yt                   =
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->kernels                  = (cl_kernel *) calloc(1, sizeof(cl_kernel));
-  gcocl->row_clusters             = NULL;
-  gcocl->cur_h2matrix_leafs       = NULL;
+
+  gcocl->yt_events                =
+    (cl_event *) calloc(ocl_system.num_devices, sizeof(cl_event));
 
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
@@ -99,7 +94,7 @@ init_gcopencl(pgcopencl gcocl)
 
     gcocl->buf_xt[i] = clCreateBuffer(ocl_system.contexts[i],
                                       CL_MEM_READ_ONLY,
-                                      ocl_system.max_package_size,
+                                      2 * ocl_system.max_package_size,
                                       NULL,
                                       &res);
 
@@ -107,37 +102,22 @@ init_gcopencl(pgcopencl gcocl)
 
     gcocl->buf_yt[i] = clCreateBuffer(ocl_system.contexts[i],
                                       CL_MEM_READ_WRITE,
-                                      ocl_system.max_package_size,
+                                      2 * ocl_system.max_package_size,
                                       NULL,
                                       &res);
 
     CL_CHECK(res);
 
-    CL_CHECK(clEnqueueFillBuffer(ocl_system.queues[i],
-                                 gcocl->buf_yt[i],
-                                 &r_zero,
-                                 sizeof(real),
-                                 0,
-                                 ocl_system.max_package_size,
-                                 0,
-                                 NULL,
-                                 NULL));
+//    CL_CHECK(clEnqueueFillBuffer(ocl_system.queues[i],
+//                                 gcocl->buf_yt[i],
+//                                 &r_zero,
+//                                 sizeof(real),
+//                                 0,
+//                                 ocl_system.max_package_size,
+//                                 0,
+//                                 NULL,
+//                                 NULL));
   }
-
-  char add_flags[50];
-
-  int n = sprintf(add_flags,
-                  "-cl-nv-verbose -DWRK_GRP_SIZE0=%u",
-                  64);
-
-  assert(n > 0);
-
-  setup_kernels_fix(4,
-                    src_code_strs,
-                    add_flags,
-                    1,
-                    kernel_names,
-                    &gcocl->kernels);
 }
 
 void
@@ -378,6 +358,24 @@ uninit_gcopencl(pgcopencl gcocl)
     gcocl->buf_xtoffs = NULL;
   }
 
+  if(gcocl->buf_xt != NULL)
+  {
+    for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseMemObject(gcocl->buf_xt[i]));
+
+    freemem(gcocl->buf_xt);
+    gcocl->buf_xt = NULL;
+  }
+
+  if(gcocl->xt_events != NULL)
+  {
+    for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseEvent(gcocl->xt_events[i]));
+
+    freemem(gcocl->xt_events);
+    gcocl->xt_events = NULL;
+  }
+
   if(gcocl->ytoffs != NULL)
   {
     freemem(gcocl->ytoffs);
@@ -397,40 +395,238 @@ uninit_gcopencl(pgcopencl gcocl)
     gcocl->buf_ytoffs = NULL;
   }
 
-  if(gcocl->kernels != NULL)
+  if(gcocl->buf_yt != NULL)
   {
-    freemem(gcocl->kernels);
-    gcocl->kernels = NULL;
+    for(uint i = 0; i < ocl_system.num_devices; ++i)
+      if(gcocl->buf_yt[i] != NULL)
+      {
+        CL_CHECK(clReleaseMemObject(gcocl->buf_yt[i]));
+        gcocl->buf_yt[i] = NULL;
+      }
+
+    freemem(gcocl->buf_yt);
+    gcocl->buf_yt = NULL;
   }
 
-  if(gcocl->row_clusters != NULL)
+  if(gcocl->yt_events != NULL)
   {
-    freemem(gcocl->row_clusters);
-    gcocl->row_clusters = NULL;
+    for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseEvent(gcocl->yt_events[i]));
+
+    freemem(gcocl->yt_events);
+    gcocl->yt_events = NULL;
+  }
+}
+
+void
+del_gcopencl(pgcopencl gcocl)
+{
+  if(gcocl != NULL)
+  {
+    uninit_gcopencl(gcocl);
+
+    freemem(gcocl);
+  }
+}
+
+void
+del_gcopencls(const uint num_gcocls, pgcopencl *gcocls)
+{
+  if(gcocls != NULL)
+  {
+    for(uint i = 0; i < num_gcocls; ++i)
+    {
+      del_gcopencl(gcocls[i]);
+      gcocls[i] = NULL;
+    }
+
+    freemem(gcocls);
+  }
+}
+
+size_t
+getsize_gcopencl(pcgcopencl gcocl)
+{
+  size_t sz = 0;
+
+  sz = sizeof(gcocl);
+
+  /* names_row_leafs, num_h2_leafs_per_row, workload_per_row, idx_off,
+   * ridx_sizes, ridx_off, ytoffs */
+  sz += gcocl->num_row_leafs * 7 * sizeof(uint);
+
+  /* host_ridx, host_cidx */
+  sz += (gcocl->size_ridx + gcocl->size_cidx) * sizeof(uint);
+
+  /* host_cidx_off, host_xtoffs */
+  sz += (gcocl->idx_off[gcocl->num_row_leafs - 1] +
+         gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1]) *
+         2 * sizeof(uint);
+
+  /* buf_num_h2_leafs_per_row, buf_idx_off, buf_ridx_size, buf_ridx_off,
+   * buf_ridx, buf_cidx_size, buf_cidx_off, buf_cidx, buf_xtoffs, buf_xt,
+   * buf_ytoffs, buf_yt */
+  sz += 12 * ocl_system.num_devices * sizeof(cl_mem);
+
+  /* yt_events */
+  sz += ocl_system.num_devices * sizeof(cl_event);
+
+  for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+  {
+    /* h2_leafs_per_row */
+    sz += gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix);
+
+    /* col_names_per_row, cidx_off, xtoffs */
+    sz += 3 * gcocl->num_h2_leafs_per_row[i] * sizeof(uint);
   }
 
-  if(gcocl->cur_h2matrix_leafs != NULL)
+  return sz;
+}
+
+static bool
+are_equal_clusters(pccluster a, pccluster b)
+{
+  if(a->size != b->size)
+    return false;
+
+  for(uint i = 0; i < a->size; ++i)
+    if(a->idx[i] != b->idx[i])
+      return false;
+
+  return true;
+}
+
+static void
+iterate_recursively_h2matrix(ph2matrix  H2,
+                             const uint xtoff,
+                             const uint ytoff,
+                             const uint level,
+                             uint       *num_gcocls,
+                             pgcopencl  **gcocls)
+{
+  if(level >= *num_gcocls)
   {
-    freemem(gcocl->cur_h2matrix_leafs);
-    gcocl->cur_h2matrix_leafs = NULL;
+    *num_gcocls += 1;
+    *gcocls = realloc(*gcocls, *num_gcocls * sizeof(gcopencl));
+
+    if(*gcocls == NULL)
+    {
+      fprintf(stderr, "error: failed to realloc array of gcopencls!");
+      exit(1);
+    }
+
+    pgcopencl gcocl = *gcocls[*num_gcocls - 1];
+
+    init_gcopencl(gcocl);
+
+    gcocl->num_row_leafs           = 1;
+    gcocl->num_h2_leafs_per_row    = calloc(1, sizeof(uint));
+    gcocl->num_h2_leafs_per_row[0] = 1;
+    gcocl->h2_leafs_per_row        = calloc(1, sizeof(ph2matrix*));
+    gcocl->h2_leafs_per_row[0]     = calloc(1, sizeof(ph2matrix));
+    gcocl->h2_leafs_per_row[0][0]  = H2;
+    gcocl->xtoffs                  = calloc(1, sizeof(uint*));
+    gcocl->xtoffs[0]               = calloc(1, sizeof(uint));
+    gcocl->xtoffs[0][0]            = xtoff;
+    gcocl->ytoffs[0]               = ytoff;
+  }
+  else
+  {
+    pgcopencl gcocl = *gcocls[level];
+
+    bool row_already_stored = false;
+
+    for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+      if(are_equal_clusters(H2->rb->t, gcocl->h2_leafs_per_row[level][i]->rb->t))
+      {
+        row_already_stored = true;
+
+        const uint j = gcocl->num_h2_leafs_per_row[i];
+
+        gcocl->num_h2_leafs_per_row[i] += 1;
+
+        gcocl->h2_leafs_per_row[i]      =
+          realloc(gcocl->h2_leafs_per_row[i],
+                  gcocl->num_h2_leafs_per_row[i] *sizeof(ph2matrix));
+
+        if(gcocl->h2_leafs_per_row[i] == NULL)
+        {
+          fprintf(stderr, "error: failed to realloc array of H2-matrices!");
+          exit(1);
+        }
+
+        gcocl->h2_leafs_per_row[i][j]   = H2;
+
+        gcocl->xtoffs[i]                =
+          realloc(gcocl->xtoffs[i],
+                  gcocl->num_h2_leafs_per_row[i] * sizeof(uint));
+
+        if(gcocl->xtoffs[i] == NULL)
+        {
+          fprintf(stderr, "error: failed to realloc array of offsets!");
+          exit(1);
+        }
+
+        gcocl->xtoffs[i][j]             = xtoff;
+
+      }
+
+    if(!row_already_stored)
+    {
+
+    }
   }
 
-  if(gcocl->kernels != NULL)
+  if(H2->son)
   {
-    for(uint k = 0; k < ocl_system.num_devices; ++k)
-      for(uint i = 0; i < 1; ++i)
-        for(uint j = 0; j < ocl_system.queues_per_device; ++j)
-          if(gcocl->kernels[j + k * ocl_system.queues_per_device +
-                            i * ocl_system.num_devices *
-                            ocl_system.queues_per_device] != NULL)
-          {
-            CL_CHECK(clReleaseKernel
-                       (gcocl->kernels[j + k * ocl_system.queues_per_device +
-                                       i * ocl_system.num_devices *
-                                       ocl_system.queues_per_device]));
-          }
+    pcclusterbasis rb = H2->rb;
+    pcclusterbasis cb = H2->cb;
 
-    freemem(gcocl->kernels);
-    gcocl->kernels = NULL;
+    const uint rsons  = H2->rsons;
+    const uint csons  = H2->csons;
+
+    uint xtoff1        = cb->k;
+
+    for(uint j = 0; j < csons; ++j)
+    {
+      assert(csons == 1 || cb->sons > 0);
+
+      uint ytoff1 = rb->k;
+
+      for(uint i = 0; i < rsons; ++i)
+      {
+        assert(rsons == 1 || rb->sons > 0);
+
+        iterate_recursively_h2matrix
+          (H2->son[i + j * rsons],
+           xtoff + xtoff1 - (cb->sons > 0 ? 0 : cb->k),
+           ytoff + ytoff1 - (rb->sons > 0 ? 0 : rb->k),
+           level + 1,
+           num_gcocls,
+           gcocls);
+
+        ytoff1 += (rb->sons > 0 ? rb->son[i]->ktree : rb->t->size);
+      }
+
+      assert(ytoff1 == rb->ktree);
+
+      xtoff1 += (cb->sons > 0 ? cb->son[j]->ktree : cb->t->size);
+    }
+
+    assert(xtoff1 == cb->ktree);
   }
+}
+
+void
+get_ocl_tree_informations_gcocl(ph2matrix H2,
+                                uint      *num_levels,
+                                pgcopencl **gcocls)
+{
+  del_gcopencls(*num_levels, *gcocls);
+
+  *num_levels = 0;
+  *gcocls     = (pgcopencl *) calloc(0, sizeof(gcopencl));
+
+  iterate_recursively_h2matrix(H2, 0, 0, 0, num_levels, gcocls);
+
 }

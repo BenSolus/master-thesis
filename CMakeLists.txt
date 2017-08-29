@@ -29,8 +29,6 @@ FIND_PACKAGE(LAPACK REQUIRED)
 FIND_PACKAGE(OpenMP REQUIRED)
 FIND_PACKAGE(OpenCL REQUIRED)
 FIND_PACKAGE(Cairo)
-FIND_PACKAGE(OpenGL)
-FIND_PACKAGE(GLUT)
 
 ################################################################################
 # Adding various include directories                                           #
@@ -71,6 +69,9 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 \
 
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} \
                             ${OpenMP_EXE_LINKER_FLAGS}")
+
+SET(CMAKE_C_FLAGS_RELEASE    "${CMAKE_C_FLAGS_RELEASE} -O2 -g")
+SET(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -O2 -g")
 
 ################################################################################
 # Debug compiler flags                                                         #

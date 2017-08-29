@@ -20,25 +20,22 @@ matrix:
             - libboost-all-dev
             - gcc-4.9
             - g++-4.9
+            - libltdl-dev
+            - libhwloc-dev
+            - ocl-icd-libopencl1
 
 before_install:
   ### Set compiler versions
   - if [ "$CC" = "gcc" ]; then export CC="gcc-4.9"; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9"; fi
 
-  ### Install AMDs OpenCL implementation
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then
-      bash Tools/Travis-CI/amd_sdk.sh;
-      tar -xjf AMD-SDK.tar.bz2;
-      AMDAPPSDKROOT=${HOME}/AMDAPPSDK;
-      export OPENCL_VENDOR_PATH=${AMDAPPSDKROOT}/etc/OpenCL/vendors;
-      mkdir -p ${OPENCL_VENDOR_PATH};
-      sh AMD-APP-SDK*.sh --tar -xf -C ${AMDAPPSDKROOT};
-      echo libamdocl64.so > ${OPENCL_VENDOR_PATH}/amdocl64.icd;
-      export LD_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LD_LIBRARY_PATH};
-      export CMAKE_LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64;
-      export LIBRARY_PATH=${AMDAPPSDKROOT}/lib/x86_64:${LIBRARY_PATH};
-    fi;
+  ### Install Portable Computing Language
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then git clone https://github.com/pocl/pocl.git; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl || exit 1; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then ./configure; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then make; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo make install; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH; fi
 
 before_script:
   ### Install H2Lib
@@ -57,7 +54,6 @@ script:
   - cd build || exit 1
   - cmake -DCMAKE_BUILD_TYPE=Debug -DH2INC:PATH=/home/travis/build/BenSolus/master-thesis/H2Lib/Library -DH2LINK:PATH=/home/travis/build/BenSolus/master-thesis/H2Lib ..
   - make -j2
-  - ctest --output-on-failure
 
 notifications:
   email:

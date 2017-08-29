@@ -41,8 +41,13 @@ builds
 .build.sh
 .clang_complete
 .gcc-flags.json
+.nvcc_complete
 .opencl-config.json
 compile_commands.json
 
 # CLion
 .idea
+
+# Misc
+make-hydra.sh
+master-thesis-hydra.sh
