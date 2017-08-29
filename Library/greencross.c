@@ -1462,7 +1462,7 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
 }
 
 static void
-nearfield_nodist_gca(pcgreencross gc)
+nearfield_nodist_gca(pcgreencross gc, const uint *ridx, const uint *cidx)
 {
 
 }
