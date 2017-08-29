@@ -14,6 +14,7 @@
 
 #include "bem2d.h"
 #include "bem3d.h"
+#include "curve2d.h"
 #include "ocl_system.h"
 
 #include "clgreencross.cl"
@@ -1462,8 +1463,23 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
 }
 
 static void
-nearfield_nodist_gca(pcgreencross gc, const uint *ridx, const uint *cidx)
+nearfield_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const uint *cidx)
 {
+  if(!H2->f)
+  {
+    fprintf(stderr, "error: trying to call nearfield_nodist_gca for"
+                    "non-nearfield H2-matrix!");
+    exit(1);
+  }
+
+  const uint dim = gc->dim;
+
+  const real (*x)[dim] = (const real (*)[dim])
+    (gc->dim == 2 ? ((pcurve2d) gc->geom)->x : ((psurface3d) gc->geom)->x);
+  const uint (*p)[dim] = (const uint(*)[dim])
+    (gc->dim == 2 ? ((pcurve2d) gc->geom)->e : ((psurface3d) gc->geom)->t);
+  const real *g = gc->dim == 2 ? ((pcurve2d) gc->geom)->g
+                               : ((psurface3d) gc->geom)->g;
 
 }
 
