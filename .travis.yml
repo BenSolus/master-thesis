@@ -76,5 +76,3 @@ branches:
 
 git:
   depth: 10
-
-sudo: false
