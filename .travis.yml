@@ -36,8 +36,9 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9"; fi
 
   ### Install Portable Computing Language
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then git clone -b release_0_9 https://github.com/pocl/pocl.git; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then curl -L -O http://portablecl.org/downloads/pocl-0.9.tar.gz; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; tar -zxvf pocl-0.9.tar.gz; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl-0.9; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then ./configure; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then make; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo make install; fi

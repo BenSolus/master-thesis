@@ -1461,6 +1461,12 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
   }
 }
 
+static void
+nearfield_nodist_gca(pcgreencross gc)
+{
+
+}
+
 void
 fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
                                                           field        alpha,
@@ -1478,6 +1484,7 @@ fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
 
   if(H2->f)
   {
+
   }
   else if(H2->son)
   {
