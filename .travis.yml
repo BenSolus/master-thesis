@@ -26,6 +26,7 @@ addons:
       - clang
       - libclang-dev
       - ocl-icd-opencl-dev
+      - libedit-dev
 
 matrix:
   include:
@@ -35,7 +36,7 @@ matrix:
 
 
 before_install:
-  ### Compile pocl with clang
+  ### Set compiler to gcc 4.8
   - if [ "$CC" = "gcc" ]; then export CC="gcc-4.8"; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
 
