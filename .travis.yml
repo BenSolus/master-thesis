@@ -35,10 +35,9 @@ matrix:
 
 
 before_install:
-  - sudo apt-get install -y pkg-config libltdl3-dev libhwloc-dev llvm-dev clang libclang-dev ocl-icd-opencl-dev libedit-dev
   ### Compile pocl with clang
-  - if [ "$CC" = "gcc" ]; then export CC="gcc-4.9"; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9"; fi
+  - if [ "$CC" = "gcc" ]; then export CC="gcc-4.8"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
 
   ### Install Portable Computing Language
   - if [ $TRAVIS_OS_NAME = "linux" ]; then wget http://portablecl.org/downloads/pocl-0.12.tar.gz; fi
