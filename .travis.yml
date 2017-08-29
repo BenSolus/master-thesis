@@ -19,9 +19,13 @@ addons:
       - libboost-all-dev
       - gcc-4.9
       - g++-4.9
-      - libltdl-dev
+      - pkg-config
+      - libltdl3-dev
       - libhwloc-dev
-      - ocl-icd-libopencl1
+      - llvm-dev
+      - clang
+      - libclang-dev
+      - ocl-icd-opencl-dev
 
 matrix:
   include:
@@ -31,18 +35,20 @@ matrix:
 
 
 before_install:
+  - sudo apt-get install -y pkg-config libltdl3-dev libhwloc-dev llvm-dev clang libclang-dev ocl-icd-opencl-dev libedit-dev
   ### Compile pocl with clang
   - if [ "$CC" = "gcc" ]; then export CC="gcc-4.9"; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9"; fi
 
   ### Install Portable Computing Language
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then curl -L -O http://portablecl.org/downloads/pocl-0.9.tar.gz; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then tar -zxvf pocl-0.9.tar.gz; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl-0.9; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then ./configure && (echo "Completed configuration"; exit 0) || (c=$?; cat config.log; (exit $c)); fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then wget http://portablecl.org/downloads/pocl-0.12.tar.gz; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then tar xzf pocl-0.12.tar.gz; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl-0.12; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then ./configure; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then make; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo make install; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd ..; fi
 
 before_script:
   ### Install H2Lib

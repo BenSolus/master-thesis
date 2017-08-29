@@ -1463,7 +1463,7 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
 }
 
 static void
-nearfield_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const uint *cidx)
+nearfield_3d_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const uint *cidx)
 {
   if(!H2->f)
   {
@@ -1471,16 +1471,32 @@ nearfield_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const uin
                     "non-nearfield H2-matrix!");
     exit(1);
   }
+  if(gc->dim != 3)
+  {
+    fprintf(stderr, "error: trying to call nearfield_3d_nodist_gca for "
+                    "problems other than in 3D.");
+    exit(1);
+  }
 
-  const uint dim = gc->dim;
+  const uint dim  = gc->dim;
+  const uint rows = H2->f->rows;
+  const uint cols = H2->f->cols;
 
-  const real (*x)[dim] = (const real (*)[dim])
-    (gc->dim == 2 ? ((pcurve2d) gc->geom)->x : ((psurface3d) gc->geom)->x);
-  const uint (*p)[dim] = (const uint(*)[dim])
-    (gc->dim == 2 ? ((pcurve2d) gc->geom)->e : ((psurface3d) gc->geom)->t);
-  const real *g = gc->dim == 2 ? ((pcurve2d) gc->geom)->g
-                               : ((psurface3d) gc->geom)->g;
+  const real (*x)[3] = (const real(*)[3]) ((psurface3d) gc->geom)->x;
+  const uint (*p)[3] = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
+  const real *g      = ((psurface3d) gc->geom)->g;
 
+  for(uint j = 0; j < cols; ++j)
+  {
+    const uint jj = (cidx ? cidx[j] : j);
+
+    for(uint i = 0; i < rows; ++i)
+    {
+      const uint ii = (ridx ? ridx[i] : i);
+
+
+    }
+  }
 }
 
 void
