@@ -1462,6 +1462,15 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
 }
 
 void
+fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
+                                                          field        alpha,
+                                                          pavector     xt,
+                                                          pavector     yt)
+{
+
+}
+
+void
 fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,
                                                       field        alpha,
                                                       pavector     xt,

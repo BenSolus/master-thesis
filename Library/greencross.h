@@ -271,6 +271,7 @@ fastaddeval_farfield_h2matrix_avectors(field      alpha,
 HEADER_PREFIX void
 fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
                                                           field        alpha,
+                                                          pch2matri
                                                           pavector     xt,
                                                           pavector     yt);
 
