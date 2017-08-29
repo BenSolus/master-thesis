@@ -1464,10 +1464,60 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
 void
 fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
                                                           field        alpha,
+                                                          pch2matrix   H2,
                                                           pavector     xt,
                                                           pavector     yt)
 {
+  const uint     rsons = H2->rsons;
+  const uint     csons = H2->csons;
+  pcclusterbasis rb    = H2->rb;
+  pcclusterbasis cb    = H2->cb;
 
+  avector        loc1, loc2;
+  pavector       xt1, yt1;
+
+  if(H2->f)
+  {
+  }
+  else if(H2->son)
+  {
+    uint xtoff = cb->k;
+
+    for(uint j = 0; j < csons; j++)
+    {
+      assert(csons == 1 || cb->sons > 0);
+
+      xt1 = (cb->sons > 0
+               ? init_sub_avector(&loc1, xt, cb->son[j]->ktree, xtoff)
+               : init_sub_avector(&loc1, xt, cb->ktree, 0));
+
+      uint ytoff = rb->k;
+
+      for(uint i = 0; i < rsons; i++)
+      {
+        assert(rsons == 1 || rb->sons > 0);
+
+        yt1 = (rb->sons > 0
+                 ? init_sub_avector(&loc2, yt, rb->son[i]->ktree, ytoff)
+                 : init_sub_avector(&loc2, yt, rb->ktree, 0));
+
+        fastaddeval_nearfield_nodist_h2matrix_avectors_greencross
+          (gc, alpha, H2->son[i + j * rsons], xt1, yt1);
+
+        uninit_avector(yt1);
+
+        ytoff += (rb->sons > 0 ? rb->son[i]->ktree : rb->t->size);
+      }
+
+      assert(ytoff == rb->ktree);
+
+      uninit_avector(xt1);
+
+      xtoff += (cb->sons > 0 ? cb->son[j]->ktree : cb->t->size);
+    }
+
+    assert(xtoff == cb->ktree);
+  }
 }
 
 void
