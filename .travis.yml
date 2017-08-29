@@ -27,7 +27,7 @@ matrix:
             - ocl-icd-libopencl1
 
 before_install:
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 100 fi;
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 100; fi
 
   ### Set compiler versions
   - if [ "$CC" = "gcc" ]; then export CC="gcc-4.9"; fi
