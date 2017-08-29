@@ -17,8 +17,8 @@ addons:
       - liblapack-dev
       - gfortran
       - libboost-all-dev
-      - gcc-4.9
-      - g++-4.9
+      - gcc-5
+      - g++-5
       - pkg-config
       - libltdl3-dev
       - libhwloc-dev
@@ -37,8 +37,10 @@ matrix:
 
 before_install:
   ### Set compiler to gcc 4.8
-  - if [ "$CC" = "gcc" ]; then export CC="gcc-4.8"; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+  - if [ "$CC" = "gcc" ]; then export CC="gcc-5" && export CXX="g++-5"; fi
+
+  - echo $CC;
+  - echo $CXX;
 
   ### Install Portable Computing Language
   - if [ $TRAVIS_OS_NAME = "linux" ]; then wget http://portablecl.org/downloads/pocl-0.12.tar.gz; fi
