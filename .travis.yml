@@ -7,7 +7,6 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.6
     packages:
       - build-essential
       - git
@@ -39,7 +38,7 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9"; fi
 
   ### Install Portable Computing Language
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then git clone https://github.com/pocl/pocl.git; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then git clone -b release_0_9 https://github.com/pocl/pocl.git; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then mkdir -p pocl/builds; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl/builds || exit 1; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cmake ..; fi

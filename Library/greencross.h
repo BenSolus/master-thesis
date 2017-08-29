@@ -257,16 +257,22 @@ HEADER_PREFIX ph2matrix
 build_green_cross_h2matrix_greencross(pgreencross gc, void *eta);
 
 HEADER_PREFIX void
-fastaddeval_nearfield_h2matrix_avector_greencross(field      alpha,
-                                                  pch2matrix h2,
-                                                  pavector   xt,
-                                                  pavector   yt);
+fastaddeval_nearfield_h2matrix_avector(field      alpha,
+                                       pch2matrix h2,
+                                       pavector   xt,
+                                       pavector   yt);
 
 HEADER_PREFIX void
 fastaddeval_farfield_h2matrix_avectors(field      alpha,
                                        pch2matrix h2,
                                        pavector   xt,
                                        pavector   yt);
+
+HEADER_PREFIX void
+fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
+                                                          field        alpha,
+                                                          pavector     xt,
+                                                          pavector     yt);
 
 HEADER_PREFIX void
 fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,

@@ -1241,10 +1241,10 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
 }
 
 void
-fastaddeval_nearfield_h2matrix_avector_greencross(field      alpha,
-                                                  pch2matrix h2,
-                                                  pavector   xt,
-                                                  pavector   yt)
+fastaddeval_nearfield_h2matrix_avector(field      alpha,
+                                                          pch2matrix h2,
+                                                          pavector   xt,
+                                                          pavector   yt)
 {
   avector   loc1, loc2;
   pavector  xp, yp, xt1, yt1;
@@ -1281,7 +1281,7 @@ fastaddeval_nearfield_h2matrix_avector_greencross(field      alpha,
                init_sub_avector(&loc2, yt, rb->son[i]->ktree, ytoff) :
                init_sub_avector(&loc2, yt, rb->ktree, 0));
 
-        fastaddeval_nearfield_h2matrix_avector_greencross(alpha, h2->son[i + j * rsons], xt1, yt1);
+        fastaddeval_nearfield_h2matrix_avector(alpha, h2->son[i + j * rsons], xt1, yt1);
 
         uninit_avector(yt1);
 
@@ -1520,7 +1520,7 @@ fastaddeval_h2matrix_avector_greencross(pgreencross gc,
 
 //  print_avector(yt);
 
-  fastaddeval_nearfield_h2matrix_avector_greencross(alpha, H2, xt, yt);
+  fastaddeval_nearfield_h2matrix_avector(alpha, H2, xt, yt);
 }
 
 void
