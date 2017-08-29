@@ -31,8 +31,9 @@ before_install:
 
   ### Install Portable Computing Language
   - if [ $TRAVIS_OS_NAME = "linux" ]; then git clone https://github.com/pocl/pocl.git; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl || exit 1; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then ./configure; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then mkdir -p pocl/builds; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl/builds || exit 1; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cmake ..; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then make; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo make install; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH; fi
