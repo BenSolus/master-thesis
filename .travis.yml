@@ -44,9 +44,9 @@ before_install:
   - if [ $TRAVIS_OS_NAME = "linux" ]; then wget http://portablecl.org/downloads/pocl-0.12.tar.gz; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then tar xzf pocl-0.12.tar.gz; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl-0.12; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then ./configure; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then make; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo make install; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="clang" CXX="clang++" ./configure; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="clang" CXX="clang++" make; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="clang" CXX="clang++" sudo make install; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cd ..; fi
 

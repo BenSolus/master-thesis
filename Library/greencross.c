@@ -1486,6 +1486,10 @@ nearfield_3d_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const 
   const uint (*p)[3] = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
   const real *g      = ((psurface3d) gc->geom)->g;
 
+  pcbem3d    bem     = (pbem3d) gc->bem;
+
+  uint       px[3], py[3];
+
   for(uint j = 0; j < cols; ++j)
   {
     const uint jj = (cidx ? cidx[j] : j);
@@ -1494,7 +1498,8 @@ nearfield_3d_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const 
     {
       const uint ii = (ridx ? ridx[i] : i);
 
-
+//      if(ii < jj)
+//        select_quadrature_singquad2d()
     }
   }
 }
