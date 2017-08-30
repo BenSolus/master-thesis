@@ -617,16 +617,16 @@ iterate_recursively_h2matrix(ph2matrix  H2,
   }
 }
 
-void
-get_ocl_tree_informations_gcocl(ph2matrix H2,
-                                uint      *num_levels,
-                                pgcopencl **gcocls)
-{
-  del_gcopencls(*num_levels, *gcocls);
-
-  *num_levels = 0;
-  *gcocls     = (pgcopencl *) calloc(0, sizeof(gcopencl));
-
-  iterate_recursively_h2matrix(H2, 0, 0, 0, num_levels, gcocls);
-
-}
+//void
+//get_ocl_tree_informations_gcocl(ph2matrix H2,
+//                                uint      *num_levels,
+//                                pgcopencl **gcocls)
+//{
+//  del_gcopencls(*num_levels, *gcocls);
+//
+//  *num_levels = 0;
+//  *gcocls     = (pgcopencl *) calloc(0, sizeof(gcopencl));
+//
+//  iterate_recursively_h2matrix(H2, 0, 0, 0, num_levels, gcocls);
+//
+//}

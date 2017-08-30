@@ -1,5 +1,5 @@
 
-#include "laplace3d.h"
+#include "laplace3dgca.h"
 
 #include "bem3d.h"
 #include "macrosurface3d.h"

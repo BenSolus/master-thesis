@@ -10,7 +10,7 @@
  * @copyright All rights reserved, Bennet Carstensen 2017
  */
 
-#include "laplace3d.h"
+#include "laplace3dgca.h"
 
 #include "laplacebem3d.h"
 #include "ocl_system.h"
@@ -70,17 +70,19 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
 
   }
 
-  gc->n  = gr->triangles;
+  gc->n         = gr->triangles;
 
-  gc->m  = m;
+  gc->m         = m;
 
-  gc->K  = 4 * m;
+  gc->K         = 4 * m;
 
-  gc->bem = (void*) new_slp_laplace_bem3d(gr,
-                                          q,
-                                          q + 2,
-                                          BASIS_CONSTANT_BEM3D,
-                                          BASIS_CONSTANT_BEM3D);
+  gc->aca_accur = accur;
+
+  gc->bem       = (void*) new_slp_laplace_bem3d(gr,
+                                                q,
+                                                q + 2,
+                                                BASIS_CONSTANT_BEM3D,
+                                                BASIS_CONSTANT_BEM3D);
 
   /* Set and get cluster(basis) from geometry. */
 

@@ -141,9 +141,9 @@ del_gcopencls(const uint num_gcocls, pgcopencl *gcocls);
 HEADER_PREFIX size_t
 getsize_gcopencl(pcgcopencl gcocl);
 
-HEADER_PREFIX void
-get_ocl_tree_informations_gcocl(ph2matrix H2,
-                                uint      *num_levels,
-                                pgcopencl **gcocls);
+//HEADER_PREFIX void
+//get_ocl_tree_informations_gcocl(ph2matrix H2,
+//                                uint      *num_levels,
+//                                pgcopencl **gcocls);
 
 #endif // GCOPENCL_H

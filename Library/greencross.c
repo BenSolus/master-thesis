@@ -1099,31 +1099,31 @@ distribute_ocl_work_uniform_gca_oclworkpkgs(pcgcopencl  gcocl,
   }
 }
 
-static void
-distribute_ocl_wrk_equidistant_gca_oclwrkpkgs(pcgcopencl  gc,
-                                              pch2matrix  H2,
-                                              uint        num_packages,
-                                              poclworkpgs oclwrk)
-{
-  if(num_packages > ocl_system.num_devices)
-  {
-    fprintf(stderr, "error: can't create more packages than devices!\n");
-    exit(1);
-  }
-
-  /* Initialize oclwrkgrppkgs. */
-
-  oclwrk->wrk_per_pkg      =
-    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
-
-  oclwrk->num_rows_per_pkg =
-    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
-
-  oclwrk->rows_per_pkg     =
-    (uint **) calloc(oclwrk->num_wrk_pkgs, sizeof(uint*));
-
-
-}
+//static void
+//distribute_ocl_wrk_equidistant_gca_oclwrkpkgs(pcgcopencl  gc,
+//                                              pch2matrix  H2,
+//                                              uint        num_packages,
+//                                              poclworkpgs oclwrk)
+//{
+//  if(num_packages > ocl_system.num_devices)
+//  {
+//    fprintf(stderr, "error: can't create more packages than devices!\n");
+//    exit(1);
+//  }
+//
+//  /* Initialize oclwrkgrppkgs. */
+//
+//  oclwrk->wrk_per_pkg      =
+//    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
+//
+//  oclwrk->num_rows_per_pkg =
+//    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
+//
+//  oclwrk->rows_per_pkg     =
+//    (uint **) calloc(oclwrk->num_wrk_pkgs, sizeof(uint*));
+//
+//
+//}
 
 ph2matrix
 build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
@@ -1462,54 +1462,121 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
   }
 }
 
-static void
-nearfield_3d_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const uint *cidx)
-{
-  if(!H2->f)
-  {
-    fprintf(stderr, "error: trying to call nearfield_nodist_gca for"
-                    "non-nearfield H2-matrix!");
-    exit(1);
-  }
-  if(gc->dim != 3)
-  {
-    fprintf(stderr, "error: trying to call nearfield_3d_nodist_gca for "
-                    "problems other than in 3D.");
-    exit(1);
-  }
-
-  const uint dim  = gc->dim;
-  const uint rows = H2->f->rows;
-  const uint cols = H2->f->cols;
-
-  const real (*x)[3] = (const real(*)[3]) ((psurface3d) gc->geom)->x;
-  const uint (*p)[3] = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
-  const real *g      = ((psurface3d) gc->geom)->g;
-
-  pcbem3d    bem     = (pbem3d) gc->bem;
-
-  uint       px[3], py[3];
-
-  for(uint j = 0; j < cols; ++j)
-  {
-    const uint jj = (cidx ? cidx[j] : j);
-
-    for(uint i = 0; i < rows; ++i)
-    {
-      const uint ii = (ridx ? ridx[i] : i);
-
-      const uint *s, *t;
-
-      real (*xq)[2], (*yq)[2], *wq;
-      uint nq;
-
+//static void
+//nearfield_3d_nodist_gca(pcgreencross gc, pch2matrix H2, const uint *ridx, const uint *cidx)
+//{
+//  if(!H2->f)
+//  {
+//    fprintf(stderr, "error: trying to call nearfield_nodist_gca for"
+//                    "non-nearfield H2-matrix!");
+//    exit(1);
+//  }
+//  if(gc->dim != 3)
+//  {
+//    fprintf(stderr, "error: trying to call nearfield_3d_nodist_gca for "
+//                    "problems other than in 3D.");
+//    exit(1);
+//  }
+//
+//  pcbem3d    bem     = (pbem3d) gc->bem;
+//
+//  const uint rows   = H2->f->rows;
+//  const uint cols   = H2->f->cols;
+//  const uint n_dist = bem->sq->n_dist;
+//
+//  const real (*v)[3] = (const real(*)[3]) ((psurface3d) gc->geom)->x;
+//  const uint (*p)[3] = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
+//  const real *g      = ((psurface3d) gc->geom)->g;
+//
+//  for(uint j = 0; j < cols; ++j)
+//  {
+//    const uint jj = (cidx ? cidx[j] : j);
+//
+//    for(uint i = 0; i < rows; ++i)
+//    {
+//      const uint ii = (ridx ? ridx[i] : i);
+//
+//      real base;
+//      uint nq, vnq;
+//      uint px[3], py[3];
+//      real *xq, *yq, *wq;
+//
+//      /* Choose quadrature rule, ensuring symmetry of the matrix. */
+//
 //      if(ii < jj)
-//        select_quadrature_singquad2d(bem->sq, p[ii], p[jj], px, py, &xq, &yq, &wq, &nq);
+//        select_quadrature_singquad2d(bem->sq,
+//                                     p[ii],
+//                                     p[jj],
+//                                     px,
+//                                     py,
+//                                     &xq,
+//                                     &yq,
+//                                     &wq,
+//                                     &nq,
+//                                     &base);
 //      else
-
-    }
-  }
-}
+//        select_quadrature_singquad2d(bem->sq,
+//                                     p[jj],
+//                                     p[ii],
+//                                     py,
+//                                     px,
+//                                     &yq,
+//                                     &xq,
+//                                     &wq,
+//                                     &nq,
+//                                     &base);
+//
+//      /* Only compute matrix entries where the corresponding triangulars have an
+//       * identical vertex, edge or are identical in themselfe. */
+//      if((nq - n_dist) > 0)
+//      {
+//        vnq = ROUNDUP(nq, VREAL);
+//        wq += vnq * 9;
+//
+//        /* Copy permuted vertex numbers. */
+//
+//        px[0] = p[ii][px[0]];
+//        px[1] = p[ii][px[1]];
+//        px[2] = p[ii][px[2]];
+//
+//        py[0] = p[jj][py[0]];
+//        py[1] = p[jj][py[1]];
+//        py[2] = p[jj][py[2]];
+//
+//        /* Copy permuted vertices */
+//
+//        const real x[3][3] =
+//          { { v[px[0]][0], v[px[0]][1], v[px[0]][2] },
+//            { v[px[1]][0], v[px[1]][1], v[px[1]][2] },
+//            { v[px[2]][0], v[px[2]][1], v[px[2]][2] } };
+//
+//        const real y[3][3] =
+//          { { v[py[0]][0], v[py[1]][0], v[py[2]][0] },
+//            { v[py[0]][1], v[py[1]][1], v[py[2]][1] },
+//            { v[py[0]][2], v[py[1]][2], v[py[2]][2] } };
+//
+//        for(uint q = 0; q < (nq - n_dist); ++q)
+//        {
+//          real a1 = xq[q];
+//          real a2 = xq[q + nq];
+//
+//          const real xx[3] =
+//            { (r_one - a1) * x[0][0] + (a1 - a2) * x[1][0] + a2 * x[2][0],
+//              (r_one - a1) * x[0][1] + (a1 - a2) * x[1][1] + a2 * x[2][1],
+//              (r_one - a1) * x[0][2] + (a1 - a2) * x[1][2] + a2 * x[2][2] };
+//
+//          a1 = yq[q];
+//          a2 = yq[q + nq];
+//
+//          const real yy[3] =
+//            { (r_one - a1) * y[0][0] + (a1 - a2) * y[1][0] + a2 * y[2][0],
+//              (r_one - a1) * y[0][1] + (a1 - a2) * y[1][1] + a2 * y[2][1],
+//              (r_one - a1) * y[0][2] + (a1 - a2) * y[1][2] + a2 * y[2][2] };
+//        }
+//      }
+//    }
+//  }
+//}
 
 void
 fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,

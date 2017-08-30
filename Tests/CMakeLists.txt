@@ -1,48 +1,39 @@
 
 ################################################################################
-# Find Boosts unit test framework                                              #
-################################################################################
-
-FIND_PACKAGE(Boost  COMPONENTS unit_test_framework program_options REQUIRED)
-
-################################################################################
 # Add test_*.cpp files to ctest                                                #
 ################################################################################
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
+
   ENABLE_TESTING()
 
   FILE(GLOB SOURCES RELATIVE "${PROJECT_SOURCE_DIR}/Tests"
-                             "${PROJECT_SOURCE_DIR}/Tests/test_*.cpp")
+                             "${PROJECT_SOURCE_DIR}/Tests/test_*.hpp")
 
-  FOREACH(source ${SOURCES})
-    STRING(REPLACE ".cpp" "" exe ${source})
-    STRING(REPLACE "test_" "" name ${exe})
+  MESSAGE(STATUS "${SOURCES}")
 
-    ADD_EXECUTABLE(${exe} ${source})
+  ADD_EXECUTABLE(tests main_test.cpp ${SOURCES})
 
-    TARGET_LINK_LIBRARIES(${exe}
-                          ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-                          ${OpenCL_LIBRARIES}
-                          MasterThesis
-                          h2)
-    IF(LAPACK_FOUND)
-      TARGET_LINK_LIBRARIES(${exe} ${LAPACK_LINKER_FLAGS} ${LAPACK_LIBRARIES})
-    ENDIF()
+  SET_TARGET_PROPERTIES(tests PROPERTIES LINKER_LANGUAGE CXX)
 
-    IF(CAIRO_FOUND)
-      TARGET_LINK_LIBRARIES(${exe} ${CAIRO_LIBRARIES})
-    ENDIF()
+  TARGET_LINK_LIBRARIES(tests ${GTEST_LIBRARIES} ${OpenCL_LIBRARIES} MasterThesis h2)
 
-    ADD_TEST(${name} "${PROJECT_BINARY_DIR}/Bin/${exe}")
-  ENDFOREACH(source ${SOURCES})
+  IF(LAPACK_FOUND)
+    TARGET_LINK_LIBRARIES(tests ${LAPACK_LINKER_FLAGS} ${LAPACK_LIBRARIES})
+  ENDIF()
 
+  IF(CAIRO_FOUND)
+    TARGET_LINK_LIBRARIES(tests ${CAIRO_LIBRARIES})
+  ENDIF()
+
+  ADD_TEST(tests "${PROJECT_BINARY_DIR}/Bin/${exe}")
 ENDIF()
+
+
 
 ADD_EXECUTABLE(benchmark benchmark.cpp)
 
-TARGET_LINK_LIBRARIES(benchmark ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-                                ${OpenCL_LIBRARIES}
+TARGET_LINK_LIBRARIES(benchmark ${OpenCL_LIBRARIES}
                                 MasterThesis
                                 h2
                                 ${CAIRO_LIBRARIES}

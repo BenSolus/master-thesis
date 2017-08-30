@@ -31,12 +31,12 @@ using namespace boost::unit_test::framework;
 
 static const real eps = std::numeric_limits<real>::epsilon();
 
-static real eta   = 2.0;       // Parameter for the accuracy of hierarchical
+static real eta   = 1.0;       // Parameter for the accuracy of hierarchical
                                // clustering
-static uint n     = 8192;      // Problem size
+static uint n     = 2048;      // Problem size
 static uint m     = 8;         // Approximation order
-static uint q     = 3;         // Quadratur order
-static uint res   = m * m; // Cluster resolution
+static uint q     = 2;         // Quadratur order
+static uint res   = m * m;     // Cluster resolution
 static real aca   = 10e-4;     // ACA resolution
 static uint tests = 100;
 

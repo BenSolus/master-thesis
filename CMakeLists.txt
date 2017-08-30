@@ -30,6 +30,10 @@ FIND_PACKAGE(OpenMP REQUIRED)
 FIND_PACKAGE(OpenCL REQUIRED)
 FIND_PACKAGE(Cairo)
 
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  FIND_PACKAGE(GTest REQUIRED)
+ENDIF()
+
 ################################################################################
 # Adding various include directories                                           #
 ################################################################################
@@ -37,6 +41,10 @@ FIND_PACKAGE(Cairo)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/Library)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/Tests)
 INCLUDE_DIRECTORIES(${H2INC})
+
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIRS})
+ENDIF()
 
 ################################################################################
 # Adding various linking directories                                           #

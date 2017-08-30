@@ -12,13 +12,13 @@ addons:
       - git
       - libgnome-keyring-dev
       - fakeroot
+      - gcc-5
+      - g++-5
       - opencl-headers
       - libblas-dev
       - liblapack-dev
       - gfortran
-      - libboost-all-dev
-      - gcc-5
-      - g++-5
+       libgtest-dev
       - pkg-config
       - libltdl3-dev
       - libhwloc-dev
@@ -36,16 +36,21 @@ matrix:
 
 
 before_install:
-  ### Set compiler to gcc 4.8
-  - if [ "$CC" = "gcc" ]; then export CC="gcc-5" && export CXX="g++-5" && echo "$CC $CXX"; fi
+  ### Install Google Test
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd /usr/src/gtest; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo cmake -DBUILD_SHARED_LIBS=ON CMakeLists.txt; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo make; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo cp *.so /usr/lib; fi
+
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then cd $TRAVIS_BUILD_DIR; fi
 
   ### Install Portable Computing Language
   - if [ $TRAVIS_OS_NAME = "linux" ]; then wget http://portablecl.org/downloads/pocl-0.12.tar.gz; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then tar xzf pocl-0.12.tar.gz; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cd pocl-0.12; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="clang" CXX="clang++" ./configure; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="clang" CXX="clang++" make; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="clang" CXX="clang++" sudo make install; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="gcc-5" CXX="g++-5" ./configure; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="gcc-5" CXX="g++-5" make; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="gcc-5" CXX="g++-5" sudo make install; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cd ..; fi
 
@@ -62,6 +67,8 @@ before_script:
   - cd ..
 
 script:
+  - echo $PWD
+  - ls -al
   - mkdir -p build
   - cd build || exit 1
   - CC="gcc-5" CXX="g++-5" cmake -DCMAKE_BUILD_TYPE=Debug -DH2INC:PATH=/home/travis/build/BenSolus/master-thesis/H2Lib/Library -DH2LINK:PATH=/home/travis/build/BenSolus/master-thesis/H2Lib ..

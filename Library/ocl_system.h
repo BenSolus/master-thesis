@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------
  * This is the file "ocl_system.h" of this master thesis.
- * All rights reserved, Sven Christophersen 2015
+ * All rights reserved, Bennet Carstensen 2017
  * ------------------------------------------------------------ */
 
 /**

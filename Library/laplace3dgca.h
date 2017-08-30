@@ -1,17 +1,17 @@
 /* ------------------------------------------------------------
- * This is the file "laplace3d.h" of this master thesis.
+ * This is the file "laplace3dgca.h" of this master thesis.
  * All rights reserved, Bennet Carstensen 2017
  * ------------------------------------------------------------ */
 
 /**
- * @file      laplace3d.h
+ * @file      laplace3dgca.h
  * @author    Bennet Carstensen
  * @date      2017
  * @copyright All rights reserved, Bennet Carstensen 2017
  */
 
-#ifndef LAPLACE3D_H
-#define LAPLACE3D_H
+#ifndef LAPLACE3DGCA_H
+#define LAPLACE3DGCA_H
 
 #include "greencross.h"
 
@@ -46,4 +46,4 @@ new_greencross_laplace3d(psurface3d s3d, uint res, uint q, uint m, real accur);
 
 /** @} */
 
-#endif // LAPLACE3D_H
+#endif // LAPLACE3DGCA_H
