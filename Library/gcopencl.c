@@ -21,6 +21,8 @@ init_gcopencl(pgcopencl gcocl)
 
   cl_int res;
 
+  gcocl->is_farfield              = false;
+
   gcocl->num_row_leafs            = 0;
   gcocl->max_num_h2_leafs_per_row = 0;
   gcocl->size_ridx                = 0;
@@ -61,18 +63,9 @@ init_gcopencl(pgcopencl gcocl)
   gcocl->host_xtoffs              = NULL;
   gcocl->buf_xtoffs               =
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->buf_xt                   =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->xt_events                =
-    (cl_event *) calloc(ocl_system.num_devices, sizeof(cl_event));
   gcocl->ytoffs                   = NULL;
   gcocl->buf_ytoffs               =
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->buf_yt                   =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-
-  gcocl->yt_events                =
-    (cl_event *) calloc(ocl_system.num_devices, sizeof(cl_event));
 
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
@@ -89,22 +82,6 @@ init_gcopencl(pgcopencl gcocl)
                                         ocl_system.max_package_size,
                                         NULL,
                                         &res);
-
-    CL_CHECK(res);
-
-    gcocl->buf_xt[i] = clCreateBuffer(ocl_system.contexts[i],
-                                      CL_MEM_READ_ONLY,
-                                      2 * ocl_system.max_package_size,
-                                      NULL,
-                                      &res);
-
-    CL_CHECK(res);
-
-    gcocl->buf_yt[i] = clCreateBuffer(ocl_system.contexts[i],
-                                      CL_MEM_READ_WRITE,
-                                      2 * ocl_system.max_package_size,
-                                      NULL,
-                                      &res);
 
     CL_CHECK(res);
 
@@ -358,24 +335,6 @@ uninit_gcopencl(pgcopencl gcocl)
     gcocl->buf_xtoffs = NULL;
   }
 
-  if(gcocl->buf_xt != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      CL_CHECK(clReleaseMemObject(gcocl->buf_xt[i]));
-
-    freemem(gcocl->buf_xt);
-    gcocl->buf_xt = NULL;
-  }
-
-  if(gcocl->xt_events != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      CL_CHECK(clReleaseEvent(gcocl->xt_events[i]));
-
-    freemem(gcocl->xt_events);
-    gcocl->xt_events = NULL;
-  }
-
   if(gcocl->ytoffs != NULL)
   {
     freemem(gcocl->ytoffs);
@@ -393,28 +352,6 @@ uninit_gcopencl(pgcopencl gcocl)
 
     freemem(gcocl->buf_ytoffs);
     gcocl->buf_ytoffs = NULL;
-  }
-
-  if(gcocl->buf_yt != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_yt[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_yt[i]));
-        gcocl->buf_yt[i] = NULL;
-      }
-
-    freemem(gcocl->buf_yt);
-    gcocl->buf_yt = NULL;
-  }
-
-  if(gcocl->yt_events != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      CL_CHECK(clReleaseEvent(gcocl->yt_events[i]));
-
-    freemem(gcocl->yt_events);
-    gcocl->yt_events = NULL;
   }
 }
 

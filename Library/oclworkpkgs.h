@@ -53,10 +53,10 @@ struct _oclworkpgs
   uint   size;
 };
 
-void
+HEADER_PREFIX void
 init_oclwork(poclworkpgs oclwrk);
 
-void
+HEADER_PREFIX void
 uninit_oclwork(poclworkpgs oclwrk);
 
 /** @} */

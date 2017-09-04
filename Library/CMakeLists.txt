@@ -1,15 +1,20 @@
 ADD_LIBRARY(MasterThesis
+            fastaddevalgca.c
+            fastaddevalgca.h
             gcopencl.c
             gcopencl.h
             greencross.c
             greencross.h
             laplace2d.c
             laplace2d.h
-  laplace3dgca.c
-  laplace3dgca.h
+            laplace3dgca.c
+            laplace3dgca.h
             ocl_system.c
             ocl_system.h
-  oclworkpkgs.h oclworkpkgs.c)
+            oclworkpkgs.c
+            oclworkpkgs.h
+            singquadgca.c
+            singquadgca.h)
 
 ################################################################################
 # Convert OpenCL source code into a string.                                    #

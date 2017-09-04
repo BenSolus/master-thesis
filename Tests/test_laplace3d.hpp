@@ -168,7 +168,6 @@ TEST(laplace3d, building_h2_matrix)
   // TODO: Error tolerance for real = float
 }
 
-
 TEST(laplace3d, h2_mvm)
 {
   pavector  x, y_gc, y_ref;

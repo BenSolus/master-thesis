@@ -38,8 +38,8 @@ matrix:
 before_install:
   ### Install Google Test
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cd /usr/src/gtest; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo cmake -DBUILD_SHARED_LIBS=ON CMakeLists.txt; fi
-  - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo make; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="gcc-5" CXX="g++-5" sudo cmake -DBUILD_SHARED_LIBS=ON CMakeLists.txt; fi
+  - if [ $TRAVIS_OS_NAME = "linux" ]; then CC="gcc-5" CXX="g++-5" sudo make; fi
   - if [ $TRAVIS_OS_NAME = "linux" ]; then sudo cp *.so /usr/lib; fi
 
   - if [ $TRAVIS_OS_NAME = "linux" ]; then cd $TRAVIS_BUILD_DIR; fi

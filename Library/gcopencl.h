@@ -35,6 +35,8 @@ typedef const gcopencl *pcgcopencl;
   *        calculate the MVM part of the listed clusters. */
 struct _gcopencl
 {
+  bool      is_farfield;
+
   /** @brief Number of row cluster this object manages. */
   uint      num_row_leafs;
 
@@ -109,17 +111,9 @@ struct _gcopencl
 
   cl_mem    *buf_xtoffs;
 
-  cl_mem    *buf_xt;
-
-  cl_event  *xt_events;
-
   uint      *ytoffs;
 
   cl_mem    *buf_ytoffs;
-
-  cl_mem    *buf_yt;
-
-  cl_event  *yt_events;
 
   uint roff;
 

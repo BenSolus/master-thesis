@@ -13,9 +13,12 @@
 #ifndef GREENCROSS_H
 #define GREENCROSS_H
 
+#include "bem3d.h"
+#include "fastaddevalgca.h"
 #include "gcopencl.h"
 #include "h2matrix.h"
 #include "oclworkpkgs.h"
+#include "singquadgca.h"
 
 /** @defgroup greencross greencross
  *  @brief Algorithms and functions to solve problems descriebed by the
@@ -92,26 +95,19 @@ struct _greencross
   /** @brief Module to construct oundary element method problems. */
   void *bem;
 
-  /** @brief OpenCL buffer objects for the quadratur points in the
-    *        x-Coordinate. */
-  cl_mem *buf_qx;
+  psingquadgca sq_gca;
 
-  /** @brief OpenCL buffer objects for the quadratur points in the
-    *        y-Coordinate. */
-  cl_mem *buf_qy;
+  pfastaddevalgca feval;
 
-  /** @brief OpenCL buffer objects for the quadratur weights. */
-  cl_mem *buf_w;
+  kernel_func3d kernel_3d;
 
-  cl_kernel *kernels;
+  cl_kernel *ocl_kernels;
 
   /** @brief Set of informations for OpenCL devices to calculate the MVM part
     *        of leaf-matrices. */
   pgcopencl gcocl;
 
-  uint      num_levels;
-
-  pgcopencl *gcocl_t;
+  pgcopencl ocl_gca_nf;
 
   /** @brief Object which distributes the work described in @p gcocl. */
   poclworkpgs  oclwrk;
@@ -258,12 +254,6 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta);
 
 HEADER_PREFIX void
 fastaddeval_nearfield_h2matrix_avector(field      alpha,
-                                       pch2matrix h2,
-                                       pavector   xt,
-                                       pavector   yt);
-
-HEADER_PREFIX void
-fastaddeval_farfield_h2matrix_avectors(field      alpha,
                                        pch2matrix h2,
                                        pavector   xt,
                                        pavector   yt);

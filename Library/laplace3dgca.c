@@ -15,6 +15,29 @@
 #include "laplacebem3d.h"
 #include "ocl_system.h"
 
+static inline field
+slp_kernel_laplacebem3d(const real * x, const real * y,
+                        const real * nx, const real * ny, void *data)
+{
+  real      dist[3];
+  real      norm;
+
+  field     res;
+
+  (void) nx;
+  (void) ny;
+  (void) data;
+
+  dist[0] = x[0] - y[0];
+  dist[1] = x[1] - y[1];
+  dist[2] = x[2] - y[2];
+  norm = REAL_NORMSQR3(dist[0], dist[1], dist[2]);
+
+  res = REAL_RSQRT(norm);
+
+  return res;
+}
+
 /*
  * @brief Substructure used for approximating @ref _hmatrix "h-", @ref
  * _uniformhmatrix "uniformh-" and @ref _h2matrix "h2matrices".
@@ -84,6 +107,10 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
                                                 BASIS_CONSTANT_BEM3D,
                                                 BASIS_CONSTANT_BEM3D);
 
+  gc->sq_gca    = build_from_singquad2d(((pbem3d) gc->bem)->sq);
+
+  gc->kernel_3d = slp_kernel_laplacebem3d;
+
   /* Set and get cluster(basis) from geometry. */
 
   cg     = build_bem3d_const_clustergeometry((pbem3d) gc->bem, &gc->idx);
@@ -103,39 +130,6 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
                                         1.0,
                                         accur,
                                         build_bem3d_cube_quadpoints);
-
-  /* Upload quadrature data to OpenCL devices. */
-
-  for(uint i = 0; i < ocl_system.num_devices; ++i)
-  {
-    create_and_fill_buffer(ocl_system.contexts[i],
-                           CL_MEM_READ_ONLY,
-                           ocl_system.queues[i * ocl_system.queues_per_device],
-                           2 * ((pbem3d) gc->bem)->sq->n_dist,
-                           sizeof(real),
-                           ((pbem3d) gc->bem)->sq->x_dist,
-                           NULL,
-                           &gc->buf_qx[i]);
-
-    create_and_fill_buffer(ocl_system.contexts[i],
-                           CL_MEM_READ_ONLY,
-                           ocl_system.queues[i * ocl_system.queues_per_device],
-                           2 * ((pbem3d) gc->bem)->sq->n_dist,
-                           sizeof(real),
-                           ((pbem3d) gc->bem)->sq->y_dist,
-                           NULL,
-                           &gc->buf_qy[i]);
-
-    create_and_fill_buffer(ocl_system.contexts[i],
-                           CL_MEM_READ_ONLY,
-                           ocl_system.queues[i * ocl_system.queues_per_device],
-                           ((pbem3d) gc->bem)->sq->n_dist,
-                           sizeof(real),
-                           ((pbem3d) gc->bem)->sq->w_dist +
-                           9 * ((pbem3d) gc->bem)->sq->n_dist,
-                           NULL,
-                           &gc->buf_w[i]);
-  }
 
   /* Clean up */
 

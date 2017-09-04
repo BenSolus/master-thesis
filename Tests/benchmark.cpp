@@ -13,11 +13,11 @@ static const real eps = std::numeric_limits<real>::epsilon();
 
 static real eta   = 1.0;       // Parameter for the accuracy of hierarchical
                                // clustering
-static uint n     = 8192;     // Problem size
+static uint n     = 2048;     // Problem size
 static uint m     = 8;         // Approximation order
 static uint q     = 2;         // Quadratur order
-static uint res   = m * m;     // Cluster resolution
-static real aca   = 1e-3;     // ACA resolution
+static uint res   = 16;     // Cluster resolution
+static real aca   = 1e-5;     // ACA resolution
 static uint tests = 1;
 
 size_t
@@ -59,8 +59,6 @@ main(int argc, char *argv[])
 
   cl_device_id *devices;
   cl_uint      ndevices;
-
-
 
   get_opencl_devices(&devices, &ndevices);
 
@@ -106,30 +104,37 @@ main(int argc, char *argv[])
 
   H2      = build_green_cross_h2matrix_greencross(gc, (void *) &eta);
 
+  printf("\nGeometry:\n"
+         "  %u polygons\n"
+         "  %u vertices\n"
+         "  %f GB\n",
+         gr->triangles,
+         gr->vertices,
+         ((3 * gr->vertices * sizeof(real)) +
+         (3 * gr->triangles * sizeof(uint)) +
+         (gr->triangles * sizeof(real))) / (1024.0 * 1024.0 * 1024.0));
+
   printf("\nQuadrature orders:\n"
          "  distant:   %u\n"
          "  vertex:    %u\n"
          "  edge:      %u\n"
-         "  identical: %u",
+         "  identical: %u\n",
          ((pbem3d) gc->bem)->sq->n_dist,
          ((pbem3d) gc->bem)->sq->n_vert,
          ((pbem3d) gc->bem)->sq->n_edge,
          ((pbem3d) gc->bem)->sq->n_id);
 
-  printf("\nGeometry: %lu GB\n",
-    (3 * gr->vertices * sizeof(real)) +
-    (3 * gr->triangles * sizeof(uint)) +
-    (gr->triangles * sizeof(real)));
-
   printf("\nH2-Matrix: %u blocks\n"
+         "             %u row clusters\n"
+         "             %u column clusters\n"
          "             size: %.5f GB\n"
-         "             farfield: %.5f GB\n"
          "             coupling: %.5f GB\n"
          "             neafield: %.5f GB\n",
          H2->desc,
+         H2->rb->t->desc,
+         H2->cb->t->desc,
          gettotalsize_h2matrix(H2) / (1024.0 * 1024.0 * 1024.0),
          getfarsize_h2matrix(H2) / (1024.0 * 1024.0 * 1024.0),
-         getcouplingsize_h2matrix(H2) / (1024.0 * 1024.0 * 1024.0),
          getnearsize_h2matrix(H2) / (1024.0 * 1024.0 * 1024.0));
 
   printf("\nOpenCL informations:\n"
@@ -160,33 +165,9 @@ main(int argc, char *argv[])
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms\n\n";
 
-  pavector  xt, yt_ref;
+  pavector  xt = new_coeffs_clusterbasis_avector(H2->cb);
 
-  xt     = new_coeffs_clusterbasis_avector(H2->cb);
-  yt_ref = new_coeffs_clusterbasis_avector(H2->rb);
-
-  forward_clusterbasis_avector(H2->cb, x, xt);
-
-  time = 0;
-
-  for(uint i(0); i < tests; ++i)
-  {
-    clear_avector(yt_ref);
-
-    std::clock_t begin(std::clock());
-
-    fastaddeval_farfield_h2matrix_avectors(1.0, H2, xt, yt_ref);
-
-    std::clock_t end(std::clock());
-
-    time += end - begin;
-  }
-
-  std::cout << "Reference fastaddeval (farfield):\n  "
-            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-            << " ms\n\n";
-
-  pavector yt = new_coeffs_clusterbasis_avector(H2->rb);
+  pavector yt  = new_coeffs_clusterbasis_avector(H2->rb);
 
   time = 0;
 
@@ -203,12 +184,9 @@ main(int argc, char *argv[])
     time += end - begin;
   }
 
-  add_avector(r_minusone, yt_ref, yt);
-
-  std::cout << "GCA fastaddeval (farfield, CPU):\n  "
+  std::cout << "fastaddeval (farfield, CPU):\n  "
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-            << " ms, rel. error: " << std::scientific
-            << norm2_avector(yt) / norm2_avector(yt_ref) << std::fixed
+            << " ms"
             << "\n\n";
 
   /******************************** GCA H2-MVM ********************************/
@@ -232,14 +210,59 @@ main(int argc, char *argv[])
 
   add_avector(r_minusone, y_ref, y);
 
-  std::cout << "GCA H2-MVM:\n  "
+  std::cout << "GCA H2-MVM (Quadrature in global memory):\n  "
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms, rel. error: " << std::scientific
-            << norm2_avector(y) / norm2_avector(y_ref)
+            << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
             << "\n\n";
 
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(y);
+//
+//    std::clock_t begin(std::clock());
+//
+//    mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y, 1);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  add_avector(r_minusone, y_ref, y);
+//
+//  std::cout << "GCA H2-MVM (Quadrature in global memory):\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms, rel. error: " << std::scientific
+//            << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
+//            << "\n\n";
+//
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(y);
+//
+//    std::clock_t begin(std::clock());
+//
+//    mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y, 2);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  add_avector(r_minusone, y_ref, y);
+//
+//  std::cout << "GCA H2-MVM (Quadrature in local memory):\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms, rel. error: " << std::scientific
+//            << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
+//            << "\n\n";
+
   del_avector(yt);
-  del_avector(yt_ref);
   del_avector(xt);
   del_avector(y);
   del_avector(y_ref);
