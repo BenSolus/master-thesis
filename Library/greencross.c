@@ -31,6 +31,12 @@ const char *kernel_names[]  = { "fastaddeval_h2matrix_avector_0",
                                 "fastaddeval_h2matrix_avector_2"//,
 //                              "fastaddeval_h2matrix_avector_3"
                               };
+typedef enum
+{
+  FARFIELD_ONLY,
+  NEARFIELD_ONLY,
+  BOTH
+} cluster_t;
 
 /** @addtogroup greencross
  *
@@ -114,16 +120,8 @@ init_greencross(pgreencross gc, uint dim)
   gc->m          = 0;
   gc->K          = 0;
   gc->aca_accur  = 0;
-  gc->gcocl      = (pgcopencl) allocmem(sizeof(gcopencl));
 
-  init_gcopencl(gc->gcocl);
-
-  gc->ocl_gca_nf = (pgcopencl) allocmem(sizeof(gcopencl));
-
-  init_gcopencl(gc->ocl_gca_nf);
-  gc->oclwrk     = (poclworkpgs) allocmem(sizeof(oclworkpgs));
-
-  init_oclwork(gc->oclwrk);
+  gc->ocl_info_nf = NULL;
 
   /* Pointer components */
   gc->geom       = NULL;
@@ -145,6 +143,10 @@ init_greencross(pgreencross gc, uint dim)
   gc->rc         = NULL;
   gc->cc         = NULL;
   gc->ocl_kernels = NULL;
+  gc->gcocl       = NULL;
+  gc->ocl_info_nf = NULL;
+  gc->oclwrk      = NULL;
+  gc->ocl_wrk_nf  = NULL;
 }
 
 void
@@ -193,6 +195,8 @@ uninit_greencross(pgreencross gc)
         CL_CHECK(clReleaseEvent(gc->event_p[i]));
         gc->event_p[i] = NULL;
       }
+
+    freemem(gc->event_p);
   }
 
   if(gc->buf_g != NULL)
@@ -245,16 +249,18 @@ uninit_greencross(pgreencross gc)
 /*  if(delete_kernels(num_kernels, &gc->kernels) != NULL)
     fprintf(stderr, "warning: failed to delete kernels");*/
 
-  uninit_gcopencl(gc->gcocl);
-  freemem(gc->gcocl);
+  freemem(gc->ocl_kernels);
+
+  del_gcopencl(gc->gcocl);
   gc->gcocl = NULL;
 
-  uninit_gcopencl(gc->ocl_gca_nf);
-  freemem(gc->ocl_gca_nf);
-  gc->ocl_gca_nf = NULL;
+  del_gcopencl(gc->ocl_info_nf);
 
-  uninit_oclwork(gc->oclwrk);
-  freemem(gc->oclwrk);
+//  uninit_gcopencl(gc->ocl_gca_nf);
+//  freemem(gc->ocl_gca_nf);
+//  gc->ocl_gca_nf = NULL;
+
+  //del_oclwrk(gc->oclwrk);
   gc->oclwrk = NULL;
 }
 
@@ -499,7 +505,7 @@ get_leaf_block_informations(ph2matrix H2,
 
   pgcopencl gcocl = gc->gcocl;
 
-  if((H2->u && gcocl->is_farfield) || (H2->f && !gcocl->is_farfield))
+  if(H2->u)
   {
     bool row_already_stored = false;
 
@@ -719,13 +725,13 @@ iterate_recursively_h2matrix(ph2matrix H2,
                              uint      ytoff,
                              pgcopencl gcocl)
 {
-  if((H2->u && gcocl->is_farfield) || (H2->f && !gcocl->is_farfield))
+  if(H2->u)
   {
-    if(H2->f && !gcocl->is_farfield)
-    {
-      xtoff += H2->cb->k;
-      ytoff += H2->rb->k;
-    }
+//    if(H2->f && !gcocl->is_farfield)
+//    {
+//      xtoff += H2->cb->k;
+//      ytoff += H2->rb->k;
+//    }
 
     int  i = -1;
     uint j;
@@ -790,9 +796,7 @@ iterate_recursively_h2matrix(ph2matrix H2,
 static void
 get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
 {
-  pgcopencl gcocl = is_farfield ? gc->gcocl : gc->ocl_gca_nf;
-
-  gcocl->is_farfield              = is_farfield;
+  pgcopencl gcocl = gc->gcocl;
 
   gcocl->num_row_leafs            = 0;
   gcocl->max_num_h2_leafs_per_row = 0;
@@ -800,6 +804,7 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
   gcocl->size_cidx                = 0;
   gcocl->roff                     = 0;
   gcocl->coff                     = 0;
+
   gcocl->names_row_leafs          = (uint *) calloc(0, sizeof(uint));
   gcocl->num_h2_leafs_per_row     = (uint *) calloc(0, sizeof(uint));
   gcocl->h2_leafs_per_row         = (ph2matrix **) calloc(0, sizeof(ph2matrix *));
@@ -818,19 +823,6 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
                    NULL,
                    (void *) gc);
 
-//  for(uint i = 0; i < gcocl->num_row_leafs; ++i)
-//  {
-//    printf("Writing cluster %u:\n", gcocl->names_row_leafs[i]);
-//
-//    for(uint j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
-//    {
-//      printf("  Reading cluster %u (%s): %u rows, %u cols\n",
-//             gcocl->col_names_per_row[i][j],
-//             gcocl->h2_leafs_per_row[i][j]->u ? "farfield" : "nearfield",
-//             gcocl->h2_leafs_per_row[i][j]->u ? gcocl->h2_leafs_per_row[i][j]->u->S.rows : gcocl->h2_leafs_per_row[i][j]->f->rows,
-//             gcocl->h2_leafs_per_row[i][j]->u ? gcocl->h2_leafs_per_row[i][j]->u->S.cols : gcocl->h2_leafs_per_row[i][j]->f->cols);
-//    }
-//  }
   gcocl->size_ridx  = gcocl->roff;
   gcocl->size_cidx  = gcocl->coff;
   gcocl->workload_per_row = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
@@ -862,10 +854,6 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
     gcocl->ridx_sizes[i] = gcocl->h2_leafs_per_row[i][0]->rb->k;
   }
 
-//  printf("\nNumber of row clusters: %u\n", gcocl->num_row_leafs);
-//  printf("\nMaximum number of H^2-matrix-leafs per row cluster: %lu\n",
-//         gcocl->max_num_h2_leafs_per_row);
-
   gcocl->cidx_sizes =
     (uint *) calloc(gcocl->idx_off[gcocl->num_row_leafs - 1] +
                     gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
@@ -876,9 +864,10 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
                     gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
                     sizeof(uint));
 
+  /* Get number of indices for all H2-matrix leafs, ready to be written to
+   * OpenCL devices. */
   for (uint i = 0; i < gcocl->num_row_leafs; ++i)
   {
-    /* Get number of indices for all H2-matrix leafs. */
     for(uint j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
       gcocl->cidx_sizes[gcocl->idx_off[i] + j] =
         gcocl->h2_leafs_per_row[i][j]->cb->k;
@@ -927,16 +916,14 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
                            NULL,
                            &gcocl->buf_ridx_off[i]);
 
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device], // Currently using only one of everything)
-                gcocl->buf_ridx[i],
-                false,
-                0,
-                gcocl->size_ridx * sizeof(uint),
-                gcocl->host_ridx,
-                0,
-                NULL,
-                NULL));
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->size_ridx,
+                           sizeof(uint),
+                           gcocl->host_ridx,
+                           NULL,
+                           &gcocl->buf_ridx[i]);
 
     create_and_fill_buffer(ocl_system.contexts[i],
                            CL_MEM_READ_ONLY,
@@ -958,17 +945,18 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
                            NULL,
                            &gcocl->buf_cidx_off[i]);
 
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device], // Currently using only one of everything)
-                gcocl->buf_cidx[i * ocl_system.queues_per_device],
-                false,
-                0,
-                gcocl->size_cidx * sizeof(uint),
-                gcocl->host_cidx,
-                0,
-                NULL,
-                NULL));
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->size_cidx,
+                           sizeof(uint),
+                           gcocl->host_cidx,
+                           NULL,
+                           &gcocl->buf_cidx[i]);
   }
+
+  /* Get offsets of individual writing clusters relative to the whole
+   * H^2-matrix. */
 
   gcocl->xtoffs             = (uint **) calloc(gcocl->num_row_leafs,
                                                sizeof(uint*));
@@ -987,6 +975,7 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
                     gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
                     sizeof(uint));
 
+  /* Make the offsets ready to be written to OpenCL devices. */
   for(uint i = 0; i < gcocl->num_row_leafs; ++i)
   {
     memcpy(gcocl->host_xtoffs + gcocl->idx_off[i],
@@ -994,6 +983,7 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
            gcocl->num_h2_leafs_per_row[i] * sizeof(uint));
   }
 
+  /* Write offsets to the devices. */
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
     create_and_fill_buffer(ocl_system.contexts[i],
@@ -1080,6 +1070,9 @@ distribute_ocl_work_uniform_gca_oclworkpkgs(pcgcopencl  gcocl,
       = i;
   }
 
+  oclwrk->buf_rows_this_device =
+    (cl_mem *) calloc(oclwrk->num_wrk_pkgs, sizeof(cl_mem));
+
   /* Write the indices of the clusters lists a device is responsible for to the
    * corresponding device. */
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
@@ -1150,17 +1143,31 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
     assemble_bem3d_h2matrix(bem, H2);
   }
 
-  /* Set up buffer for fastaddeval. */
-
-  gc->feval = new_fastaddevalgca(H2->rb, H2->cb);
-
   /* Get farfield leaf informations. */
+
+  gc->gcocl = new_gcopencl();
 
   get_ocl_informations_gcocl(H2, gc, true);
 
-  distribute_ocl_work_uniform_gca_oclworkpkgs(gc->gcocl,
-                                              ocl_system.num_devices,
-                                              gc->oclwrk);
+  //printf("%u\n", gc->gcocl->ridx_off[0]);
+  /* Get the informations an OpenCL device needs to perform the MVM-part of
+   * nearfield matrices. */
+  gc->ocl_info_nf = new_nearfield_gcopencl(H2);
+
+  gc->oclwrk      = new_equidistant_distributed_oclwork(gc->gcocl,
+                                                        H2,
+                                                        1);
+
+  gc->ocl_wrk_nf  = new_equidistant_distributed_oclwork(gc->ocl_info_nf,
+                                                        H2,
+                                                        1);
+
+  /* Set up buffer for fastaddeval. */
+  gc->feval = new_fastaddevalgca(H2->rb, H2->cb, 1);
+
+//  distribute_ocl_work_uniform_gca_oclworkpkgs(gc->gcocl,
+//                                              ocl_system.num_devices,
+//                                              gc->oclwrk);
 
   if(delete_kernels(num_kernels, &gc->ocl_kernels) != NULL)
   {
@@ -1204,12 +1211,14 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
         CL_CHECK(clSetKernelArg(kernel, 2, sizeof(cl_mem), &gc->buf_x[i]));
         CL_CHECK(clSetKernelArg(kernel, 3, sizeof(cl_mem), &gc->buf_p[i]));
         CL_CHECK(clSetKernelArg(kernel, 4, sizeof(cl_mem), &gc->buf_g[i]));
-        CL_CHECK(clSetKernelArg(kernel, 5, sizeof(uint), &gc->sq_gca->nq));
+
+        CL_CHECK(clSetKernelArg(kernel, 5, sizeof(uint),   &gc->sq_gca->nq));
         CL_CHECK(clSetKernelArg(kernel, 6, sizeof(cl_mem), &gc->sq_gca->buf_xqs[i]));
         CL_CHECK(clSetKernelArg(kernel, 7, sizeof(cl_mem), &gc->sq_gca->buf_yqs[i]));
         CL_CHECK(clSetKernelArg(kernel, 8, sizeof(cl_mem), &gc->sq_gca->buf_wqs[i]));
         CL_CHECK(clSetKernelArg(kernel, 9, sizeof(cl_mem), &gc->sq_gca->buf_bases[i]));
-        CL_CHECK(clSetKernelArg(kernel, 10, sizeof(uint), &gc->oclwrk->num_rows_per_pkg[i]));
+
+        CL_CHECK(clSetKernelArg(kernel, 10, sizeof(uint),   &gc->oclwrk->num_rows_per_pkg[i]));
         CL_CHECK(clSetKernelArg(kernel, 11, sizeof(cl_mem), &gc->oclwrk->buf_rows_this_device[i]));
         CL_CHECK(clSetKernelArg(kernel, 12, sizeof(cl_mem), &gc->gcocl->buf_num_h2_leafs_per_row[i]));
         CL_CHECK(clSetKernelArg(kernel, 13, sizeof(cl_mem), &gc->gcocl->buf_idx_off[i]));
@@ -1219,11 +1228,36 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
         CL_CHECK(clSetKernelArg(kernel, 17, sizeof(cl_mem), &gc->gcocl->buf_cidx_off[i]));
         CL_CHECK(clSetKernelArg(kernel, 18, sizeof(cl_mem), &gc->gcocl->buf_ridx[i]));
         CL_CHECK(clSetKernelArg(kernel, 19, sizeof(cl_mem), &gc->gcocl->buf_cidx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 20, sizeof(cl_mem), &gc->gcocl->buf_xtoffs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 21, sizeof(cl_mem), &gc->gcocl->buf_ytoffs[i]));
 
-        CL_CHECK(clSetKernelArg(kernel, 21, sizeof(cl_mem), &gc->gcocl->buf_xtoffs[i]));
-        CL_CHECK(clSetKernelArg(kernel, 22, sizeof(cl_mem), &gc->gcocl->buf_ytoffs[i]));
-        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->feval->buf_xt[i]));
-        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->feval->buf_yt[i]));
+        CL_CHECK(clSetKernelArg(kernel, 22, sizeof(uint),   &gc->ocl_wrk_nf->num_rows_per_pkg[i]));
+        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->ocl_wrk_nf->buf_rows_this_device[i]));
+        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->ocl_info_nf->buf_num_h2_leafs_per_row[i]));
+        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->ocl_info_nf->buf_idx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 26, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 27, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 28, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 29, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 31, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 32, sizeof(cl_mem), &gc->ocl_info_nf->buf_xtoffs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 33, sizeof(cl_mem), &gc->ocl_info_nf->buf_ytoffs[i]));
+
+        if(gc->dim == 2)
+        {
+          CL_CHECK(clSetKernelArg(kernel, 34, sizeof(real), &((pbem2d) gc->bem)->alpha));
+        }
+        else
+        {
+          CL_CHECK(clSetKernelArg(kernel, 34, sizeof(real), &((pbem3d) gc->bem)->alpha));
+        }
+
+        CL_CHECK(clSetKernelArg(kernel, 36, sizeof(cl_mem), &gc->feval->buf_xt[i]));
+        CL_CHECK(clSetKernelArg(kernel, 37, sizeof(cl_mem), &gc->feval->buf_yt[i]));
+
+//        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->feval->buf_xt[i]));
+//        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->feval->buf_yt[i]));
       }
     }
   }
@@ -1301,7 +1335,6 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
                                        gc->gcocl->num_row_leafs;
 
   pfastaddevalgca feval  = gc->feval;
-  pgcopencl       gcocl  = gc->gcocl;
   poclworkpgs     oclwrk = gc->oclwrk;
 
   cl_command_queue *queues = ocl_system.queues;
@@ -1319,17 +1352,6 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
                 0,
                 NULL,
                 &feval->events_xt[i]));
-
-    CL_CHECK(clEnqueueWriteBuffer
-               (queues[i * ocl_system.queues_per_device],
-                feval->buf_yt[i],
-                CL_FALSE,
-                0,
-                yt->dim * sizeof(real),
-                yt->v,
-                0,
-                NULL,
-                &feval->events_yt[i]));
   }
 
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
@@ -1342,7 +1364,8 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
                                          kernel_idx * ocl_system.num_devices *
                                          ocl_system.queues_per_device];
 
-      CL_CHECK(clSetKernelArg(kernel, 20, sizeof(real), &alpha));
+      CL_CHECK(clSetKernelArg(kernel, 35, sizeof(real), &alpha));
+//      CL_CHECK(clSetKernelArg(kernel, 22, sizeof(real), &alpha));
     }
 
     cl_event events[2] = { feval->events_xt[i], feval->events_yt[i] };
@@ -1362,27 +1385,6 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
                 0,
                 NULL,
                 NULL));
-  }
-
-  for(uint j = 0; j < oclwrk->num_wrk_pkgs; ++j)
-  {
-    clFinish(queues[j * ocl_system.queues_per_device]);
-
-    for (uint i = 0; i < oclwrk->num_rows_per_pkg[j]; ++i)
-    {
-      CL_CHECK(clEnqueueReadBuffer
-                 (queues[j * ocl_system.queues_per_device],
-                  feval->buf_yt[j],
-                  CL_TRUE,
-                  gcocl->ytoffs[oclwrk->rows_per_pkg[j][i]] *
-                  sizeof(real),
-                  gcocl->ridx_sizes[oclwrk->rows_per_pkg[j][i]] *
-                  sizeof(real),
-                  yt->v + gcocl->ytoffs[oclwrk->rows_per_pkg[j][i]],
-                  0,
-                  NULL,
-                  NULL));
-    }
   }
 }
 
@@ -1536,6 +1538,8 @@ nearfield_3d_cpu_gca(pcgreencross gc,
   const uint (*p)[3] = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
   const real *g      = ((psurface3d) gc->geom)->g;
 
+//  printf("CPU %u %u\n", rows, cols);
+
   for(uint i = 0; i < rows; ++i)
   {
     const uint ii  = (ridx == NULL ? i : ridx[i]);
@@ -1615,7 +1619,7 @@ nearfield_3d_cpu_gca(pcgreencross gc,
           ? 0.5 * bem->alpha * g[ii]
           : r_zero;
 
-        result += (sum * factor + factor2) * getentry_avector(xt, j);
+      result += (sum * factor + factor2) * getentry_avector(xt, j);
     }
 
     yt->v[i] += alpha * result;
@@ -1650,15 +1654,6 @@ fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
                             alpha,
                             xt1,
                             yt1);
-
-    nearfield_3d_cpu_gca(gc,
-                         H2->f->rows,
-                         H2->f->cols,
-                         H2->rb->t->idx,
-                         H2->cb->t->idx,
-                         alpha,
-                         xt1,
-                         yt1);
 
     uninit_avector(yt1);
     uninit_avector(xt1);
@@ -1705,6 +1700,51 @@ fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
 }
 
 void
+fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,
+                                                field       alpha,
+                                                pavector    xt,
+                                                pavector    yt)
+{
+  pgcopencl ocl_info = gc->ocl_info_nf;
+
+  avector tmp1, tmp2;
+
+  for(uint i = 0; i < ocl_info->num_row_leafs; ++i)
+  {
+    pavector yt1 = init_sub_avector(&tmp1,
+                                    yt,
+                                    ocl_info->ridx_sizes[i],
+                                    ocl_info->ytoffs[i]);
+
+    const uint idx_off = ocl_info->idx_off[i];
+    const uint *ridx   = ocl_info->host_ridx + ocl_info->ridx_off[i];
+
+    for(uint j = 0; j < ocl_info->num_h2_leafs_per_row[i]; ++j)
+    {
+      pavector xt1 = init_sub_avector(&tmp2,
+                                      xt,
+                                      ocl_info->cidx_sizes[idx_off + j],
+                                      ocl_info->xtoffs[i][j]);
+
+      nearfield_3d_cpu_gca(gc,
+                           yt1->dim,
+                           xt1->dim,
+                           ridx,
+                           ocl_info->host_cidx + ocl_info->cidx_off[i][j],
+                           alpha,
+                           xt1,
+                           yt1);
+
+      uninit_avector(xt1);
+    }
+
+//    print_avector(yt1);
+
+    uninit_avector(yt1);
+  }
+}
+
+void
 fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,
                                                       field        alpha,
                                                       pavector     xt,
@@ -1721,19 +1761,26 @@ fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,
                                     gcocl->ridx_sizes[i],
                                     gcocl->ytoffs[i]);
 
+//    printf("%u %u", gcocl->ytoffs[i], gcocl->ridx_sizes[i]);
     const uint idx_off = gcocl->idx_off[i];
 
     for (uint j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
     {
+      const uint cidx_size = gcocl->cidx_sizes[idx_off + j];
+
       pavector xt1 = init_sub_avector(&tmp2,
                                       xt,
-                                      gcocl->cidx_sizes[idx_off + j],
+                                      cidx_size,
                                       gcocl->xtoffs[i][j]);
 
-      addeval_amatrix_avector(alpha,
-                              &gcocl->h2_leafs_per_row[i][j]->u->S,
-                              xt1,
-                              yt1);
+      nearfield_3d_cpu_gca(gc,
+                           gc->gcocl->ridx_sizes[i],
+                           cidx_size,
+                           gc->gcocl->host_ridx + gc->gcocl->ridx_off[i],
+                           gc->gcocl->host_cidx + gc->gcocl->cidx_off[i][j],
+                           alpha,
+                           xt1,
+                           yt1);
 
       uninit_avector(xt1);
     }
@@ -1750,17 +1797,61 @@ fastaddeval_h2matrix_avector_greencross(pgreencross gc,
 			                                  pavector    yt,
                                         uint        kernel_idx)
 {
+//#pragma omp parallel
+//{
+//  #pragma omp task shared(yt)
   fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(gc,
                                                             alpha,
                                                             H2,
                                                             xt,
                                                             yt);
 
+//  #pragma omp task shared(yt)
   fastaddeval_farfield_h2matrix_avector_greencross(gc,
                                                    alpha,
                                                    xt,
                                                    yt,
                                                    kernel_idx);
+
+//  #pragma omp taskwait
+
+  pfastaddevalgca feval = gc->feval;
+  poclworkpgs oclwrk = gc->oclwrk;
+
+  cl_command_queue *queues = ocl_system.queues;
+
+//  #pragma omp for
+  for (uint j = 0; j < oclwrk->num_wrk_pkgs; ++j) {
+    const uint num_comp = oclwrk->last_idx_of_pkg[j] -
+                          oclwrk->first_idx_of_pkgs[j];
+
+    avector tmp;
+    pavector cpu = init_sub_avector(&tmp,
+                                    yt,
+                                    num_comp,
+                                    oclwrk->first_idx_of_pkgs[j]);
+
+    pavector gpu = new_avector(num_comp);
+
+    clFinish(queues[j * ocl_system.queues_per_device]);
+
+    CL_CHECK(clEnqueueReadBuffer
+               (queues[j * ocl_system.queues_per_device],
+                feval->buf_yt[j],
+                CL_TRUE,
+                oclwrk->first_idx_of_pkgs[j] * sizeof(real),
+                num_comp * sizeof(real),
+                gpu->v,
+                0,
+                NULL,
+                NULL));
+
+    add_avector(r_one, gpu, cpu);
+
+    del_avector(gpu);
+    uninit_avector(cpu);
+  }
+//}
 }
 
 void
@@ -1777,6 +1868,20 @@ addeval_h2matrix_avector_greencross(pgreencross gc,
   yt = new_coeffs_clusterbasis_avector(H2->rb);
 
   clear_avector(yt);
+
+  for(uint i = 0; i < gc->oclwrk->num_wrk_pkgs; ++i)
+  {
+    CL_CHECK(clEnqueueWriteBuffer
+               (ocl_system.queues[i * ocl_system.queues_per_device],
+                gc->feval->buf_yt[i],
+                CL_FALSE,
+                0,
+                yt->dim * sizeof(real),
+                yt->v,
+                0,
+                NULL,
+                &gc->feval->events_yt[i]));
+  }
 
   forward_clusterbasis_avector(H2->cb, x, xt);
 

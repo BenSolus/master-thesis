@@ -14,371 +14,272 @@
 
 #include "ocl_system.h"
 
+#include <string.h>
+
 void
 init_gcopencl(pgcopencl gcocl)
 {
-  assert(gcocl != NULL);
-
-  cl_int res;
-
-  gcocl->is_farfield              = false;
-
-  gcocl->num_row_leafs            = 0;
-  gcocl->max_num_h2_leafs_per_row = 0;
-  gcocl->size_ridx                = 0;
-  gcocl->size_cidx                = 0;
-  gcocl->roff                     = 0;
-  gcocl->coff                     = 0;
-
-  gcocl->names_row_leafs          = NULL;
-  gcocl->num_h2_leafs_per_row     = NULL;
-  gcocl->buf_num_h2_leafs_per_row =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->workload_per_row         = NULL;
-  gcocl->idx_off                  = NULL;
-  gcocl->buf_idx_off              =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->col_names_per_row        = NULL;
-  gcocl->h2_leafs_per_row         = NULL;
-  gcocl->ridx_sizes               = NULL;
-  gcocl->buf_ridx_sizes           =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->ridx_off                 = NULL;
-  gcocl->buf_ridx_off             =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->host_ridx                = NULL;
-  gcocl->buf_ridx                 =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->cidx_sizes               = NULL;
-  gcocl->buf_cidx_sizes           =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->cidx_off                 = NULL;
-  gcocl->host_cidx_off            = NULL;
-  gcocl->buf_cidx_off             =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->host_cidx                = NULL;
-  gcocl->buf_cidx                 =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->xtoffs                   = NULL;
-  gcocl->host_xtoffs              = NULL;
-  gcocl->buf_xtoffs               =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  gcocl->ytoffs                   = NULL;
-  gcocl->buf_ytoffs               =
-    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-
-  for(uint i = 0; i < ocl_system.num_devices; ++i)
+  if(gcocl != NULL)
   {
-    gcocl->buf_ridx[i] = clCreateBuffer(ocl_system.contexts[i],
-                                        CL_MEM_READ_ONLY,
-                                        ocl_system.max_package_size,
-                                        NULL,
-                                        &res);
+    gcocl->is_farfield              = false;
 
-    CL_CHECK(res);
+    gcocl->num_row_leafs            = 0;
+    gcocl->max_num_h2_leafs_per_row = 0;
+    gcocl->size_ridx                = 0;
+    gcocl->size_cidx                = 0;
+    gcocl->roff                     = 0;
+    gcocl->coff                     = 0;
 
-    gcocl->buf_cidx[i] = clCreateBuffer(ocl_system.contexts[i],
-                                        CL_MEM_READ_ONLY,
-                                        ocl_system.max_package_size,
-                                        NULL,
-                                        &res);
-
-    CL_CHECK(res);
-
-//    CL_CHECK(clEnqueueFillBuffer(ocl_system.queues[i],
-//                                 gcocl->buf_yt[i],
-//                                 &r_zero,
-//                                 sizeof(real),
-//                                 0,
-//                                 ocl_system.max_package_size,
-//                                 0,
-//                                 NULL,
-//                                 NULL));
+    gcocl->names_row_leafs          = NULL;
+    gcocl->num_h2_leafs_per_row     = NULL;
+    gcocl->buf_num_h2_leafs_per_row = NULL;
+    gcocl->workload_per_row         = NULL;
+    gcocl->idx_off                  = NULL;
+    gcocl->buf_idx_off              = NULL;
+    gcocl->col_names_per_row        = NULL;
+    gcocl->h2_leafs_per_row         = NULL;
+    gcocl->ridx_sizes               = NULL;
+    gcocl->buf_ridx_sizes           = NULL;
+    gcocl->ridx_off                 = NULL;
+    gcocl->buf_ridx_off             = NULL;
+    gcocl->host_ridx                = NULL;
+    gcocl->buf_ridx                 = NULL;
+    gcocl->cidx_sizes               = NULL;
+    gcocl->buf_cidx_sizes           = NULL;
+    gcocl->cidx_off                 = NULL;
+    gcocl->host_cidx_off            = NULL;
+    gcocl->buf_cidx_off             = NULL;
+    gcocl->host_cidx                = NULL;
+    gcocl->buf_cidx                 = NULL;
+    gcocl->xtoffs                   = NULL;
+    gcocl->host_xtoffs              = NULL;
+    gcocl->buf_xtoffs               = NULL;
+    gcocl->ytoffs                   = NULL;
+    gcocl->buf_ytoffs               = NULL;
   }
 }
 
 void
 uninit_gcopencl(pgcopencl gcocl)
 {
-  if(gcocl->names_row_leafs != NULL)
+  if(gcocl != NULL)
   {
-    freemem(gcocl->names_row_leafs);
-    gcocl->names_row_leafs = NULL;
+    /* Free all memory/release all objects. */
+    if (gcocl->names_row_leafs != NULL)
+      freemem(gcocl->names_row_leafs);
+
+    if (gcocl->num_h2_leafs_per_row != NULL)
+      freemem(gcocl->num_h2_leafs_per_row);
+
+    if (gcocl->buf_num_h2_leafs_per_row != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_num_h2_leafs_per_row[i]));
+
+      freemem(gcocl->buf_num_h2_leafs_per_row);
+    }
+
+    if (gcocl->workload_per_row != NULL)
+      freemem(gcocl->workload_per_row);
+
+    if (gcocl->idx_off != NULL)
+      freemem(gcocl->idx_off);
+
+    if (gcocl->buf_idx_off != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_idx_off[i]));
+
+      freemem(gcocl->buf_idx_off);
+    }
+
+    if (gcocl->h2_leafs_per_row != NULL) {
+      for (uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if (gcocl->h2_leafs_per_row[i] != NULL) {
+          freemem(gcocl->h2_leafs_per_row[i]);
+          gcocl->h2_leafs_per_row[i] = NULL;
+        }
+
+      freemem(gcocl->h2_leafs_per_row);
+    }
+
+    if (gcocl->col_names_per_row != NULL) {
+      for (uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if (gcocl->col_names_per_row[i] != NULL) {
+          freemem(gcocl->col_names_per_row[i]);
+          gcocl->col_names_per_row[i] = NULL;
+        }
+
+      freemem(gcocl->col_names_per_row);
+    }
+
+    if (gcocl->buf_ridx_sizes != NULL)
+      freemem(gcocl->ridx_sizes);
+
+    if (gcocl->buf_ridx_sizes != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i)
+        if (gcocl->buf_ridx_sizes[i] != NULL) {
+          CL_CHECK(clReleaseMemObject(gcocl->buf_ridx_sizes[i]));
+          gcocl->buf_ridx_sizes[i] = NULL;
+        }
+
+      freemem(gcocl->buf_ridx_sizes);
+    }
+
+    if (gcocl->ridx_off != NULL)
+      freemem(gcocl->ridx_off);
+
+    if (gcocl->buf_ridx_off != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i)
+        if (gcocl->buf_ridx_off[i] != NULL) {
+          CL_CHECK(clReleaseMemObject(gcocl->buf_ridx_off[i]));
+          gcocl->buf_ridx_off[i] = NULL;
+        }
+
+      freemem(gcocl->buf_ridx_off);
+    }
+
+    if (gcocl->host_ridx != NULL)
+      freemem(gcocl->host_ridx);
+
+    if (gcocl->buf_ridx != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_ridx[i]));
+
+      freemem(gcocl->buf_ridx);
+    }
+
+    if (gcocl->cidx_sizes != NULL)
+      freemem(gcocl->cidx_sizes);
+
+    if (gcocl->buf_cidx_sizes != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_cidx_sizes[i]));
+
+      freemem(gcocl->buf_cidx_sizes);
+    }
+
+    if (gcocl->cidx_off != NULL) {
+      for (uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if (gcocl->cidx_off[i] != NULL) {
+          freemem(gcocl->cidx_off[i]);
+          gcocl->cidx_off[i] = NULL;
+        }
+
+      freemem(gcocl->cidx_off);
+    }
+
+    if (gcocl->host_cidx_off != NULL)
+      freemem(gcocl->host_cidx_off);
+
+    if (gcocl->buf_cidx_off != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_cidx_off[i]));
+
+      freemem(gcocl->buf_cidx_off);
+    }
+
+    if (gcocl->host_cidx != NULL)
+      freemem(gcocl->host_cidx);
+
+    if(gcocl->buf_cidx != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_cidx[i]));
+
+      freemem(gcocl->buf_cidx);
+    }
+
+    if (gcocl->xtoffs != NULL) {
+      for (uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if (gcocl->xtoffs[i] != NULL) {
+          freemem(gcocl->xtoffs[i]);
+          gcocl->xtoffs[i] = NULL;
+        }
+
+      freemem(gcocl->xtoffs);
+    }
+
+    if (gcocl->host_xtoffs != NULL)
+      freemem(gcocl->host_xtoffs);
+
+    if (gcocl->buf_xtoffs != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_xtoffs[i]));
+
+      freemem(gcocl->buf_xtoffs);
+    }
+
+    if (gcocl->ytoffs != NULL)
+      freemem(gcocl->ytoffs);
+
+    if (gcocl->buf_ytoffs != NULL) {
+      for (uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_ytoffs[i]));
+
+      freemem(gcocl->buf_ytoffs);
+    }
+
+    /* Set all variables to 0/NULL. */
+    init_gcopencl(gcocl);
   }
+}
 
-  if(gcocl->num_h2_leafs_per_row != NULL)
-  {
-    freemem(gcocl->num_h2_leafs_per_row);
-    gcocl->num_h2_leafs_per_row = NULL;
-  }
+pgcopencl
+new_gcopencl()
+{
+  pgcopencl gcocl = (pgcopencl) allocmem(sizeof(gcopencl));
 
-  if(gcocl->buf_num_h2_leafs_per_row != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_num_h2_leafs_per_row[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_num_h2_leafs_per_row[i]));
-        gcocl->buf_num_h2_leafs_per_row[i] = NULL;
-      }
+  init_gcopencl(gcocl);
 
-    freemem(gcocl->buf_num_h2_leafs_per_row);
-    gcocl->buf_num_h2_leafs_per_row = NULL;
-  }
+  gcocl->buf_num_h2_leafs_per_row =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-  if(gcocl->workload_per_row != NULL)
-  {
-    freemem(gcocl->workload_per_row);
-    gcocl->workload_per_row = NULL;
-  }
+  gcocl->buf_idx_off =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-  if(gcocl->idx_off != NULL)
-  {
-    freemem(gcocl->idx_off);
-    gcocl->idx_off = NULL;
-  }
+  gcocl->buf_ridx_sizes =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-  if(gcocl->buf_idx_off != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_idx_off[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_idx_off[i]));
-        gcocl->buf_idx_off[i] = NULL;
-      }
+  gcocl->buf_ridx_off =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-    freemem(gcocl->buf_idx_off);
-    gcocl->buf_idx_off = NULL;
-  }
+  gcocl->buf_ridx =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-  if(gcocl->h2_leafs_per_row != NULL)
-  {
-    for(uint i = 0; i < gcocl->num_row_leafs; ++i)
-      if(gcocl->h2_leafs_per_row[i] != NULL)
-      {
-        freemem(gcocl->h2_leafs_per_row[i]);
-        gcocl->h2_leafs_per_row[i] = NULL;
-      }
+  gcocl->buf_cidx_sizes =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-    freemem(gcocl->h2_leafs_per_row);
-    gcocl->h2_leafs_per_row = NULL;
-  }
+  gcocl->buf_cidx_off =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-  if(gcocl->col_names_per_row != NULL)
-  {
-    for(uint i = 0; i < gcocl->num_row_leafs; ++i)
-      if(gcocl->col_names_per_row[i] != NULL)
-      {
-        freemem(gcocl->col_names_per_row[i]);
-        gcocl->col_names_per_row[i] = NULL;
-      }
+  gcocl->buf_cidx =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-    freemem(gcocl->col_names_per_row);
-    gcocl->col_names_per_row = NULL;
-  }
+  gcocl->buf_xtoffs =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-  if(gcocl->buf_ridx_sizes != NULL)
-  {
-    freemem(gcocl->ridx_sizes);
-    gcocl->buf_ridx_sizes = NULL;
-  }
+  gcocl->buf_ytoffs =
+    (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
-  if(gcocl->buf_ridx_sizes != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_ridx_sizes[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_ridx_sizes[i]));
-        gcocl->buf_ridx_sizes[i] = NULL;
-      }
+  return gcocl;
+}
 
-    freemem(gcocl->buf_ridx_sizes);
-    gcocl->buf_ridx_sizes = NULL;
-  }
+pgcopencl
+new_nearfield_gcopencl(ph2matrix H2)
+{
+  pgcopencl gcocl    = new_gcopencl();
 
-  if(gcocl->ridx_off != NULL)
-  {
-    freemem(gcocl->ridx_off);
-    gcocl->ridx_off = NULL;
-  }
+  get_ocl_informations(H2, NEARFIELD, gcocl);
 
-  if(gcocl->buf_ridx_off != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_ridx_off[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_ridx_off[i]));
-        gcocl->buf_ridx_off[i] = NULL;
-      }
-
-    freemem(gcocl->buf_ridx_off);
-    gcocl->buf_ridx_off = NULL;
-  }
-
-  if(gcocl->host_ridx != NULL)
-  {
-    freemem(gcocl->host_ridx);
-    gcocl->host_ridx = NULL;
-  }
-
-  if(gcocl->buf_ridx != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_ridx[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_ridx[i]));
-        gcocl->buf_ridx[i] = NULL;
-      }
-
-    freemem(gcocl->buf_ridx);
-    gcocl->buf_ridx = NULL;
-  }
-
-  if(gcocl->cidx_sizes != NULL)
-  {
-    freemem(gcocl->cidx_sizes);
-    gcocl->cidx_sizes = NULL;
-  }
-
-  if(gcocl->buf_cidx_sizes != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_cidx_sizes[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_cidx_sizes[i]));
-        gcocl->buf_cidx_sizes[i] = NULL;
-      }
-
-    freemem(gcocl->buf_cidx_sizes);
-    gcocl->buf_cidx_sizes = NULL;
-  }
-
-  if(gcocl->cidx_off != NULL)
-  {
-    for(uint i = 0; i < gcocl->num_row_leafs; ++i)
-      if(gcocl->cidx_off[i] != NULL)
-      {
-        freemem(gcocl->cidx_off[i]);
-        gcocl->cidx_off[i] = NULL;
-      }
-
-    freemem(gcocl->cidx_off);
-    gcocl->cidx_off = NULL;
-  }
-
-  if(gcocl->host_cidx_off != NULL)
-  {
-    freemem(gcocl->host_cidx_off);
-    gcocl->host_cidx_off = NULL;
-  }
-
-  if(gcocl->buf_cidx_off != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_cidx_off[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_cidx_off[i]));
-        gcocl->buf_cidx_off[i] = NULL;
-      }
-
-    freemem(gcocl->buf_cidx_off);
-    gcocl->buf_cidx_off = NULL;
-  }
-
-  if(gcocl->host_cidx != NULL)
-  {
-    freemem(gcocl->host_cidx);
-    gcocl->host_cidx = NULL;
-  }
-
-  if(gcocl->buf_cidx != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_cidx[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_cidx[i]));
-        gcocl->buf_cidx[i] = NULL;
-      }
-
-    freemem(gcocl->buf_cidx);
-    gcocl->buf_cidx = NULL;
-  }
-
-  if(gcocl->xtoffs != NULL)
-  {
-    for(uint i = 0; i < gcocl->num_row_leafs; ++i)
-      if(gcocl->xtoffs[i] != NULL)
-      {
-        freemem(gcocl->xtoffs[i]);
-        gcocl->xtoffs[i] = NULL;
-      }
-
-    freemem(gcocl->xtoffs);
-    gcocl->xtoffs = NULL;
-  }
-
-  if(gcocl->host_xtoffs != NULL)
-  {
-    freemem(gcocl->host_xtoffs);
-    gcocl->host_xtoffs = NULL;
-  }
-
-  if(gcocl->buf_xtoffs != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_xtoffs[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_xtoffs[i]));
-        gcocl->buf_xtoffs[i] = NULL;
-      }
-
-    freemem(gcocl->buf_xtoffs);
-    gcocl->buf_xtoffs = NULL;
-  }
-
-  if(gcocl->ytoffs != NULL)
-  {
-    freemem(gcocl->ytoffs);
-    gcocl->ytoffs = NULL;
-  }
-
-  if(gcocl->buf_ytoffs != NULL)
-  {
-    for(uint i = 0; i < ocl_system.num_devices; ++i)
-      if(gcocl->buf_ytoffs[i] != NULL)
-      {
-        CL_CHECK(clReleaseMemObject(gcocl->buf_ytoffs[i]));
-        gcocl->buf_ytoffs[i] = NULL;
-      }
-
-    freemem(gcocl->buf_ytoffs);
-    gcocl->buf_ytoffs = NULL;
-  }
+  return gcocl;
 }
 
 void
 del_gcopencl(pgcopencl gcocl)
 {
+  uninit_gcopencl(gcocl);
+
   if(gcocl != NULL)
-  {
-    uninit_gcopencl(gcocl);
-
     freemem(gcocl);
-  }
-}
-
-void
-del_gcopencls(const uint num_gcocls, pgcopencl *gcocls)
-{
-  if(gcocls != NULL)
-  {
-    for(uint i = 0; i < num_gcocls; ++i)
-    {
-      del_gcopencl(gcocls[i]);
-      gcocls[i] = NULL;
-    }
-
-    freemem(gcocls);
-  }
 }
 
 size_t
@@ -420,6 +321,220 @@ getsize_gcopencl(pcgcopencl gcocl)
   return sz;
 }
 
+void
+get_ocl_nearfild_informations(ph2matrix H2,
+                              uint      mname,
+                              uint      rname,
+                              uint      cname,
+                              uint      pardepth,
+                              void      *data)
+{
+  (void) mname;
+  (void) pardepth;
+
+  pgcopencl gcocl = (pgcopencl) data;
+
+  if(H2->f)
+  {
+    bool row_already_stored = false;
+
+    for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+      if(gcocl->names_row_leafs[i] == rname)
+      {
+        row_already_stored = true;
+
+        bool column_already_used = false;
+
+        // Update H2-matrix leaf counter for this cluster
+        gcocl->num_h2_leafs_per_row[i] += 1;
+
+        /************************* h2_leafs_per_row ***************************/
+
+        gcocl->h2_leafs_per_row[i] =
+          realloc(gcocl->h2_leafs_per_row[i],
+                  gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
+
+        gcocl->h2_leafs_per_row[i][gcocl->num_h2_leafs_per_row[i] - 1] = H2;
+
+        /************************* col_names_per_row **************************/
+
+        gcocl->col_names_per_row[i] =
+          realloc(gcocl->col_names_per_row[i],
+                  gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
+
+        gcocl->col_names_per_row[i][gcocl->num_h2_leafs_per_row[i] - 1] = cname;
+
+        for(uint j = 0; j < gcocl->num_row_leafs; ++j)
+          for(uint k = 0; k < gcocl->num_h2_leafs_per_row[j]; ++k)
+            if(i != j || ((gcocl->num_h2_leafs_per_row[i] - 1) != k))
+              if(gcocl->col_names_per_row[j][k] == cname)
+              {
+                column_already_used = true;
+
+                /********************** buf_cidx_off ************************/
+
+                gcocl->cidx_off[i] =
+                  realloc(gcocl->cidx_off[i],
+                          gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
+
+                gcocl->cidx_off[i][gcocl->num_h2_leafs_per_row[i] - 1] =
+                  gcocl->cidx_off[j][k];
+
+                break;
+              }
+
+        if(!column_already_used)
+        {
+          /************************** buf_cidx_off ****************************/
+
+          gcocl->cidx_off[i] =
+            realloc(gcocl->cidx_off[i],
+                    gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
+
+          gcocl->cidx_off[i][gcocl->num_h2_leafs_per_row[i] - 1] = gcocl->coff;
+
+          /**************************** host_cidx *****************************/
+
+          gcocl->host_cidx = realloc
+            (gcocl->host_cidx, (gcocl->coff + H2->cb->t->size) * sizeof(uint));
+
+          assert(gcocl->host_cidx != NULL);
+
+          memcpy(gcocl->host_cidx + gcocl->coff,
+                 H2->cb->t->idx,
+                 H2->cb->t->size * sizeof(uint));
+
+          gcocl->coff += H2->cb->t->size;
+        }
+
+        break;
+      }
+
+    if(!row_already_stored)
+    {
+      bool column_already_used = false;
+
+      // Update number of leafs
+      gcocl->num_row_leafs += 1;
+
+      /**************************** names_row_leafs ***************************/
+
+      gcocl->names_row_leafs = realloc(gcocl->names_row_leafs,
+                                       gcocl->num_row_leafs * sizeof(uint));
+
+      assert(gcocl->names_row_leafs != NULL);
+
+      gcocl->names_row_leafs[gcocl->num_row_leafs - 1] = rname;
+
+      /************************* num_h2_leafs_per_row *************************/
+
+      gcocl->num_h2_leafs_per_row = realloc(gcocl->num_h2_leafs_per_row,
+                                            gcocl->num_row_leafs * sizeof(uint));
+
+      assert(gcocl->num_h2_leafs_per_row != NULL);
+
+      gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1] = 1;
+
+      /*************************** h2_leafs_per_row ***************************/
+
+      gcocl->h2_leafs_per_row = realloc(gcocl->h2_leafs_per_row,
+                                        gcocl->num_row_leafs * sizeof(ph2matrix*));
+
+      assert(gcocl->h2_leafs_per_row != NULL);
+
+      gcocl->h2_leafs_per_row[gcocl->num_row_leafs - 1] =
+        calloc(1, sizeof(ph2matrix*));
+
+      gcocl->h2_leafs_per_row[gcocl->num_row_leafs - 1][0] = H2;
+
+
+      /*************************** col_names_per_row **************************/
+
+      gcocl->col_names_per_row = realloc(gcocl->col_names_per_row,
+                                         gcocl->num_row_leafs * sizeof(uint*));
+
+      assert(gcocl->col_names_per_row != NULL);
+
+      gcocl->col_names_per_row[gcocl->num_row_leafs - 1] =
+        calloc(1, sizeof(uint*));
+
+      gcocl->col_names_per_row[gcocl->num_row_leafs - 1][0] = cname;
+
+      /******************************* ridx_off *******************************/
+
+      gcocl->ridx_off = realloc(gcocl->ridx_off,
+                                gcocl->num_row_leafs * sizeof(uint));
+
+      assert(gcocl->ridx_off != NULL);
+
+      gcocl->ridx_off[gcocl->num_row_leafs - 1] = gcocl->roff;
+
+      /****************************** host_ridx *******************************/
+
+      gcocl->host_ridx = realloc
+        (gcocl->host_ridx, (gcocl->roff + H2->rb->t->size) * sizeof(uint));
+
+      assert(gcocl->host_ridx != NULL);
+
+      memcpy(gcocl->host_ridx + gcocl->roff,
+             H2->rb->t->idx,
+             H2->rb->t->size * sizeof(uint));
+
+      gcocl->roff += H2->rb->t->size;
+
+      for(int i = 0; i < (int) gcocl->num_row_leafs - 2; ++i)
+        for(uint j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
+          if(gcocl->col_names_per_row[i][j] == cname)
+          {
+            column_already_used = true;
+
+            /**************************** cidx_off ****************************/
+
+            gcocl->cidx_off = realloc(gcocl->cidx_off,
+                                      gcocl->num_row_leafs * sizeof(uint*));
+
+            assert(gcocl->cidx_off != NULL);
+
+            gcocl->cidx_off[gcocl->num_row_leafs - 1] =
+              calloc(1, sizeof(uint*));
+
+            gcocl->cidx_off[gcocl->num_row_leafs - 1][0] =
+              gcocl->cidx_off[i][j];
+
+            break;
+          }
+
+      if(!column_already_used)
+      {
+        /**************************** cidx_off ****************************/
+
+        gcocl->cidx_off = realloc(gcocl->cidx_off,
+                                  gcocl->num_row_leafs * sizeof(uint*));
+
+        assert(gcocl->cidx_off != NULL);
+
+        gcocl->cidx_off[gcocl->num_row_leafs - 1] =
+          calloc(1, sizeof(uint*));
+
+        gcocl->cidx_off[gcocl->num_row_leafs - 1][0] = gcocl->coff;
+
+        /**************************** host_cidx ****************************/
+
+        gcocl->host_cidx = realloc
+          (gcocl->host_cidx, (gcocl->coff + H2->cb->t->size) * sizeof(uint));
+
+        assert(gcocl->host_cidx != NULL);
+
+        memcpy(gcocl->host_cidx + gcocl->coff,
+               H2->cb->t->idx,
+               H2->cb->t->size * sizeof(uint));
+
+        gcocl->coff += H2->cb->t->size;
+      }
+    }
+  }
+}
+
 static bool
 are_equal_clusters(pccluster a, pccluster b)
 {
@@ -434,95 +549,73 @@ are_equal_clusters(pccluster a, pccluster b)
 }
 
 static void
-iterate_recursively_h2matrix(ph2matrix  H2,
-                             const uint xtoff,
-                             const uint ytoff,
-                             const uint level,
-                             uint       *num_gcocls,
-                             pgcopencl  **gcocls)
+iterate_recursively_h2matrix(ph2matrix H2,
+                             uint      xtoff,
+                             uint      ytoff,
+                             pgcopencl gcocl)
 {
-  if(level >= *num_gcocls)
+  if((H2->u && gcocl->is_farfield) || (H2->f && !gcocl->is_farfield))
   {
-    *num_gcocls += 1;
-    *gcocls = realloc(*gcocls, *num_gcocls * sizeof(gcopencl));
+    /* Write offsets if we have reached a leaf. */
 
-    if(*gcocls == NULL)
+    /* Nearfield matrices have an additional offset. */
+    if(H2->f && !gcocl->is_farfield)
     {
-      fprintf(stderr, "error: failed to realloc array of gcopencls!");
-      exit(1);
+      xtoff += H2->cb->k;
+      ytoff += H2->rb->k;
     }
 
-    pgcopencl gcocl = *gcocls[*num_gcocls - 1];
+    /* Find the writing cluster of the current H^2-matrix inside the gcopencl
+     * object.*/
+    int  i = -1;
+    uint j;
 
-    init_gcopencl(gcocl);
-
-    gcocl->num_row_leafs           = 1;
-    gcocl->num_h2_leafs_per_row    = calloc(1, sizeof(uint));
-    gcocl->num_h2_leafs_per_row[0] = 1;
-    gcocl->h2_leafs_per_row        = calloc(1, sizeof(ph2matrix*));
-    gcocl->h2_leafs_per_row[0]     = calloc(1, sizeof(ph2matrix));
-    gcocl->h2_leafs_per_row[0][0]  = H2;
-    gcocl->xtoffs                  = calloc(1, sizeof(uint*));
-    gcocl->xtoffs[0]               = calloc(1, sizeof(uint));
-    gcocl->xtoffs[0][0]            = xtoff;
-    gcocl->ytoffs[0]               = ytoff;
-  }
-  else
-  {
-    pgcopencl gcocl = *gcocls[level];
-
-    bool row_already_stored = false;
-
-    for(uint i = 0; i < gcocl->num_row_leafs; ++i)
-      if(are_equal_clusters(H2->rb->t, gcocl->h2_leafs_per_row[level][i]->rb->t))
+    for(uint k = 0; k < gcocl->num_row_leafs; ++k)
+      if(are_equal_clusters(H2->rb->t, gcocl->h2_leafs_per_row[k][0]->rb->t))
       {
-        row_already_stored = true;
-
-        const uint j = gcocl->num_h2_leafs_per_row[i];
-
-        gcocl->num_h2_leafs_per_row[i] += 1;
-
-        gcocl->h2_leafs_per_row[i]      =
-          realloc(gcocl->h2_leafs_per_row[i],
-                  gcocl->num_h2_leafs_per_row[i] *sizeof(ph2matrix));
-
-        if(gcocl->h2_leafs_per_row[i] == NULL)
-        {
-          fprintf(stderr, "error: failed to realloc array of H2-matrices!");
-          exit(1);
-        }
-
-        gcocl->h2_leafs_per_row[i][j]   = H2;
-
-        gcocl->xtoffs[i]                =
-          realloc(gcocl->xtoffs[i],
-                  gcocl->num_h2_leafs_per_row[i] * sizeof(uint));
-
-        if(gcocl->xtoffs[i] == NULL)
-        {
-          fprintf(stderr, "error: failed to realloc array of offsets!");
-          exit(1);
-        }
-
-        gcocl->xtoffs[i][j]             = xtoff;
-
+        i = k;
+        break;
       }
 
-    if(!row_already_stored)
+    /* We face an error if we haven't found any matching writing cluster. */
+    if(i < 0)
     {
+      fprintf(stderr, "error: Unknown error in "
+                      "iterate_recursively_h2matrix!\n");
 
+      abort();
+    }
+
+    /* Write the offsets in the corresponding entries. */
+    gcocl->ytoffs[i] = ytoff;
+
+    for(j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
+      if(are_equal_clusters(H2->cb->t, gcocl->h2_leafs_per_row[i][j]->cb->t))
+      {
+        gcocl->xtoffs[i][j] = xtoff;
+        break;
+      }
+
+    /* We face an error if we haven't found any matching reading cluster. */
+    if(j >= gcocl->num_h2_leafs_per_row[i])
+    {
+      fprintf(stderr, "error: Unknown error in "
+        "iterate_recursively_h2matrix!\n");
+
+      abort();
     }
   }
-
-  if(H2->son)
+  else if(H2->son)
   {
+    /* Recursivly call the children. */
+
     pcclusterbasis rb = H2->rb;
     pcclusterbasis cb = H2->cb;
 
     const uint rsons  = H2->rsons;
     const uint csons  = H2->csons;
 
-    uint xtoff1        = cb->k;
+    uint xtoff1 = cb->k;
 
     for(uint j = 0; j < csons; ++j)
     {
@@ -534,13 +627,10 @@ iterate_recursively_h2matrix(ph2matrix  H2,
       {
         assert(rsons == 1 || rb->sons > 0);
 
-        iterate_recursively_h2matrix
-          (H2->son[i + j * rsons],
-           xtoff + xtoff1 - (cb->sons > 0 ? 0 : cb->k),
-           ytoff + ytoff1 - (rb->sons > 0 ? 0 : rb->k),
-           level + 1,
-           num_gcocls,
-           gcocls);
+        iterate_recursively_h2matrix(H2->son[i + j * rsons],
+                                     xtoff + xtoff1 - (cb->sons > 0 ? 0 : cb->k),
+                                     ytoff + ytoff1 - (rb->sons > 0 ? 0 : rb->k),
+                                     gcocl);
 
         ytoff1 += (rb->sons > 0 ? rb->son[i]->ktree : rb->t->size);
       }
@@ -554,16 +644,224 @@ iterate_recursively_h2matrix(ph2matrix  H2,
   }
 }
 
-//void
-//get_ocl_tree_informations_gcocl(ph2matrix H2,
-//                                uint      *num_levels,
-//                                pgcopencl **gcocls)
-//{
-//  del_gcopencls(*num_levels, *gcocls);
-//
-//  *num_levels = 0;
-//  *gcocls     = (pgcopencl *) calloc(0, sizeof(gcopencl));
-//
-//  iterate_recursively_h2matrix(H2, 0, 0, 0, num_levels, gcocls);
-//
-//}
+void
+get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl)
+{
+  gcocl->num_row_leafs            = 0;
+  gcocl->max_num_h2_leafs_per_row = 0;
+  gcocl->size_ridx                = 0;
+  gcocl->size_cidx                = 0;
+  gcocl->roff                     = 0;
+  gcocl->coff                     = 0;
+
+  gcocl->names_row_leafs          = (uint *) calloc(0, sizeof(uint));
+  gcocl->num_h2_leafs_per_row     = (uint *) calloc(0, sizeof(uint));
+  gcocl->h2_leafs_per_row         = (ph2matrix **) calloc(0, sizeof(ph2matrix *));
+  gcocl->col_names_per_row        = (uint **) calloc(0, sizeof(uint *));
+  gcocl->ridx_off                 = (uint *) calloc(0, sizeof(uint));
+  gcocl->host_ridx                = (uint *) calloc(0, sizeof(uint));
+  gcocl->cidx_off                 = (uint **) calloc(0, sizeof(uint *));
+  gcocl->host_cidx                = (uint *) calloc(0, sizeof(uint));
+
+  switch(info)
+  {
+    case NEARFIELD: gcocl->is_farfield = false;
+                    iterate_h2matrix(H2,
+                                     0,
+                                     0,
+                                     0,
+                                     0,
+                                     get_ocl_nearfild_informations,
+                                     NULL,
+                                     (void *) gcocl);
+                    break;
+    default:        fprintf(stderr, "error: given case for "
+                                    "get_ocl_informations not implemented yet");
+                    abort();
+  }
+
+  gcocl->size_ridx  = gcocl->roff;
+  gcocl->size_cidx  = gcocl->coff;
+  gcocl->workload_per_row = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
+  gcocl->idx_off    = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
+  gcocl->ridx_sizes = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
+
+  for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+  {
+    /* Get maximum number of H2-matrix leafs which share the same writing
+     * cluster. */
+    if(gcocl->num_h2_leafs_per_row[i] > gcocl->max_num_h2_leafs_per_row)
+      gcocl->max_num_h2_leafs_per_row = gcocl->num_h2_leafs_per_row[i];
+
+    /* Get workload of the current writing cluster. */
+    for(uint j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
+      gcocl->workload_per_row[i] +=
+        gcocl->is_farfield
+        ? gcocl->h2_leafs_per_row[i][j]->u->S.rows *
+          gcocl->h2_leafs_per_row[i][j]->u->S.cols
+        : gcocl->h2_leafs_per_row[i][j]->f->rows *
+          gcocl->h2_leafs_per_row[i][j]->f->cols;
+
+    /* Get the index offset for the current writing cluster needed by the
+     * devices. */
+    gcocl->idx_off[i] =
+      (i == 0 ? 0 : gcocl->idx_off[i - 1] + gcocl->num_h2_leafs_per_row[i - 1]);
+
+    /* Sum up the number of indices needed by the devices. */
+    gcocl->ridx_sizes[i] = gcocl->h2_leafs_per_row[i][0]->rb->t->size;
+    // TODO: ^Differs between farfield and nearfield
+  }
+
+  gcocl->cidx_sizes =
+    (uint *) calloc(gcocl->idx_off[gcocl->num_row_leafs - 1] +
+                    gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
+                    sizeof(uint));
+
+  gcocl->host_cidx_off =
+    (uint *) calloc(gcocl->idx_off[gcocl->num_row_leafs - 1] +
+                    gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
+                    sizeof(uint));
+
+  /* Get number of indices for all H2-matrix leafs, ready to be written to
+   * OpenCL devices. */
+  for (uint i = 0; i < gcocl->num_row_leafs; ++i)
+  {
+    for(uint j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
+      gcocl->cidx_sizes[gcocl->idx_off[i] + j] =
+        gcocl->h2_leafs_per_row[i][j]->cb->t->size;
+        // TODO: ^Differs between farfield and nearfield
+
+    memcpy(gcocl->host_cidx_off + gcocl->idx_off[i],
+           gcocl->cidx_off[i],
+           gcocl->num_h2_leafs_per_row[i] * sizeof(uint));
+  }
+
+  /* Write H2-matrix informations to the devices. */
+  for(uint i = 0; i < ocl_system.num_devices; ++i)
+  {
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->num_row_leafs,
+                           sizeof(uint),
+                           gcocl->num_h2_leafs_per_row,
+                           NULL,
+                           &gcocl->buf_num_h2_leafs_per_row[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->num_row_leafs,
+                           sizeof(uint),
+                           gcocl->idx_off,
+                           NULL,
+                           &gcocl->buf_idx_off[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->num_row_leafs,
+                           sizeof(uint),
+                           gcocl->ridx_sizes,
+                           NULL,
+                           &gcocl->buf_ridx_sizes[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->num_row_leafs,
+                           sizeof(uint),
+                           gcocl->ridx_off,
+                           NULL,
+                           &gcocl->buf_ridx_off[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->size_ridx,
+                           sizeof(uint),
+                           gcocl->host_ridx,
+                           NULL,
+                           &gcocl->buf_ridx[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->idx_off[gcocl->num_row_leafs - 1] +
+                           gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
+                           sizeof(uint),
+                           gcocl->cidx_sizes,
+                           NULL,
+                           &gcocl->buf_cidx_sizes[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->idx_off[gcocl->num_row_leafs - 1] +
+                           gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
+                           sizeof(uint),
+                           gcocl->host_cidx_off,
+                           NULL,
+                           &gcocl->buf_cidx_off[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->size_cidx,
+                           sizeof(uint),
+                           gcocl->host_cidx,
+                           NULL,
+                           &gcocl->buf_cidx[i]);
+  }
+
+  /* Get offsets of individual writing clusters relative to the whole
+   * H^2-matrix. */
+
+  gcocl->xtoffs             = (uint **) calloc(gcocl->num_row_leafs,
+                                               sizeof(uint*));
+
+  gcocl->ytoffs             = (uint *) calloc(gcocl->num_row_leafs,
+                                              sizeof(uint));
+
+  for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+    gcocl->xtoffs[i]       =
+      (uint *) calloc(gcocl->num_h2_leafs_per_row[i], sizeof(uint));
+
+  iterate_recursively_h2matrix(H2, 0, 0, gcocl);
+
+  gcocl->host_xtoffs   =
+    (uint *) calloc(gcocl->idx_off[gcocl->num_row_leafs - 1] +
+                    gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
+                    sizeof(uint));
+
+  /* Make the offsets ready to be written to OpenCL devices. */
+  for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+  {
+    memcpy(gcocl->host_xtoffs + gcocl->idx_off[i],
+           gcocl->xtoffs[i],
+           gcocl->num_h2_leafs_per_row[i] * sizeof(uint));
+  }
+
+  /* Write offsets to the devices. */
+  for(uint i = 0; i < ocl_system.num_devices; ++i)
+  {
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->idx_off[gcocl->num_row_leafs - 1] +
+                           gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
+                           sizeof(uint),
+                           gcocl->host_xtoffs,
+                           NULL,
+                           &gcocl->buf_xtoffs[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->num_row_leafs,
+                           sizeof(uint),
+                           gcocl->ytoffs,
+                           NULL,
+                           &gcocl->buf_ytoffs[i]);
+  }
+}

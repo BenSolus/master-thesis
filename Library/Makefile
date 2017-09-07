@@ -10,7 +10,7 @@ LDFLAGS  = ../../H2Lib/libh2.a  -shared
 
 LIBRARY   = libMT.so
 BENCH     = benchmark
-SOURCES   = gcopencl.c greencross.c laplace2d.c laplace3d.c ocl_system.c oclworkpkgs.c
+SOURCES   = fastaddevalgca.c gcopencl.c greencross.c laplace2d.c laplace3dgca.c ocl_system.c oclworkpkgs.c singquadgca.c
 CLSOURCES = clbasic.cl clgcidxinfo.cl clgeom.cl clgreencross.cl clquad.cl
 OBJS      = $(SOURCES:.c=.o)
 CLOBJS    = $(CLSOURCES:.cl=.o)
@@ -22,6 +22,6 @@ $(OBJS): %.o: %.c
 	$(CC) -c $< $(INCLUDES) $(GFLAGS) -o $@
 
 bench:
-	$(CXX) -o $(BENCH) ../Tests/benchmark.cpp gcopencl.o greencross.o laplace2d.o laplace3d.o ocl_system.o oclworkpkgs.o $(INCLUDES) $(BFLAGS) -lOpenCL -lblas -lcairo -llapack ../../H2Lib/libh2.a
+	$(CXX) -o $(BENCH) ../Tests/benchmark.cpp fastaddevalgca.o gcopencl.o greencross.o laplace2d.o laplace3dgca.o ocl_system.o oclworkpkgs.o singquadgca.o $(INCLUDES) $(BFLAGS) -lOpenCL -lblas -lcairo -llapack ../../H2Lib/libh2.a
 clean:
 	-rm -f ${LIBRARY} ${OBJS} ${BENCH}

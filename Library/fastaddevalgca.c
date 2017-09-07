@@ -19,10 +19,12 @@ init_fastaddevalgca(pfastaddevalgca feval)
 {
   if(feval != NULL)
   {
-    feval->buf_xt    = NULL;
-    feval->events_xt = NULL;
-    feval->buf_yt    = NULL;
-    feval->events_yt = NULL;
+    feval->num_wrk_pkgs = 0;
+
+    feval->buf_xt       = NULL;
+    feval->events_xt    = NULL;
+    feval->buf_yt       = NULL;
+    feval->events_yt    = NULL;
   }
 }
 
@@ -68,18 +70,23 @@ uninit_fastaddevalgca(pfastaddevalgca feval)
 }
 
 pfastaddevalgca
-new_fastaddevalgca(pcclusterbasis rb, pcclusterbasis cb)
+new_fastaddevalgca(pcclusterbasis rb,
+                   pcclusterbasis cb,
+                   const uint     num_wrk_pkgs)
 {
   pfastaddevalgca feval = (pfastaddevalgca) allocmem(sizeof(fastaddevalgca));
 
   init_fastaddevalgca(feval);
 
-  feval->buf_xt    = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
-  feval->events_xt =
-    (cl_event *) calloc(ocl_system.num_devices, sizeof(cl_event));
-  feval->buf_yt    = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  feval->num_wrk_pkgs = num_wrk_pkgs;
+  feval->buf_xt       =
+    (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
+  feval->events_xt    =
+    (cl_event *) calloc(feval->num_wrk_pkgs,    sizeof(cl_event));
+  feval->buf_yt       =
+    (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
   feval->events_yt =
-    (cl_event *) calloc(ocl_system.num_devices, sizeof(cl_event));
+    (cl_event *) calloc(feval->num_wrk_pkgs,    sizeof(cl_event));
 
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {

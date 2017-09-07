@@ -107,10 +107,12 @@ struct _greencross
     *        of leaf-matrices. */
   pgcopencl gcocl;
 
-  pgcopencl ocl_gca_nf;
+  pgcopencl ocl_info_nf;
 
   /** @brief Object which distributes the work described in @p gcocl. */
   poclworkpgs  oclwrk;
+
+  poclworkpgs ocl_wrk_nf;
 };
 
 /** @brief Initilize components related to the dimension of the problem and
@@ -264,6 +266,12 @@ fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
                                                           pch2matrix   H2,
                                                           pavector     xt,
                                                           pavector     yt);
+
+HEADER_PREFIX void
+fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,
+                                                field       alpha,
+                                                pavector    xt,
+                                                pavector    yt);
 
 HEADER_PREFIX void
 fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,

@@ -257,6 +257,8 @@ select_quadrature_singquadgca(psingquadgca sq_gca,
     }
   }
 
+//  printf("%u (%u %u %u) (%u %u %u)\n", p, tp[0], tp[1], tp[2], sp[0], sp[1], sp[2]);
+
   uint q = p;
 
   for(uint i = 0; i < 3; i++)

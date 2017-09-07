@@ -34,6 +34,8 @@ typedef const fastaddevalgca *pcfastaddevalgca;
 
 struct _fastaddevalgca
 {
+  uint     num_wrk_pkgs;
+
   cl_mem   *buf_xt;
 
   cl_event *events_xt;
@@ -50,7 +52,9 @@ HEADER_PREFIX void
 uninit_fastaddevalgca(pfastaddevalgca feval);
 
 HEADER_PREFIX pfastaddevalgca
-new_fastaddevalgca(pcclusterbasis rb, pcclusterbasis cb);
+new_fastaddevalgca(pcclusterbasis rb,
+                   pcclusterbasis cb,
+                   const uint     num_wrk_pkgs);
 
 HEADER_PREFIX void
 del_fastaddevalgca(pfastaddevalgca feval);

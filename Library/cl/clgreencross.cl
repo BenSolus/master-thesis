@@ -42,7 +42,7 @@ laplace3d(private float3 x, private float3 y)
 
   norm = native_rsqrt(norm2);
 
-  return r_four_pi * norm;
+  return norm;
 }
 
 // kernel void
@@ -251,22 +251,38 @@ fastaddeval_h2matrix_avector_0(       const uint dim,
                                global const uint *cidx_offs,
                                global const uint *ridxs,
                                global const uint *cidxs,
-                                      const real alpha,
                                global const uint *xt_offs,
                                global const uint *yt_offs,
+                                      const uint num_nf_writing_clusters,
+                               global const uint *nf_writings_this_device,
+                               global const uint *num_nf_h2_leafs_per_cluster,
+                               global const uint *nf_idx_offs,
+                               global const uint *nf_ridx_sizes,
+                               global const uint *nf_cidx_sizes,
+                               global const uint *nf_ridx_offs,
+                               global const uint *nf_cidx_offs,
+                               global const uint *nf_ridxs,
+                               global const uint *nf_cidxs,
+                               global const uint *nf_xt_offs,
+                               global const uint *nf_yt_offs,
+                                      const real bem_alpha,
+                                      const real alpha,
                                global const real *xts,
                                global       real *yt)
 {
   const size_t grpid0 = get_group_id(0);
 
-  if(grpid0 >= num_row_leafs)
+  if((grpid0 >= num_row_leafs)) //&& (grpid0 >= num_nf_writing_clusters))
     return;
   else
   {
-    const uint   row_this_group = rows_this_device[grpid0];
+    const size_t lid0          = get_local_id(0);
 
-    const uint   num_h2_leafs   = num_h2_leafs_per_cluster[row_this_group];
-    const size_t lid0           = get_local_id(0);
+    const real   kernel_factor = r_four_pi;
+
+    uint   row_this_group      = rows_this_device[grpid0];
+
+    uint   num_h2_leafs        = num_h2_leafs_per_cluster[row_this_group];
 
 
     gcidxinfo gcii;
@@ -282,7 +298,10 @@ fastaddeval_h2matrix_avector_0(       const uint dim,
     init_geom(&sur, dim, n, vs, p, g, 0, 0);
     init_singquadg(&sq, dim, nq, xqs, yqs, wqs, bases);
 
-    /* Same H2-matrix information for all threads in a work group */
+    if(grpid0 < num_row_leafs)
+    {
+
+    /* Same H2-matrix farfield information for all threads in a work group */
     init_row_gcidxinfo(&gcii,
                        num_h2_leafs,
                        idx_offs[row_this_group],
@@ -293,8 +312,9 @@ fastaddeval_h2matrix_avector_0(       const uint dim,
                        yt,
                        0);
 
-    /* Different H2-matrix information for all threads in a work group */
+    /* Different farfield H2-matrix information for all threads in a work group */
     if(lid0 < num_h2_leafs)
+    {
       set_column_info_gcidxinfo(&gcii,
                                 cidx_sizes[gcii.idx_off + lid0],
                                 cidx_offs[gcii.idx_off + lid0],
@@ -302,120 +322,191 @@ fastaddeval_h2matrix_avector_0(       const uint dim,
                                 xt_offs[gcii.idx_off + lid0],
                                 xts);
 
-    for(uint k = 0; k < gcii.ridx_size; k += 32)
+    for(uint i = 0; i < gcii.ridx_size; ++i)
     {
-      const uint loops = (k + 32) < gcii.ridx_size ? 32 : gcii.ridx_size - k;
+      const uint ii = gcii.ridx[i];
 
-      barrier(CLK_LOCAL_MEM_FENCE);
+      const real  gr = sur.g[ii];
 
-      if(lid0 < loops)
+      const uint3 q  = vload3(ii, sur.p);
+
+      x[0] = vload3(q.x, sur.v);
+      x[1] = vload3(q.y, sur.v);
+      x[2] = vload3(q.z, sur.v);
+
+      real res = r_zero;
+
+      for(uint j = 0; j < gcii.cidx_size; ++j)
       {
-        const uint  ii = gcii.ridx[k + lid0];
+        const uint jj = gcii.cidx[j];
 
-        gr_tmp[lid0]   = sur.g[ii];
+        const real gc = sur.g[jj];
 
-        const uint3 q  = vload3(ii, sur.p);
+        private uint3 p = vload3(jj, sur.p);
 
-        q_tmp[lid0]    = q;
+        y[0] = vload3(p.x, sur.v);
+        y[1] = vload3(p.y, sur.v);
+        y[2] = vload3(p.z, sur.v);
 
-        x_tmp[lid0][0] = vload3(q.x, sur.v);
-        x_tmp[lid0][1] = vload3(q.y, sur.v);
-        x_tmp[lid0][2] = vload3(q.z, sur.v);
+        real sum = sq.bases.x;
 
-        yt_tmp[lid0]   = r_zero;
-      }
-
-      if(lid0 < num_h2_leafs)
-      {
-        for(uint i = 0; i < loops; ++i)
+        for(uint q = 0; q < sq.nq; ++q)
         {
-          barrier(CLK_LOCAL_MEM_FENCE);
-
-          const uint ii = (lid0 + i) % loops;
-          const real gr = gr_tmp[ii];
-
-          private const uint3 q = q_tmp[ii];
-
-          x[0] = x_tmp[ii][0];
-          x[1] = x_tmp[ii][1];
-          x[2] = x_tmp[ii][2];
-
-          real res = r_zero;
-
-          for(uint j = 0; j < gcii.cidx_size; ++j)
-          {
-            const uint jj = gcii.cidx[j];
-            const real gc = sur.g[jj];
-
-            private uint3 p = vload3(jj, sur.p);
-
-            y[0] = vload3(p.x, sur.v);
-            y[1] = vload3(p.y, sur.v);
-            y[2] = vload3(p.z, sur.v);
-
-            real sum = r_zero;
-
-            global  const real *xq, *yq, *wq;
-
-            private uint3 xp, yp;
-
-            select_quadratureg(&sq, q, p, &xp, &yp, &xq, &yq, &wq, &sum);
-
-            for(uint q = 0; q < sq.nq; ++q)
-            {
-              float s, t;
+          float s, t;
 
 #ifndef USE_FLOAT
-              t  = convert_float(xq[q]);
-              s  = convert_float(xq[q + sq.nq]);
+          t  = convert_float(sq.xqs[q]);
+          s  = convert_float(sq.xqs[q + sq.nq]);
 
-              xx = (1.0f - t) * convert_float3(x[xp.x]) +
-                   (t - s)    * convert_float3(x[xp.y]) +
-                   s          * convert_float3(x[xp.z]);
+          xx = (1.0f - t) * convert_float3(x[0]) +
+               (t - s)    * convert_float3(x[1]) +
+               s          * convert_float3(x[2]);
 
-              t  = convert_float(yq[q]);
-              s  = convert_float(yq[q + sq.nq]);
+          t  = convert_float(sq.yqs[q]);
+          s  = convert_float(sq.yqs[q + sq.nq]);
 
-              yy = (1.0f - t) * convert_float3(y[yp.x]) +
-                   (t - s)    * convert_float3(y[yp.y]) +
-                   s          * convert_float3(y[yp.z]);
+          yy = (1.0f - t) * convert_float3(y[0]) +
+               (t - s)    * convert_float3(y[1]) +
+               s          * convert_float3(y[2]);
 #else
-              t  = xq[q];
-              s  = xq[q + quad.nq]
+          t  = sq.xqs[q];
+          s  = sq.xqs[q + quad.nq]
 
-              xx = (r_one - t) * x[xp.x] + (t - s) * x[xp.y] + s * x[xp.z];
+          xx = (r_one - t) * x[0] + (t - s) * x[1] + s * x[2];
 
-              t = xy[q];
-              s = xy[q + quad.nq];
+          t = sq.yqs[q];
+          s = sq.yqs[q + quad.nq];
 
-              yy = (r_one - t) * y[yp.x] + (t - s) * y[yp.y] + s * y[yp.z];
+          yy = (r_one - t) * y[0] + (t - s) * y[1] + s * y[2];
 #endif
 
-              sum += wq[q] * laplace3d(xx, yy);
-            }
-
-            res += gcii.xt[j] * gc * gr * sum;
-          }
-
-          for(uint j = 0; j < num_h2_leafs; j += loops)
-          {
-            const uint max = (j + loops) < num_h2_leafs
-                               ? j + loops
-                               : num_h2_leafs;
-
-
-            barrier(CLK_LOCAL_MEM_FENCE);
-
-            if((lid0 >= j) && (lid0 < max))
-              yt_tmp[ii] += res;
-          }
+          sum += sq.wqs[q] * laplace3d(xx, yy);
         }
+
+        res += gcii.xt[j] * (gc * gr * kernel_factor * sum);
       }
 
-      barrier(CLK_LOCAL_MEM_FENCE);
+      for(uint j = 0; j < gcii.num_h2_leafs; ++j)
+      {
+        barrier(CLK_GLOBAL_MEM_FENCE);
 
-      if(lid0 < loops)
-        gcii.yt[k + lid0] = alpha * yt_tmp[lid0];
+        if(lid0 == j)
+          gcii.yt[i] += alpha * res;
+      }
+    }
+    }
+
+    barrier(CLK_GLOBAL_MEM_FENCE);
+
+    if(grpid0 >= num_nf_writing_clusters)
+      return;
+
+    row_this_group = nf_writings_this_device[grpid0];
+
+    num_h2_leafs   = num_nf_h2_leafs_per_cluster[row_this_group];
+
+    /* Same H2-matrix nearfield information for all threads in a work group. */
+    init_row_gcidxinfo(&gcii,
+                       num_h2_leafs,
+                       nf_idx_offs[row_this_group],
+                       nf_ridx_sizes[row_this_group],
+                       nf_ridx_offs[row_this_group],
+                       nf_ridxs,
+                       nf_yt_offs[row_this_group],
+                       yt,
+                       0);
+
+    /* Different nearfield H2-matrix information for all threads in a work
+     * group. */
+    if(lid0 < num_h2_leafs)
+      set_column_info_gcidxinfo(&gcii,
+                                nf_cidx_sizes[gcii.idx_off + lid0],
+                                nf_cidx_offs[gcii.idx_off + lid0],
+                                nf_cidxs,
+                                nf_xt_offs[gcii.idx_off + lid0],
+                                xts);
+
+    for(uint i = 0; i < gcii.ridx_size; ++i)
+    {
+      const uint ii = gcii.ridx[i];
+
+      const real  gr = sur.g[ii];
+
+      const uint3 q  = vload3(ii, sur.p);
+
+      x[0] = vload3(q.x, sur.v);
+      x[1] = vload3(q.y, sur.v);
+      x[2] = vload3(q.z, sur.v);
+
+      real res = r_zero;
+
+      for(uint j = 0; j < gcii.cidx_size; ++j)
+      {
+        const uint  jj = gcii.cidx[j];
+
+        const real  gc = sur.g[jj];
+        const uint3 p  = vload3(jj, sur.p);
+
+        const real factor = (ii == jj) * 0.5 * bem_alpha * gr;
+
+        y[0] = vload3(p.x, sur.v);
+        y[1] = vload3(p.y, sur.v);
+        y[2] = vload3(p.z, sur.v);
+
+        real sum;
+        uint xp[3], yp[3];
+
+        global const real *xq, *yq, *wq;
+
+        select_quadratureg(&sq, q, p, xp, yp, &xq, &yq, &wq, &sum);
+
+        // printf("%u %u: (%u %u %u) (%u %u %u)\n", ii, jj, xp[0], xp[1], xp[2], yp[0], yp[1], yp[2]);
+
+        for(uint q = 0; q < sq.nq; ++q)
+        {
+          float s, t;
+
+#ifndef USE_FLOAT
+          t  = convert_float(xq[q]);
+          s  = convert_float(xq[q + sq.nq]);
+
+          xx = (1.0f - t) * convert_float3(x[xp[0]]) +
+               (t - s)    * convert_float3(x[xp[1]]) +
+               s          * convert_float3(x[xp[2]]);
+
+          t  = convert_float(yq[q]);
+          s  = convert_float(yq[q + sq.nq]);
+
+          yy = (1.0f - t) * convert_float3(y[yp[0]]) +
+               (t - s)    * convert_float3(y[yp[1]]) +
+               s          * convert_float3(y[yp[2]]);
+#else
+          t  = xq[q];
+          s  = xq[q + sq.nq];
+
+          xx = (r_one - t) * x[xp[0]] + (t - s) * x[xp[1]] + s * x[xp[2]];
+
+          t  = yq[q];
+          s  = yq[q + quad.nq];
+
+          yy = (r_one - t) * y[yp[0]] + (t - s) * y[yp[1]] + s * y[yp[2]];
+#endif
+
+          sum += wq[q] * laplace3d(xx, yy);
+        }
+
+        //printf("%u %u: Matrix: %.5e, Vector: %.5e\n", i, j, ((gc * gr * kernel_factor * sum) + factor), gcii.xt[j]);
+
+        res += gcii.xt[j] * ((gc * gr * kernel_factor * sum) + factor);
+      }
+
+      for(uint j = 0; j < gcii.num_h2_leafs; ++j)
+      {
+        barrier(CLK_GLOBAL_MEM_FENCE);
+
+        if(lid0 == j)
+          gcii.yt[i] += alpha * res;
+      }
     }
   }
 }
@@ -596,8 +687,8 @@ fastaddeval_h2matrix_avector_0(       const uint dim,
 //         gcii.yt[k + lid0] = alpha * yt_tmp[lid0];
 //     }
 //   }
-// }
-//
+}
+
 // kernel void
 // fastaddeval_h2matrix_avector_2(       const uint dim,
 //                                       const uint n,

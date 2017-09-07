@@ -106,10 +106,3 @@ IF(DOC MATCHES ON)
 ENDIF()
 
 ADD_SUBDIRECTORY(Tests)
-
-ADD_EXECUTABLE(main main.cpp)
-
-TARGET_LINK_LIBRARIES(main ${CAIRO_LIBRARIES}
-                           ${LAPACK_LINKER_FLAGS}
-                           ${LAPACK_LIBRARIES}
-                           h2)

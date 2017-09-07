@@ -21,6 +21,12 @@
 #include "CL/cl.h"
 #endif
 
+typedef enum
+{
+  NEARFIELD,
+  FARFIELD_GCA
+} information_t;
+
 /** @brief @ref gcopencl is just an abbreviation for the struct @ref
                 _gcopencl. */
 typedef struct _gcopencl gcopencl;
@@ -126,14 +132,28 @@ init_gcopencl(pgcopencl gcocl);
 HEADER_PREFIX void
 uninit_gcopencl(pgcopencl gcocl);
 
+HEADER_PREFIX pgcopencl
+new_gcopencl();
+
+HEADER_PREFIX pgcopencl
+new_nearfield_gcopencl(ph2matrix H2);
+
 HEADER_PREFIX void
 del_gcopencl(pgcopencl gcocls);
 
-HEADER_PREFIX void
-del_gcopencls(const uint num_gcocls, pgcopencl *gcocls);
-
 HEADER_PREFIX size_t
 getsize_gcopencl(pcgcopencl gcocl);
+
+HEADER_PREFIX void
+get_ocl_nearfild_informations(ph2matrix H2,
+                              uint      mname,
+                              uint      rname,
+                              uint      cname,
+                              uint      pardepth,
+                              void      *data);
+
+HEADER_PREFIX void
+get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl);
 
 //HEADER_PREFIX void
 //get_ocl_tree_informations_gcocl(ph2matrix H2,

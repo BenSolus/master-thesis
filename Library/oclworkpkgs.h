@@ -14,6 +14,7 @@
 #define OCLWORKPKGS_H
 
 #include "basic.h"
+#include "gcopencl.h"
 
 #ifdef __APPLE__
 #include "OpenCL/opencl.h"
@@ -42,15 +43,15 @@ struct _oclworkpgs
 
   uint   *wrk_per_pkg;
 
+  uint   *first_idx_of_pkgs;
+
+  uint   *last_idx_of_pkg;
+
   uint   *num_rows_per_pkg;
 
   uint   **rows_per_pkg;
 
   cl_mem *buf_rows_this_device;
-
-  uint   offset;
-
-  uint   size;
 };
 
 HEADER_PREFIX void
@@ -58,6 +59,14 @@ init_oclwork(poclworkpgs oclwrk);
 
 HEADER_PREFIX void
 uninit_oclwork(poclworkpgs oclwrk);
+
+HEADER_PREFIX poclworkpgs
+new_equidistant_distributed_oclwork(pcgcopencl gcocl,
+                                    ph2matrix  H2,
+                                    const uint num_packages);
+
+HEADER_PREFIX void
+del_oclwrk(poclworkpgs oclwrk);
 
 /** @} */
 
