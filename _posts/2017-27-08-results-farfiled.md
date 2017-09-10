@@ -12,13 +12,14 @@ comments:  true
                   no-undefined-references-->
 
 After some time now, I have the first results to present. First the bad news: We
-are not developing a faster solver compared to previous methods, which is rather
-untypical for utilizing GPUs. On the bright side, we can save 20-26% of memory
-used by a $$\mathcal{H}^2$$-matrices at the expense of 20-55% of increased
-computation time in the $$\mathcal{H}^2$$-matrix vector multiplication,
-decreasing antiproportional with the problem size. This in term is heavily
-utilized in, e.g., Krylov subspace methods to solve system of equations like the
-[discretized integrals]({{ site.baseurl }}/blog/intro) we consider.
+are (currently) don't have a faster solver compared to previous methods, which
+is rather untypical for utilizing GPUs. On the bright side, we can save 20-26%
+of memory used by a $$\mathcal{H}^2$$-matrices at the expense of 20-55% of
+increased computation time in the $$\mathcal{H}^2$$-matrix vector
+multiplication, decreasing antiproportional with the problem size. This in term
+is heavily utilized in, e.g., Krylov subspace methods to solve system of
+equations like the [discretized integrals]({{ site.baseurl }}/blog/intro) we
+consider.
 
 <!--more-->
 
@@ -58,7 +59,8 @@ follwing matrix vector multiplication, including the
 *   quadrature points and weights and
 *   bookkeeping informations of the
     *   dimensions of each farfield matrix and
-    *   their row and column offset relative to the whole $$\mathcal{H}^2$$,
+    *   their row and column offset relative to the whole
+        $$\mathcal{H}^2$$-matrix,
 
 occupies only a fraction of the memory used to save the matrices directly.
 
