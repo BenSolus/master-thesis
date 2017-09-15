@@ -15,7 +15,6 @@
 #include "basic.h"
 #include "ocl_system.h"
 
-#include <stdio.h>
 #include <string.h>
 
 void
@@ -24,6 +23,7 @@ init_singquadgca(psingquadgca sq_gca)
   if(sq_gca != NULL)
   {
     sq_gca->nq        = 0;
+    sq_gca->offset    = 0;
 
     sq_gca->xqs       = NULL;
     sq_gca->yqs       = NULL;
@@ -165,6 +165,8 @@ build_from_singquad2d(psingquad2d sq)
 
   sq_gca->bases[3]  = sq->base_id;
 
+  sq_gca->offset    = 0;
+
   sq_gca->buf_xqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
   sq_gca->buf_yqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
   sq_gca->buf_wqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
@@ -212,6 +214,210 @@ build_from_singquad2d(psingquad2d sq)
   return sq_gca;
 }
 
+psingquadgca
+build_min_vert_from_singquad2d(psingquad2d sq)
+{
+  psingquadgca sq_gca = (psingquadgca) allocmem(sizeof(singquadgca));
+
+  init_singquadgca(sq_gca);
+
+  sq_gca->nq = sq->n_vert - sq->n_dist;
+
+  sq_gca->xqs   = allocreal(6 * sq_gca->nq);
+  sq_gca->yqs   = allocreal(6 * sq_gca->nq);
+  sq_gca->wqs   = allocreal(3 * sq_gca->nq);
+  sq_gca->bases = allocreal(3);
+
+  uint vnq = ROUNDUP(sq->n_vert, VREAL);
+
+  real *xq = sq->x_vert;
+  real *yq = sq->y_vert;
+  real *wq = sq->w_vert + (9 * vnq);
+
+  memcpy(sq_gca->xqs,              xq,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->xqs + sq_gca->nq, xq + vnq, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs,              yq,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + sq_gca->nq, yq + vnq, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->wqs,              wq,       sq_gca->nq * sizeof(real));
+
+  sq_gca->bases[0]  = sq->base_vert;
+
+  vnq = ROUNDUP(sq->n_edge, VREAL);
+
+  xq = sq->x_edge;
+  yq = sq->y_edge;
+  wq = sq->w_edge + (9 * vnq) + (sq->n_edge - sq->n_vert);
+
+  uint offset_src = sq->n_edge - sq->n_vert;
+
+  memcpy(sq_gca->xqs + (2 * sq_gca->nq), xq + offset_src,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->xqs + (3 * sq_gca->nq), xq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (2 * sq_gca->nq), yq + offset_src,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (3 * sq_gca->nq), yq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->wqs + (1 * sq_gca->nq), wq,                    sq_gca->nq * sizeof(real));
+
+  sq_gca->bases[1]  = sq->base_edge;
+
+  vnq = ROUNDUP(sq->n_id, VREAL);
+
+  xq = sq->x_id;
+  yq = sq->y_id;
+  wq = sq->w_id + (9 * vnq) + (sq->n_id - sq->n_vert);
+
+  offset_src = sq->n_id - sq->n_vert;
+
+  memcpy(sq_gca->xqs + (4 * sq_gca->nq), xq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->xqs + (5 * sq_gca->nq), xq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (4 * sq_gca->nq), yq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (5 * sq_gca->nq), yq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->wqs + (2 * sq_gca->nq), wq, sq_gca->nq * sizeof(real));
+
+  sq_gca->bases[2]  = sq->base_id;
+
+  sq_gca->offset    = -1;
+
+  sq_gca->buf_xqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  sq_gca->buf_yqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  sq_gca->buf_wqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  sq_gca->buf_bases = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+
+  for(uint i = 0; i < ocl_system.num_devices; ++i)
+  {
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           6 * sq_gca->nq,
+                           sizeof(real),
+                           sq_gca->xqs,
+                           NULL,
+                           &sq_gca->buf_xqs[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           6 * sq_gca->nq,
+                           sizeof(real),
+                           sq_gca->yqs,
+                           NULL,
+                           &sq_gca->buf_yqs[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           3 * sq_gca->nq,
+                           sizeof(real),
+                           sq_gca->wqs,
+                           NULL,
+                           &sq_gca->buf_wqs[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           3,
+                           sizeof(real),
+                           sq_gca->bases,
+                           NULL,
+                           &sq_gca->buf_bases[i]);
+  }
+
+  return sq_gca;
+}
+
+psingquadgca
+build_min_edge_from_singquad2d(psingquad2d sq)
+{
+  psingquadgca sq_gca = (psingquadgca) allocmem(sizeof(singquadgca));
+
+  init_singquadgca(sq_gca);
+
+  sq_gca->nq = sq->n_edge - sq->n_vert;
+
+  sq_gca->xqs   = allocreal(4 * sq_gca->nq);
+  sq_gca->yqs   = allocreal(4 * sq_gca->nq);
+  sq_gca->wqs   = allocreal(2 * sq_gca->nq);
+  sq_gca->bases = allocreal(2);
+
+  uint vnq = ROUNDUP(sq->n_edge, VREAL);
+
+  real *xq = sq->x_edge;
+  real *yq = sq->y_edge;
+  real *wq = sq->w_edge + (9 * vnq);
+
+  uint offset_src = 0;
+
+  memcpy(sq_gca->xqs + (0 * sq_gca->nq), xq + offset_src,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->xqs + (1 * sq_gca->nq), xq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (0 * sq_gca->nq), yq + offset_src,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (1 * sq_gca->nq), yq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->wqs + (0 * sq_gca->nq), wq,                    sq_gca->nq * sizeof(real));
+
+  sq_gca->bases[0]  = sq->base_edge;
+
+  vnq = ROUNDUP(sq->n_id, VREAL);
+
+  xq = sq->x_id;
+  yq = sq->y_id;
+  wq = sq->w_id + (9 * vnq) + (sq->n_id - sq->n_edge);
+
+  offset_src = sq->n_id - sq->n_edge;
+
+  memcpy(sq_gca->xqs + (2 * sq_gca->nq), xq + offset_src,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->xqs + (3 * sq_gca->nq), xq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (2 * sq_gca->nq), yq + offset_src,       sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->yqs + (3 * sq_gca->nq), yq + vnq + offset_src, sq_gca->nq * sizeof(real));
+  memcpy(sq_gca->wqs + (1 * sq_gca->nq), wq,                    sq_gca->nq * sizeof(real));
+
+  sq_gca->bases[1]  = sq->base_id;
+
+  sq_gca->offset    = -2;
+
+  sq_gca->buf_xqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  sq_gca->buf_yqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  sq_gca->buf_wqs   = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  sq_gca->buf_bases = (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+
+  for(uint i = 0; i < ocl_system.num_devices; ++i)
+  {
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           4 * sq_gca->nq,
+                           sizeof(real),
+                           sq_gca->xqs,
+                           NULL,
+                           &sq_gca->buf_xqs[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           4 * sq_gca->nq,
+                           sizeof(real),
+                           sq_gca->yqs,
+                           NULL,
+                           &sq_gca->buf_yqs[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           2 * sq_gca->nq,
+                           sizeof(real),
+                           sq_gca->wqs,
+                           NULL,
+                           &sq_gca->buf_wqs[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           2,
+                           sizeof(real),
+                           sq_gca->bases,
+                           NULL,
+                           &sq_gca->buf_bases[i]);
+  }
+
+  return sq_gca;
+}
+
 void
 select_quadrature_singquadgca(psingquadgca sq_gca,
                               const uint   *tv,
@@ -236,10 +442,10 @@ select_quadrature_singquadgca(psingquadgca sq_gca,
   tp[0] = 0, tp[1] = 1, tp[2] = 2;
   sp[0] = 0, sp[1] = 1, sp[2] = 2;
 
-  *x = sq_gca->xqs + (2 * p * sq_gca->nq);
-  *y = sq_gca->yqs + (2 * p * sq_gca->nq);
-  *w = sq_gca->wqs + (p * sq_gca->nq);
-  *base = sq_gca->bases[p];
+  *x    = sq_gca->xqs + (2 * (p + sq_gca->offset) * sq_gca->nq);
+  *y    = sq_gca->yqs + (2 * (p + sq_gca->offset) * sq_gca->nq);
+  *w    = sq_gca->wqs + ((p + sq_gca->offset) * sq_gca->nq);
+  *base = sq_gca->bases[p + sq_gca->offset];
 
   p = 0;
 

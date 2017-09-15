@@ -111,6 +111,32 @@ struct _gcopencl
 
   cl_mem    *buf_cidx;
 
+  uint      *num_any_id;
+
+  cl_mem    *buf_num_any_id;
+
+  uint      *idx_off_any_id;
+
+  cl_mem    *buf_idx_off_any_id;
+
+  uint      **rows_any_id;
+
+  uint      *host_rows_any_id;
+
+  cl_mem    *buf_rows_any_id;
+
+  uint      **cols_any_id;
+
+  uint      *host_cols_any_id;
+
+  cl_mem    *buf_cols_any_id;
+
+  uint      **cidx_any_id;
+
+  uint      *host_cidx_any_id;
+
+  cl_mem    *buf_cidx_any_id;
+
   uint      **xtoffs;
 
   uint      *host_xtoffs;
@@ -133,10 +159,10 @@ HEADER_PREFIX void
 uninit_gcopencl(pgcopencl gcocl);
 
 HEADER_PREFIX pgcopencl
-new_gcopencl();
+new_gcopencl(const information_t info);
 
 HEADER_PREFIX pgcopencl
-new_nearfield_gcopencl(ph2matrix H2);
+new_nearfield_gcopencl(ph2matrix H2, const uint dim, void *poly_idx);
 
 HEADER_PREFIX void
 del_gcopencl(pgcopencl gcocls);
@@ -153,7 +179,11 @@ get_ocl_nearfild_informations(ph2matrix H2,
                               void      *data);
 
 HEADER_PREFIX void
-get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl);
+get_ocl_informations(ph2matrix           H2,
+                     const information_t info,
+                     const uint          dim,
+                     void                *poly_idx,
+                     pgcopencl           gcocl);
 
 //HEADER_PREFIX void
 //get_ocl_tree_informations_gcocl(ph2matrix H2,

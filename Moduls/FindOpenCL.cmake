@@ -98,6 +98,7 @@ find_path(OpenCL_INCLUDE_DIR
   NAMES
     CL/cl.h OpenCL/cl.h
   PATHS
+    /usr/local/cuda/include/
     ENV "PROGRAMFILES(X86)"
     ENV AMDAPPSDKROOT
     ENV INTELOCLSDKROOT

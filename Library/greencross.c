@@ -14,29 +14,31 @@
 
 #include "bem2d.h"
 #include "ocl_system.h"
+#include "simd.h"
 
-#include "clgreencross.cl"
-#include "clgeom.cl"
-#include "clsingquad.cl"
+#include "clfastaddevalgca.cl"
 #include "clgcidxinfo.cl"
+#include "clgeom.cl"
+#include "clgreencross.cl"
+#include "clkernels.cl"
+#include "clintegralinfo.cl"
+#include "clsingquad.cl"
 
 #include <string.h>
 
-const char *src_code_strs[] = { clgeom_src,
+const char *src_code_strs[] = { clgcidxinfo_src,
+                                clgeom_src,
+                                clkernels_src,
                                 clsingquad_src,
-                                clgcidxinfo_src,
+                                clfastaddevalgca_src,
+                                clintegralinfo_src,
                                 clgreencross_src };
+
 const char *kernel_names[]  = { "fastaddeval_h2matrix_avector_0",
-                                "fastaddeval_h2matrix_avector_1",
-                                "fastaddeval_h2matrix_avector_2"//,
-//                              "fastaddeval_h2matrix_avector_3"
+                                "fastaddeval_nf_common",
+                                "fastaddeval_nf_min_vert",
+                                "fastaddeval_nf_min_edge"
                               };
-typedef enum
-{
-  FARFIELD_ONLY,
-  NEARFIELD_ONLY,
-  BOTH
-} cluster_t;
 
 /** @addtogroup greencross
  *
@@ -135,8 +137,13 @@ init_greencross(pgreencross gc, uint dim)
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
   gc->bem        = NULL;
   gc->sq_gca     = NULL;
+  gc->sq_partial_min_vert = NULL;
+  gc->sq_partial_min_edge = NULL;
   gc->feval      = NULL;
   gc->kernel_3d  = NULL;
+#ifdef USE_SIMD
+  gc->kernel_simd_3d = NULL;
+#endif
   gc->idx        = NULL;
   gc->rb         = NULL;
   gc->cb         = NULL;
@@ -144,9 +151,10 @@ init_greencross(pgreencross gc, uint dim)
   gc->cc         = NULL;
   gc->ocl_kernels = NULL;
   gc->gcocl       = NULL;
-  gc->ocl_info_nf = NULL;
-  gc->oclwrk      = NULL;
-  gc->ocl_wrk_nf  = NULL;
+  gc->ocl_info_nf     = NULL;
+  gc->iinfos_min_edge = NULL;
+  gc->oclwrk          = NULL;
+  gc->ocl_wrk_nf      = NULL;
 }
 
 void
@@ -242,6 +250,12 @@ uninit_greencross(pgreencross gc)
 
   if(gc->sq_gca != NULL)
     del_singquadgca(gc->sq_gca);
+
+  if(gc->sq_partial_min_vert != NULL)
+    del_singquadgca(gc->sq_partial_min_vert);
+
+  if(gc->sq_partial_min_edge != NULL)
+    del_singquadgca(gc->sq_partial_min_edge);
 
   if(gc->feval != NULL)
     del_fastaddevalgca(gc->feval);
@@ -794,7 +808,7 @@ iterate_recursively_h2matrix(ph2matrix H2,
 }
 
 static void
-get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
+get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc)
 {
   pgcopencl gcocl = gc->gcocl;
 
@@ -1007,113 +1021,6 @@ get_ocl_informations_gcocl(ph2matrix H2, pgreencross gc, bool is_farfield)
   }
 }
 
-static void
-distribute_ocl_work_uniform_gca_oclworkpkgs(pcgcopencl  gcocl,
-                                            uint        num_packages,
-                                            poclworkpgs oclwrk)
-{
-  if(num_packages > ocl_system.num_devices)
-  {
-    fprintf(stderr, "error: can't create more packages than devices!\n");
-    exit(1);
-  }
-
-  /* Initialize oclwrkgrppkgs. */
-
-  oclwrk->num_wrk_pkgs = num_packages;
-
-  oclwrk->wrk_per_pkg      =
-    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
-
-  oclwrk->num_rows_per_pkg =
-    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
-
-  oclwrk->rows_per_pkg     =
-    (uint **) calloc(oclwrk->num_wrk_pkgs, sizeof(uint*));
-
-  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
-    oclwrk->rows_per_pkg[i] = (uint *) calloc(0, sizeof(uint));
-
-  /* Distribute work to the packages. */
-
-  for(uint i = 0; i < gcocl->num_row_leafs; ++i)
-  {
-    uint min_wrk     = oclwrk->wrk_per_pkg[0];
-    uint min_wrk_pkg = 0;
-
-    /* Find group with lowest work load. */
-
-    for(uint j = 1; j < oclwrk->num_wrk_pkgs; ++j)
-      if(oclwrk->wrk_per_pkg[j] < min_wrk)
-      {
-        min_wrk     = oclwrk->wrk_per_pkg[j];
-        min_wrk_pkg = j;
-      }
-
-    /* Assign current cluster array to this group. */
-
-    oclwrk->wrk_per_pkg[min_wrk_pkg]      += gcocl->workload_per_row[i];
-
-    oclwrk->num_rows_per_pkg[min_wrk_pkg] += 1;
-
-    oclwrk->rows_per_pkg[min_wrk_pkg] =
-      realloc(oclwrk->rows_per_pkg[min_wrk_pkg],
-              oclwrk->num_rows_per_pkg[min_wrk_pkg] * sizeof(uint));
-
-    if(oclwrk->rows_per_pkg[min_wrk_pkg] == NULL)
-    {
-      fprintf(stderr, "error: failed updating work package!");
-      exit(1);
-    }
-
-    oclwrk->rows_per_pkg[min_wrk_pkg][oclwrk->num_rows_per_pkg[min_wrk_pkg] - 1]
-      = i;
-  }
-
-  oclwrk->buf_rows_this_device =
-    (cl_mem *) calloc(oclwrk->num_wrk_pkgs, sizeof(cl_mem));
-
-  /* Write the indices of the clusters lists a device is responsible for to the
-   * corresponding device. */
-  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
-  {
-    create_and_fill_buffer(ocl_system.contexts[i],
-                           CL_MEM_READ_ONLY,
-                           ocl_system.queues[i * ocl_system.queues_per_device],
-                           oclwrk->num_rows_per_pkg[i],
-                           sizeof(uint),
-                           oclwrk->rows_per_pkg[i],
-                           NULL,
-                           &oclwrk->buf_rows_this_device[i]);
-  }
-}
-
-//static void
-//distribute_ocl_wrk_equidistant_gca_oclwrkpkgs(pcgcopencl  gc,
-//                                              pch2matrix  H2,
-//                                              uint        num_packages,
-//                                              poclworkpgs oclwrk)
-//{
-//  if(num_packages > ocl_system.num_devices)
-//  {
-//    fprintf(stderr, "error: can't create more packages than devices!\n");
-//    exit(1);
-//  }
-//
-//  /* Initialize oclwrkgrppkgs. */
-//
-//  oclwrk->wrk_per_pkg      =
-//    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
-//
-//  oclwrk->num_rows_per_pkg =
-//    (uint *) calloc(oclwrk->num_wrk_pkgs, sizeof(uint));
-//
-//  oclwrk->rows_per_pkg     =
-//    (uint **) calloc(oclwrk->num_wrk_pkgs, sizeof(uint*));
-//
-//
-//}
-
 ph2matrix
 build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
 {
@@ -1121,7 +1028,7 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
   ph2matrix H2;
 
   broot = build_strict_block(gc->rc, gc->cc, eta, admissible_max_cluster);
-//  view_block(broot);
+
   H2    = build_from_block_h2matrix(broot,
                                     gc->rb,
                                     gc->cb);
@@ -1145,19 +1052,42 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
 
   /* Get farfield leaf informations. */
 
-  gc->gcocl = new_gcopencl();
+  gc->gcocl = new_gcopencl(FARFIELD_GCA);
 
-  get_ocl_informations_gcocl(H2, gc, true);
+  get_ocl_informations_gcocl(H2, gc);
 
-  //printf("%u\n", gc->gcocl->ridx_off[0]);
   /* Get the informations an OpenCL device needs to perform the MVM-part of
    * nearfield matrices. */
-  gc->ocl_info_nf = new_nearfield_gcopencl(H2);
+  if(gc->dim == 2)
+  {
+    pcurve2d gr = (pcurve2d) gc->geom;
+
+    gc->ocl_info_nf = new_nearfield_gcopencl(H2, gc->dim, gr->e);
+
+    gc->iinfos_min_edge = build_from_idxinfos_integralinfos(gc->ocl_info_nf,
+                                                            H2,
+                                                            gc->dim,
+                                                            (void*) gr->e,
+                                                            1);
+  }
+  else
+  {
+    psurface3d gr = (psurface3d) gc->geom;
+
+    gc->ocl_info_nf = new_nearfield_gcopencl(H2, gc->dim, gr->t);
+
+    gc->iinfos_min_edge = build_from_idxinfos_integralinfos(gc->ocl_info_nf,
+                                                            H2,
+                                                            gc->dim,
+                                                            (void*) gr->t,
+                                                            1);
+  }
 
   gc->oclwrk      = new_equidistant_distributed_oclwork(gc->gcocl,
                                                         H2,
                                                         1);
 
+  /* TODO: This must be synchronized with the above work packages. */
   gc->ocl_wrk_nf  = new_equidistant_distributed_oclwork(gc->ocl_info_nf,
                                                         H2,
                                                         1);
@@ -1165,21 +1095,24 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
   /* Set up buffer for fastaddeval. */
   gc->feval = new_fastaddevalgca(H2->rb, H2->cb, 1);
 
-//  distribute_ocl_work_uniform_gca_oclworkpkgs(gc->gcocl,
-//                                              ocl_system.num_devices,
-//                                              gc->oclwrk);
-
   if(delete_kernels(num_kernels, &gc->ocl_kernels) != NULL)
   {
     fprintf(stderr, "error: can't create new kernels\n");
     exit(1);
   }
 
+  const uint max_num_h2_leafs =
+    UINT_MAX((uint) gc->gcocl->max_num_h2_leafs_per_row,
+             (uint) gc->ocl_info_nf->max_num_h2_leafs_per_row);
+
   char add_flags[100];
 
   int n = sprintf(add_flags,
-                  "-cl-nv-verbose -DQUADRATUR_ORDER=%u",
-                  ((pbem3d) gc->bem)->sq->n_dist);
+                  "-cl-nv-verbose -DQUADRATUR_ORDER=%u -DSIZE=%u "
+                  "-DMAX_WRK_GRP_SIZE=%u",
+                  ((pbem3d) gc->bem)->sq->n_dist,
+                  16,
+                  max_num_h2_leafs);
 
   if(n <= 0)
   {
@@ -1187,7 +1120,7 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
     exit(1);
   }
 
-  setup_kernels_fix(4,
+  setup_kernels_fix(7,
                     src_code_strs,
                     add_flags,
                     num_kernels,
@@ -1197,20 +1130,25 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
 
   for(uint i = 0; i < gc->oclwrk->num_wrk_pkgs; ++i)
   {
-    for(uint j = 0; j < num_kernels; ++j)
-    {
       for(uint k = 0; k < ocl_system.queues_per_device; ++k)
       {
-        cl_kernel kernel = gc->ocl_kernels[k +
-                                       i * ocl_system.queues_per_device +
-                                       j * ocl_system.num_devices *
-                                       ocl_system.queues_per_device];
+        for(uint j = 0; j < num_kernels; ++j)
+        {
+          cl_kernel kernel =
+            gc->ocl_kernels[k + i * ocl_system.queues_per_device +
+                            j * ocl_system.num_devices *
+                            ocl_system.queues_per_device];
 
-        CL_CHECK(clSetKernelArg(kernel, 0, sizeof(uint), &gc->dim));
-        CL_CHECK(clSetKernelArg(kernel, 1, sizeof(uint), &gc->n));
-        CL_CHECK(clSetKernelArg(kernel, 2, sizeof(cl_mem), &gc->buf_x[i]));
-        CL_CHECK(clSetKernelArg(kernel, 3, sizeof(cl_mem), &gc->buf_p[i]));
-        CL_CHECK(clSetKernelArg(kernel, 4, sizeof(cl_mem), &gc->buf_g[i]));
+          CL_CHECK(clSetKernelArg(kernel, 0, sizeof(uint), &gc->dim));
+          CL_CHECK(clSetKernelArg(kernel, 1, sizeof(uint), &gc->n));
+          CL_CHECK(clSetKernelArg(kernel, 2, sizeof(cl_mem), &gc->buf_x[i]));
+          CL_CHECK(clSetKernelArg(kernel, 3, sizeof(cl_mem), &gc->buf_p[i]));
+          CL_CHECK(clSetKernelArg(kernel, 4, sizeof(cl_mem), &gc->buf_g[i]));
+        }
+
+        cl_kernel kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device];// +
+//                                       j * ocl_system.num_devices *
+//                                       ocl_system.queues_per_device];
 
         CL_CHECK(clSetKernelArg(kernel, 5, sizeof(uint),   &gc->sq_gca->nq));
         CL_CHECK(clSetKernelArg(kernel, 6, sizeof(cl_mem), &gc->sq_gca->buf_xqs[i]));
@@ -1218,48 +1156,139 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
         CL_CHECK(clSetKernelArg(kernel, 8, sizeof(cl_mem), &gc->sq_gca->buf_wqs[i]));
         CL_CHECK(clSetKernelArg(kernel, 9, sizeof(cl_mem), &gc->sq_gca->buf_bases[i]));
 
-        CL_CHECK(clSetKernelArg(kernel, 10, sizeof(uint),   &gc->oclwrk->num_rows_per_pkg[i]));
-        CL_CHECK(clSetKernelArg(kernel, 11, sizeof(cl_mem), &gc->oclwrk->buf_rows_this_device[i]));
-        CL_CHECK(clSetKernelArg(kernel, 12, sizeof(cl_mem), &gc->gcocl->buf_num_h2_leafs_per_row[i]));
-        CL_CHECK(clSetKernelArg(kernel, 13, sizeof(cl_mem), &gc->gcocl->buf_idx_off[i]));
-        CL_CHECK(clSetKernelArg(kernel, 14, sizeof(cl_mem), &gc->gcocl->buf_ridx_sizes[i]));
-        CL_CHECK(clSetKernelArg(kernel, 15, sizeof(cl_mem), &gc->gcocl->buf_cidx_sizes[i]));
-        CL_CHECK(clSetKernelArg(kernel, 16, sizeof(cl_mem), &gc->gcocl->buf_ridx_off[i]));
-        CL_CHECK(clSetKernelArg(kernel, 17, sizeof(cl_mem), &gc->gcocl->buf_cidx_off[i]));
-        CL_CHECK(clSetKernelArg(kernel, 18, sizeof(cl_mem), &gc->gcocl->buf_ridx[i]));
-        CL_CHECK(clSetKernelArg(kernel, 19, sizeof(cl_mem), &gc->gcocl->buf_cidx[i]));
-        CL_CHECK(clSetKernelArg(kernel, 20, sizeof(cl_mem), &gc->gcocl->buf_xtoffs[i]));
-        CL_CHECK(clSetKernelArg(kernel, 21, sizeof(cl_mem), &gc->gcocl->buf_ytoffs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 10, sizeof(uint),   &gc->sq_partial_min_vert->nq));
+        CL_CHECK(clSetKernelArg(kernel, 11, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_xqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 12, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_yqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 13, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_wqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 14, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_bases[i]));
 
-        CL_CHECK(clSetKernelArg(kernel, 22, sizeof(uint),   &gc->ocl_wrk_nf->num_rows_per_pkg[i]));
-        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->ocl_wrk_nf->buf_rows_this_device[i]));
-        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->ocl_info_nf->buf_num_h2_leafs_per_row[i]));
-        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->ocl_info_nf->buf_idx_off[i]));
-        CL_CHECK(clSetKernelArg(kernel, 26, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_sizes[i]));
-        CL_CHECK(clSetKernelArg(kernel, 27, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_sizes[i]));
-        CL_CHECK(clSetKernelArg(kernel, 28, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_off[i]));
-        CL_CHECK(clSetKernelArg(kernel, 29, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_off[i]));
-        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx[i]));
-        CL_CHECK(clSetKernelArg(kernel, 31, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx[i]));
-        CL_CHECK(clSetKernelArg(kernel, 32, sizeof(cl_mem), &gc->ocl_info_nf->buf_xtoffs[i]));
-        CL_CHECK(clSetKernelArg(kernel, 33, sizeof(cl_mem), &gc->ocl_info_nf->buf_ytoffs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 15, sizeof(uint),   &gc->oclwrk->num_rows_per_pkg[i]));
+        CL_CHECK(clSetKernelArg(kernel, 16, sizeof(cl_mem), &gc->oclwrk->buf_rows_this_device[i]));
+        CL_CHECK(clSetKernelArg(kernel, 17, sizeof(cl_mem), &gc->gcocl->buf_num_h2_leafs_per_row[i]));
+        CL_CHECK(clSetKernelArg(kernel, 18, sizeof(cl_mem), &gc->gcocl->buf_idx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 19, sizeof(cl_mem), &gc->gcocl->buf_ridx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 20, sizeof(cl_mem), &gc->gcocl->buf_cidx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 21, sizeof(cl_mem), &gc->gcocl->buf_ridx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 22, sizeof(cl_mem), &gc->gcocl->buf_cidx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->gcocl->buf_ridx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->gcocl->buf_cidx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->gcocl->buf_xtoffs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 26, sizeof(cl_mem), &gc->gcocl->buf_ytoffs[i]));
+
+          CL_CHECK(clSetKernelArg(kernel, 27, sizeof(uint),   &gc->ocl_wrk_nf->num_rows_per_pkg[i]));
+          CL_CHECK(clSetKernelArg(kernel, 28, sizeof(cl_mem), &gc->ocl_wrk_nf->buf_rows_this_device[i]));
+          CL_CHECK(clSetKernelArg(kernel, 29, sizeof(cl_mem), &gc->ocl_info_nf->buf_num_h2_leafs_per_row[i]));
+          CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->ocl_info_nf->buf_idx_off[i]));
+          CL_CHECK(clSetKernelArg(kernel, 31, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_sizes[i]));
+          CL_CHECK(clSetKernelArg(kernel, 32, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_sizes[i]));
+          CL_CHECK(clSetKernelArg(kernel, 33, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_off[i]));
+          CL_CHECK(clSetKernelArg(kernel, 34, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_off[i]));
+          CL_CHECK(clSetKernelArg(kernel, 35, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx[i]));
+          CL_CHECK(clSetKernelArg(kernel, 36, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx[i]));
+          CL_CHECK(clSetKernelArg(kernel, 37, sizeof(cl_mem), &gc->ocl_info_nf->buf_xtoffs[i]));
+          CL_CHECK(clSetKernelArg(kernel, 38, sizeof(cl_mem), &gc->ocl_info_nf->buf_ytoffs[i]));
+
+        CL_CHECK(clSetKernelArg(kernel, 39, sizeof(cl_mem), &gc->ocl_info_nf->buf_num_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 40, sizeof(cl_mem), &gc->ocl_info_nf->buf_idx_off_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 41, sizeof(cl_mem), &gc->ocl_info_nf->buf_rows_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 42, sizeof(cl_mem), &gc->ocl_info_nf->buf_cols_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 43, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_any_id[i]));
+
 
         if(gc->dim == 2)
         {
-          CL_CHECK(clSetKernelArg(kernel, 34, sizeof(real), &((pbem2d) gc->bem)->alpha));
+          CL_CHECK(clSetKernelArg(kernel, 44, sizeof(real), &((pbem2d) gc->bem)->alpha));
         }
         else
         {
-          CL_CHECK(clSetKernelArg(kernel, 34, sizeof(real), &((pbem3d) gc->bem)->alpha));
+          CL_CHECK(clSetKernelArg(kernel, 44, sizeof(real), &((pbem3d) gc->bem)->alpha));
         }
 
-        CL_CHECK(clSetKernelArg(kernel, 36, sizeof(cl_mem), &gc->feval->buf_xt[i]));
-        CL_CHECK(clSetKernelArg(kernel, 37, sizeof(cl_mem), &gc->feval->buf_yt[i]));
+        CL_CHECK(clSetKernelArg(kernel, 46, sizeof(cl_mem), &gc->feval->buf_xt[i]));
+        CL_CHECK(clSetKernelArg(kernel, 47, sizeof(cl_mem), &gc->feval->buf_yt[i]));
 
-//        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->feval->buf_xt[i]));
-//        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->feval->buf_yt[i]));
+        kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device +
+                                 2 * ocl_system.num_devices *
+                                 ocl_system.queues_per_device];
+
+        CL_CHECK(clSetKernelArg(kernel, 5, sizeof(uint),   &gc->sq_partial_min_vert->nq));
+        CL_CHECK(clSetKernelArg(kernel, 6, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_xqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 7, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_yqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 8, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_wqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 9, sizeof(cl_mem), &gc->sq_partial_min_vert->buf_bases[i]));
+
+        CL_CHECK(clSetKernelArg(kernel, 10, sizeof(uint),   &gc->ocl_wrk_nf->num_rows_per_pkg[i]));
+        CL_CHECK(clSetKernelArg(kernel, 11, sizeof(cl_mem), &gc->ocl_wrk_nf->buf_rows_this_device[i]));
+        CL_CHECK(clSetKernelArg(kernel, 12, sizeof(cl_mem), &gc->ocl_info_nf->buf_num_h2_leafs_per_row[i]));
+        CL_CHECK(clSetKernelArg(kernel, 13, sizeof(cl_mem), &gc->ocl_info_nf->buf_idx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 14, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 15, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 16, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 17, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 18, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 19, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 20, sizeof(cl_mem), &gc->ocl_info_nf->buf_xtoffs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 21, sizeof(cl_mem), &gc->ocl_info_nf->buf_ytoffs[i]));
+
+        CL_CHECK(clSetKernelArg(kernel, 22, sizeof(cl_mem), &gc->ocl_info_nf->buf_num_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->ocl_info_nf->buf_idx_off_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->ocl_info_nf->buf_rows_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->ocl_info_nf->buf_cols_any_id[i]));
+        CL_CHECK(clSetKernelArg(kernel, 26, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_any_id[i]));
+
+        if(gc->dim == 2)
+        {
+          CL_CHECK(clSetKernelArg(kernel, 27, sizeof(real), &((pbem2d) gc->bem)->alpha));
+        }
+        else
+        {
+          CL_CHECK(clSetKernelArg(kernel, 27, sizeof(real), &((pbem3d) gc->bem)->alpha));
+        }
+
+        CL_CHECK(clSetKernelArg(kernel, 29, sizeof(cl_mem), &gc->feval->buf_xt[i]));
+        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt[i]));
+
+        kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device +
+                                 3 * ocl_system.num_devices *
+                                 ocl_system.queues_per_device];
+
+        CL_CHECK(clSetKernelArg(kernel, 5, sizeof(uint),   &gc->sq_partial_min_edge->nq));
+        CL_CHECK(clSetKernelArg(kernel, 6, sizeof(cl_mem), &gc->sq_partial_min_edge->buf_xqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 7, sizeof(cl_mem), &gc->sq_partial_min_edge->buf_yqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 8, sizeof(cl_mem), &gc->sq_partial_min_edge->buf_wqs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 9, sizeof(cl_mem), &gc->sq_partial_min_edge->buf_bases[i]));
+
+        CL_CHECK(clSetKernelArg(kernel, 10, sizeof(uint),   &gc->ocl_wrk_nf->num_rows_per_pkg[i]));
+        CL_CHECK(clSetKernelArg(kernel, 11, sizeof(cl_mem), &gc->ocl_wrk_nf->buf_rows_this_device[i]));
+        CL_CHECK(clSetKernelArg(kernel, 12, sizeof(cl_mem), &gc->ocl_info_nf->buf_num_h2_leafs_per_row[i]));
+        CL_CHECK(clSetKernelArg(kernel, 13, sizeof(cl_mem), &gc->ocl_info_nf->buf_idx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 14, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 15, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_sizes[i]));
+        CL_CHECK(clSetKernelArg(kernel, 16, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 17, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 18, sizeof(cl_mem), &gc->ocl_info_nf->buf_ridx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 19, sizeof(cl_mem), &gc->ocl_info_nf->buf_cidx[i]));
+        CL_CHECK(clSetKernelArg(kernel, 20, sizeof(cl_mem), &gc->ocl_info_nf->buf_xtoffs[i]));
+        CL_CHECK(clSetKernelArg(kernel, 21, sizeof(cl_mem), &gc->ocl_info_nf->buf_ytoffs[i]));
+
+        CL_CHECK(clSetKernelArg(kernel, 22, sizeof(cl_mem), &gc->iinfos_min_edge->buf_num_integrals[i]));
+        CL_CHECK(clSetKernelArg(kernel, 23, sizeof(cl_mem), &gc->iinfos_min_edge->buf_idx_off[i]));
+        CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->iinfos_min_edge->buf_rows[i]));
+        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->iinfos_min_edge->buf_cols[i]));
+        CL_CHECK(clSetKernelArg(kernel, 26, sizeof(cl_mem), &gc->iinfos_min_edge->buf_cidx[i]));
+
+        if(gc->dim == 2)
+        {
+          CL_CHECK(clSetKernelArg(kernel, 27, sizeof(real), &((pbem2d) gc->bem)->alpha));
+        }
+        else
+        {
+          CL_CHECK(clSetKernelArg(kernel, 27, sizeof(real), &((pbem3d) gc->bem)->alpha));
+        }
+
+        CL_CHECK(clSetKernelArg(kernel, 29, sizeof(cl_mem), &gc->feval->buf_xt[i]));
+        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt[i]));
       }
-    }
   }
 
   del_block(broot);
@@ -1268,10 +1297,61 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
 }
 
 void
+fastaddeval_farfield_h2matrix_avector(field      alpha,
+                                      pch2matrix h2,
+                                      pavector   xt,
+                                      pavector   yt)
+{
+  avector        loc1, loc2;
+  pavector       xt1, yt1;
+  pcclusterbasis rb = h2->rb;
+  pcclusterbasis cb = h2->cb;
+  uint      rsons = h2->rsons;
+  uint      csons = h2->csons;
+  uint      xtoff, ytoff;
+  uint      i, j;
+
+  if(h2->u)
+    addeval_amatrix_avector(alpha, &h2->u->S, xt, yt);
+  else if(h2->son)
+  {
+    xtoff = cb->k;
+    for (j = 0; j < csons; j++) {
+      assert(csons == 1 || cb->sons > 0);
+      xt1 =
+        (cb->sons >
+         0 ? init_sub_avector(&loc1, xt, cb->son[j]->ktree,
+                              xtoff) : init_sub_avector(&loc1, xt, cb->ktree,
+                                                        0));
+
+      ytoff = rb->k;
+      for (i = 0; i < rsons; i++) {
+        assert(rsons == 1 || rb->sons > 0);
+        yt1 = (rb->sons > 0 ?
+               init_sub_avector(&loc2, yt, rb->son[i]->ktree, ytoff) :
+               init_sub_avector(&loc2, yt, rb->ktree, 0));
+
+        fastaddeval_farfield_h2matrix_avector(alpha, h2->son[i + j * rsons], xt1, yt1);
+
+        uninit_avector(yt1);
+
+        ytoff += (rb->sons > 0 ? rb->son[i]->ktree : rb->t->size);
+      }
+      assert(ytoff == rb->ktree);
+
+      uninit_avector(xt1);
+
+      xtoff += (cb->sons > 0 ? cb->son[j]->ktree : cb->t->size);
+    }
+    assert(xtoff == cb->ktree);
+  }
+}
+
+void
 fastaddeval_nearfield_h2matrix_avector(field      alpha,
-                                                          pch2matrix h2,
-                                                          pavector   xt,
-                                                          pavector   yt)
+                                       pch2matrix h2,
+                                       pavector   xt,
+                                       pavector   yt)
 {
   avector   loc1, loc2;
   pavector  xp, yp, xt1, yt1;
@@ -1325,49 +1405,29 @@ fastaddeval_nearfield_h2matrix_avector(field      alpha,
 }
 
 void
-fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
-                                                 field        alpha,
-                                                 pavector     xt,
-                                                 pavector     yt,
-                                                 uint         kernel_idx)
+fastaddeval_part_2_h2matrix_avector_gca(pgreencross  gc,
+                                        const uint   kernel_idx,
+                                        const field  alpha,
+                                        pcavector    xt,
+                                        pavector     yt)
 {
-  const size_t num_global_work_items = gc->gcocl->max_num_h2_leafs_per_row *
-                                       gc->gcocl->num_row_leafs;
+  const size_t max_num_h2_leafs         =
+    UINT_MAX((uint) gc->gcocl->max_num_h2_leafs_per_row,
+             (uint) gc->ocl_info_nf->max_num_h2_leafs_per_row);
+
+  const size_t max_num_writing_clusters =
+    UINT_MAX(gc->gcocl->num_row_leafs, gc->ocl_info_nf->num_row_leafs);
+
+  const size_t num_global_work_items    = max_num_h2_leafs *
+                                          max_num_writing_clusters;
 
   pfastaddevalgca feval  = gc->feval;
   poclworkpgs     oclwrk = gc->oclwrk;
 
   cl_command_queue *queues = ocl_system.queues;
 
-  /* Write input vector to device. */
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
   {
-    CL_CHECK(clEnqueueWriteBuffer
-               (queues[i * ocl_system.queues_per_device],
-                feval->buf_xt[i],
-                CL_FALSE,
-                0,
-                xt->dim * sizeof(real),
-                xt->v,
-                0,
-                NULL,
-                &feval->events_xt[i]));
-  }
-
-  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
-  {
-    /* Write alpha/scaling factor to device. */
-    for (uint k = 0; k < ocl_system.queues_per_device; ++k)
-    {
-      cl_kernel kernel = gc->ocl_kernels[k +
-                                         i * ocl_system.queues_per_device +
-                                         kernel_idx * ocl_system.num_devices *
-                                         ocl_system.queues_per_device];
-
-      CL_CHECK(clSetKernelArg(kernel, 35, sizeof(real), &alpha));
-//      CL_CHECK(clSetKernelArg(kernel, 22, sizeof(real), &alpha));
-    }
-
     cl_event events[2] = { feval->events_xt[i], feval->events_yt[i] };
 
     clWaitForEvents(2, events);
@@ -1381,7 +1441,69 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
                 1,
                 NULL,
                 &num_global_work_items,
-                &gc->gcocl->max_num_h2_leafs_per_row,
+                &max_num_h2_leafs,
+                0,
+                NULL,
+                NULL));
+  }
+}
+
+void
+fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gc)
+{
+  const size_t max_num_h2_leafs      = gc->ocl_info_nf->max_num_h2_leafs_per_row;
+  const size_t num_writing_clusters  = gc->ocl_info_nf->num_row_leafs;
+  const size_t num_global_work_items = max_num_h2_leafs * num_writing_clusters;
+
+  pcoclworkpgs     oclwrk            = gc->oclwrk;
+
+  cl_command_queue *queues           = ocl_system.queues;
+
+  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
+  {
+    clFinish(queues[i * ocl_system.queues_per_device]);
+
+    /* Start kernel */
+    CL_CHECK(clEnqueueNDRangeKernel
+               (queues[i * ocl_system.queues_per_device],
+                gc->ocl_kernels[i * ocl_system.queues_per_device +
+                                2 * ocl_system.num_devices *
+                                ocl_system.queues_per_device],
+                1,
+                NULL,
+                &num_global_work_items,
+                &max_num_h2_leafs,
+                0,
+                NULL,
+                NULL));
+  }
+}
+
+void
+fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gc)
+{
+  const size_t max_num_h2_leafs      = gc->ocl_info_nf->max_num_h2_leafs_per_row;
+  const size_t num_groups            = gc->iinfos_min_edge->num_integral_grps;
+  const size_t num_global_work_items = max_num_h2_leafs * num_groups;
+
+  pcoclworkpgs     oclwrk            = gc->oclwrk;
+
+  cl_command_queue *queues           = ocl_system.queues;
+
+  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
+  {
+    clFinish(queues[i * ocl_system.queues_per_device]);
+
+    /* Start kernel */
+    CL_CHECK(clEnqueueNDRangeKernel
+               (queues[i * ocl_system.queues_per_device],
+                gc->ocl_kernels[i * ocl_system.queues_per_device +
+                                3 * ocl_system.num_devices *
+                                ocl_system.queues_per_device],
+                1,
+                NULL,
+                &num_global_work_items,
+                &max_num_h2_leafs,
                 0,
                 NULL,
                 NULL));
@@ -1389,18 +1511,18 @@ fastaddeval_farfield_h2matrix_avector_greencross(pgreencross  gc,
 }
 
 static void
-nearfield_3d_nodist_gca(pcgreencross gc,
-                        const uint   rows,
-                        const uint   cols,
-                        const uint   *ridx,
-                        const uint   *cidx,
-                        const field  alpha,
-                        pcavector    xt,
-                        pavector     yt)
+nearfield_3d_partial_gca(pcgreencross gc,
+                         const uint   rows,
+                         const uint   cols,
+                         const uint   *ridx,
+                         const uint   *cidx,
+                         const field  alpha,
+                         pcavector    xt,
+                         pavector     yt)
 {
   if(gc->dim != 3)
   {
-    fprintf(stderr, "error: trying to call nearfield_3d_nodist_gca for "
+    fprintf(stderr, "error: trying to call nearfield_3d_partial_gca for "
                     "problems other than in 3D.");
     exit(1);
   }
@@ -1477,7 +1599,69 @@ nearfield_3d_nodist_gca(pcgreencross gc,
 
         real sum = base;
 
-        for(uint q = 0; q < (nq - n_dist); ++q)
+        uint q   = 0;
+
+//#ifdef USE_SIMD
+//        for(q = 0; (i + q) < (nq - n_dist); q += VREAL)
+//        {
+//          const vreal one = vset1(r_one);
+//          const vreal w   = vload(wq + q);
+//
+//          vreal a1 = vload(xq + q);
+//          vreal a2 = vload(xq + nq + q);
+//
+//          vreal xx[3] = { vset1(r_zero), vset1(r_zero), vset1(r_zero) };
+//
+//          vreal scalar;
+//
+//          scalar = vset1(x[0][0]); xx[0] = vfmadd(vsub(one, a1), scalar, xx[0]);
+//          scalar = vset1(x[1][0]); xx[0] = vfmadd(vsub(a1,  a2), scalar, xx[0]);
+//          scalar = vset1(x[2][0]); xx[0] = vfmadd(a2,            scalar, xx[0]);
+//
+//          scalar = vset1(x[0][1]); xx[1] = vfmadd(vsub(one, a1), scalar, xx[1]);
+//          scalar = vset1(x[1][1]); xx[1] = vfmadd(vsub(a1,  a2), scalar, xx[1]);
+//          scalar = vset1(x[2][1]); xx[1] = vfmadd(a2,            scalar, xx[1]);
+//
+//          scalar = vset1(x[0][2]); xx[2] = vfmadd(vsub(one, a1), scalar, xx[2]);
+//          scalar = vset1(x[1][2]); xx[2] = vfmadd(vsub(a1,  a2), scalar, xx[2]);
+//          scalar = vset1(x[2][2]); xx[2] = vfmadd(a2,            scalar, xx[2]);
+//
+//          a1 = vload(yq + q);
+//          a2 = vload(yq + nq + q);
+//
+//          vreal yy[3] = { vset1(r_zero), vset1(r_zero), vset1(r_zero) };
+//
+//          scalar = vset1(y[0][0]); yy[0] = vfmadd(vsub(one, a1), scalar, yy[0]);
+//          scalar = vset1(y[1][0]); yy[0] = vfmadd(vsub(a1,  a2), scalar, yy[0]);
+//          scalar = vset1(y[2][0]); yy[0] = vfmadd(a2,            scalar, yy[0]);
+//
+//          scalar = vset1(y[0][1]); yy[1] = vfmadd(vsub(one, a1), scalar, yy[1]);
+//          scalar = vset1(y[1][1]); yy[1] = vfmadd(vsub(a1,  a2), scalar, yy[1]);
+//          scalar = vset1(y[2][1]); yy[1] = vfmadd(a2,            scalar, yy[1]);
+//
+//          scalar = vset1(y[0][2]); yy[2] = vfmadd(vsub(one, a1), scalar, yy[2]);
+//          scalar = vset1(y[1][2]); yy[2] = vfmadd(vsub(a1,  a2), scalar, yy[2]);
+//          scalar = vset1(y[2][2]); yy[2] = vfmadd(a2,            scalar, yy[2]);
+//
+//          vreal kernel_result;
+//
+//          gc->kernel_simd_3d(xx, yy, NULL, NULL, NULL, &kernel_result, NULL);
+//
+//          kernel_result = vmul(w, kernel_result);
+//
+//          real results[VREAL];
+//
+//          vstore(results, kernel_result);
+//
+//          for(uint k = (VREAL >> 1); k > 0; k >>= 1)
+//            for(uint l = 0; l < k; ++l)
+//              results[l] += results[k + l];
+//
+//          sum += results[0];
+//        }
+//#endif
+        
+        for(; q < (nq - n_dist); ++q)
         {
           real a1 = xq[q];
           real a2 = xq[q + nq];
@@ -1512,6 +1696,277 @@ nearfield_3d_nodist_gca(pcgreencross gc,
 }
 
 static void
+nearfield_3d_partial_min_id_edge(pcgreencross gc,
+                                 const uint   rows,
+                                 const uint   cols,
+                                 const uint   *ridx,
+                                 const uint   *cidx,
+                                 const field  alpha,
+                                 pcavector    xt,
+                                 pavector     yt)
+{
+  if(gc->dim != 3)
+  {
+    fprintf(stderr, "error: trying to call nearfield_3d_partial_gca for "
+      "problems other than in 3D.");
+    exit(1);
+  }
+
+  kernel_func3d kernel = gc->kernel_3d;
+
+  pcbem3d    bem     = (pbem3d) gc->bem;
+
+//  const uint n_vert = bem->sq->n_vert;
+
+  const real (*v)[3] = (const real(*)[3]) ((psurface3d) gc->geom)->x;
+  const real *g      = ((psurface3d) gc->geom)->g;
+
+  uint (*p)[3] = ((psurface3d) gc->geom)->t;
+
+  for(uint i = 0; i < rows; ++i)
+  {
+    const uint ii  = (ridx == NULL ? i : ridx[i]);
+    const real tmp = g[ii] * bem->kernel_const;
+
+    real result = r_zero;
+
+    for(uint j = 0; j < cols; ++j)
+    {
+      const uint jj = (cidx == NULL ? j : cidx[j]);
+
+      uint id_verts = 0;
+
+      if(gc->dim == 2)
+        fprintf(stderr, "error: nearfield_3d_partial_min_id_edge not yet "
+          "implemented for 2D problems!\n");
+      else
+        id_verts = fast_select_quadrature(p, ii, jj);
+
+      if(id_verts > 1)
+      {
+        const real factor = tmp * g[jj];
+
+        real sum;
+        uint px[3], py[3];
+        real *xq, *yq, *wq;
+
+        select_quadrature_singquadgca(gc->sq_partial_min_edge,
+                                      p[ii],
+                                      p[jj],
+                                      px,
+                                      py,
+                                      &xq,
+                                      &yq,
+                                      &wq,
+                                      &sum);
+
+        /* Copy permuted vertex numbers. */
+
+        px[0] = p[ii][px[0]];
+        px[1] = p[ii][px[1]];
+        px[2] = p[ii][px[2]];
+
+        py[0] = p[jj][py[0]];
+        py[1] = p[jj][py[1]];
+        py[2] = p[jj][py[2]];
+
+        /* Copy permuted vertices */
+
+        const real x[3][3] =
+          { { v[px[0]][0], v[px[0]][1], v[px[0]][2] },
+            { v[px[1]][0], v[px[1]][1], v[px[1]][2] },
+            { v[px[2]][0], v[px[2]][1], v[px[2]][2] } };
+
+        const real y[3][3] =
+          { { v[py[0]][0], v[py[0]][1], v[py[0]][2] },
+            { v[py[1]][0], v[py[1]][1], v[py[1]][2] },
+            { v[py[2]][0], v[py[2]][1], v[py[2]][2] } };
+
+        const uint nq = gc->sq_partial_min_edge->nq;
+
+        for(uint q = 0; q < nq; ++q)
+        {
+          real a1 = xq[q];
+          real a2 = xq[q + nq];
+
+          const real xx[3] =
+            { (r_one - a1) * x[0][0] + (a1 - a2) * x[1][0] + a2 * x[2][0],
+              (r_one - a1) * x[0][1] + (a1 - a2) * x[1][1] + a2 * x[2][1],
+              (r_one - a1) * x[0][2] + (a1 - a2) * x[1][2] + a2 * x[2][2] };
+
+          a1 = yq[q];
+          a2 = yq[q + nq];
+
+          const real yy[3] =
+            { (r_one - a1) * y[0][0] + (a1 - a2) * y[1][0] + a2 * y[2][0],
+              (r_one - a1) * y[0][1] + (a1 - a2) * y[1][1] + a2 * y[2][1],
+              (r_one - a1) * y[0][2] + (a1 - a2) * y[1][2] + a2 * y[2][2] };
+
+          sum += wq[q] * kernel(xx, yy, NULL, NULL, NULL);
+        }
+
+        const real factor2 =
+          ((bem->alpha != 0.0) && (ii == jj))
+          ? 0.5 * bem->alpha * g[ii]
+          : r_zero;
+
+        result += (sum * factor + factor2) * getentry_avector(xt, j);
+      }
+
+//      const real factor = tmp * g[jj];
+//
+//      real base;
+//      uint nq;
+//      uint px[3], py[3];
+//      real *xq, *yq, *wq;
+//
+//       Choose quadrature rule, ensuring symmetry of the matrix.
+//
+//      select_quadrature_singquad2d(bem->sq,
+//                                   p[ii],
+//                                   p[jj],
+//                                   px,
+//                                   py,
+//                                   &xq,
+//                                   &yq,
+//                                   &wq,
+//                                   &nq,
+//                                   &base);
+//
+//      const int num_quad_points = nq - n_vert;
+//
+//       Only compute matrix entries where the corresponding triangulars have an
+//       * identical edge or are identical in themselves.
+//      if(num_quad_points > 0)
+//      {
+//        const uint vnq = ROUNDUP(nq, VREAL);
+//
+//        wq += vnq * 9;
+//
+//         Copy permuted vertex numbers.
+//
+//        px[0] = p[ii][px[0]];
+//        px[1] = p[ii][px[1]];
+//        px[2] = p[ii][px[2]];
+//
+//        py[0] = p[jj][py[0]];
+//        py[1] = p[jj][py[1]];
+//        py[2] = p[jj][py[2]];
+//
+//         Copy permuted vertices
+//
+//        const real x[3][3] =
+//          { { v[px[0]][0], v[px[0]][1], v[px[0]][2] },
+//            { v[px[1]][0], v[px[1]][1], v[px[1]][2] },
+//            { v[px[2]][0], v[px[2]][1], v[px[2]][2] } };
+//
+//        const real y[3][3] =
+//          { { v[py[0]][0], v[py[0]][1], v[py[0]][2] },
+//            { v[py[1]][0], v[py[1]][1], v[py[1]][2] },
+//            { v[py[2]][0], v[py[2]][1], v[py[2]][2] } };
+//
+//        real sum = base;
+//
+//        uint q   = 0;
+
+//#ifdef USE_SIMD
+//        for(q = 0; (i + q) < num_quad_points; q += VREAL)
+//        {
+//          const vreal one = vset1(r_one);
+//          const vreal w   = vload(wq + q);
+//
+//          vreal a1 = vload(xq + q);
+//          vreal a2 = vload(xq + nq + q);
+//
+//          vreal xx[3] = { vset1(r_zero), vset1(r_zero), vset1(r_zero) };
+//
+//          vreal scalar;
+//
+//          scalar = vset1(x[0][0]); xx[0] = vfmadd(vsub(one, a1), scalar, xx[0]);
+//          scalar = vset1(x[1][0]); xx[0] = vfmadd(vsub(a1,  a2), scalar, xx[0]);
+//          scalar = vset1(x[2][0]); xx[0] = vfmadd(a2,            scalar, xx[0]);
+//
+//          scalar = vset1(x[0][1]); xx[1] = vfmadd(vsub(one, a1), scalar, xx[1]);
+//          scalar = vset1(x[1][1]); xx[1] = vfmadd(vsub(a1,  a2), scalar, xx[1]);
+//          scalar = vset1(x[2][1]); xx[1] = vfmadd(a2,            scalar, xx[1]);
+//
+//          scalar = vset1(x[0][2]); xx[2] = vfmadd(vsub(one, a1), scalar, xx[2]);
+//          scalar = vset1(x[1][2]); xx[2] = vfmadd(vsub(a1,  a2), scalar, xx[2]);
+//          scalar = vset1(x[2][2]); xx[2] = vfmadd(a2,            scalar, xx[2]);
+//
+//          a1 = vload(yq + q);
+//          a2 = vload(yq + nq + q);
+//
+//          vreal yy[3] = { vset1(r_zero), vset1(r_zero), vset1(r_zero) };
+//
+//          scalar = vset1(y[0][0]); yy[0] = vfmadd(vsub(one, a1), scalar, yy[0]);
+//          scalar = vset1(y[1][0]); yy[0] = vfmadd(vsub(a1,  a2), scalar, yy[0]);
+//          scalar = vset1(y[2][0]); yy[0] = vfmadd(a2,            scalar, yy[0]);
+//
+//          scalar = vset1(y[0][1]); yy[1] = vfmadd(vsub(one, a1), scalar, yy[1]);
+//          scalar = vset1(y[1][1]); yy[1] = vfmadd(vsub(a1,  a2), scalar, yy[1]);
+//          scalar = vset1(y[2][1]); yy[1] = vfmadd(a2,            scalar, yy[1]);
+//
+//          scalar = vset1(y[0][2]); yy[2] = vfmadd(vsub(one, a1), scalar, yy[2]);
+//          scalar = vset1(y[1][2]); yy[2] = vfmadd(vsub(a1,  a2), scalar, yy[2]);
+//          scalar = vset1(y[2][2]); yy[2] = vfmadd(a2,            scalar, yy[2]);
+//
+//          vreal kernel_result;
+//
+//          gc->kernel_simd_3d(xx, yy, NULL, NULL, NULL, &kernel_result, NULL);
+//
+//          kernel_result = vmul(w, kernel_result);
+//
+//          real results[VREAL];
+//
+//          vstore(results, kernel_result);
+//
+//          for(uint k = (VREAL >> 1); k > 0; k >>= 1)
+//            for(uint l = 0; l < k; ++l)
+//              results[l] += results[k + l];
+//
+//          sum += results[0];
+//        }
+//#endif
+
+//        for(; (int) q < num_quad_points; ++q)
+//        {
+//          real a1 = xq[q];
+//          real a2 = xq[q + nq];
+//
+//          const real xx[3] =
+//            { (r_one - a1) * x[0][0] + (a1 - a2) * x[1][0] + a2 * x[2][0],
+//              (r_one - a1) * x[0][1] + (a1 - a2) * x[1][1] + a2 * x[2][1],
+//              (r_one - a1) * x[0][2] + (a1 - a2) * x[1][2] + a2 * x[2][2] };
+//
+//          a1 = yq[q];
+//          a2 = yq[q + nq];
+//
+//          const real yy[3] =
+//            { (r_one - a1) * y[0][0] + (a1 - a2) * y[1][0] + a2 * y[2][0],
+//              (r_one - a1) * y[0][1] + (a1 - a2) * y[1][1] + a2 * y[2][1],
+//              (r_one - a1) * y[0][2] + (a1 - a2) * y[1][2] + a2 * y[2][2] };
+//
+//          sum += wq[q] * kernel(xx, yy, NULL, NULL, NULL);
+//        }
+//
+//        const real factor2 =
+//          ((bem->alpha != 0.0) && (ii == jj))
+//          ? 0.5 * bem->alpha * g[ii]
+//          : r_zero;
+//
+//        result += (sum * factor + factor2) * getentry_avector(xt, j);
+//      }
+//    }
+//
+//    yt->v[i] += alpha * result;
+    }
+
+    yt->v[i] += alpha * result;
+  }
+}
+
+static void
 nearfield_3d_cpu_gca(pcgreencross gc,
                      const uint   rows,
                      const uint   cols,
@@ -1523,7 +1978,7 @@ nearfield_3d_cpu_gca(pcgreencross gc,
 {
   if(gc->dim != 3)
   {
-    fprintf(stderr, "error: trying to call nearfield_3d_nodist_gca for "
+    fprintf(stderr, "error: trying to call nearfield_3d_cpu_gca for "
       "problems other than in 3D.");
     exit(1);
   }
@@ -1537,8 +1992,6 @@ nearfield_3d_cpu_gca(pcgreencross gc,
   const real (*v)[3] = (const real(*)[3]) ((psurface3d) gc->geom)->x;
   const uint (*p)[3] = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
   const real *g      = ((psurface3d) gc->geom)->g;
-
-//  printf("CPU %u %u\n", rows, cols);
 
   for(uint i = 0; i < rows; ++i)
   {
@@ -1626,76 +2079,501 @@ nearfield_3d_cpu_gca(pcgreencross gc,
   }
 }
 
-void
-fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
-                                                          field        alpha,
-                                                          pch2matrix   H2,
-                                                          pavector     xt,
-                                                          pavector     yt)
+static void
+nearfield_3d_partial_min_vert(pcgreencross gc,
+                              const uint   rows,
+                              const uint   cols,
+                              const uint   *ridx,
+                              const uint   *cidx,
+                              const field  alpha,
+                              pcavector    xt,
+                              pavector     yt)
 {
-  const uint     rsons = H2->rsons;
-  const uint     csons = H2->csons;
-  pcclusterbasis rb    = H2->rb;
-  pcclusterbasis cb    = H2->cb;
-
-  avector        loc1, loc2;
-  pavector       xt1, yt1;
-
-  if(H2->f)
+  if(gc->dim != 3)
   {
-    xt1 = init_sub_avector(&loc1, xt, cb->t->size, cb->k);
-    yt1 = init_sub_avector(&loc2, yt, rb->t->size, rb->k);
-
-    nearfield_3d_nodist_gca(gc,
-                            H2->f->rows,
-                            H2->f->cols,
-                            H2->rb->t->idx,
-                            H2->cb->t->idx,
-                            alpha,
-                            xt1,
-                            yt1);
-
-    uninit_avector(yt1);
-    uninit_avector(xt1);
+    fprintf(stderr, "error: trying to call nearfield_3d_cpu_gca for "
+      "problems other than in 3D.");
+    exit(1);
   }
-  else if(H2->son)
+
+  kernel_func3d kernel = gc->kernel_3d;
+
+  pcbem3d       bem  = (pbem3d) gc->bem;
+  pcsingquadgca sq   = gc->sq_partial_min_vert;
+
+//  const uint n_dist  = bem->sq->n_dist;
+//  const uint n_vert  = bem->sq->n_vert;
+
+  const real (*v)[3] = (const real(*)[3]) ((psurface3d) gc->geom)->x;
+  const uint (*p)[3] = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
+  const real *g      = ((psurface3d) gc->geom)->g;
+
+  for(uint i = 0; i < rows; ++i)
   {
-    uint xtoff = cb->k;
+    const uint ii  = (ridx == NULL ? i : ridx[i]);
+    const real tmp = g[ii] * bem->kernel_const;
 
-    for(uint j = 0; j < csons; j++)
+    real result = r_zero;
+
+    for(uint j = 0; j < cols; ++j)
     {
-      assert(csons == 1 || cb->sons > 0);
+      const uint jj = (cidx == NULL ? j : cidx[j]);
+      const real factor = tmp * g[jj];
 
-      xt1 = (cb->sons > 0
-               ? init_sub_avector(&loc1, xt, cb->son[j]->ktree, xtoff)
-               : init_sub_avector(&loc1, xt, cb->ktree, 0));
-
-      uint ytoff = rb->k;
-
-      for(uint i = 0; i < rsons; i++)
+      if(fast_select_quadrature((uint (*)[3]) p, ii, jj) > 0)
       {
-        assert(rsons == 1 || rb->sons > 0);
+        real sum;
+        uint px[3], py[3];
+        real *xq, *yq, *wq;
 
-        yt1 = (rb->sons > 0
-                 ? init_sub_avector(&loc2, yt, rb->son[i]->ktree, ytoff)
-                 : init_sub_avector(&loc2, yt, rb->ktree, 0));
+        select_quadrature_singquadgca(gc->sq_partial_min_vert,
+                                      p[ii],
+                                      p[jj],
+                                      px,
+                                      py,
+                                      &xq,
+                                      &yq,
+                                      &wq,
+                                      &sum);
 
-        fastaddeval_nearfield_nodist_h2matrix_avectors_greencross
-          (gc, alpha, H2->son[i + j * rsons], xt1, yt1);
+        /* Copy permuted vertex numbers. */
 
-        uninit_avector(yt1);
+        px[0] = p[ii][px[0]];
+        px[1] = p[ii][px[1]];
+        px[2] = p[ii][px[2]];
 
-        ytoff += (rb->sons > 0 ? rb->son[i]->ktree : rb->t->size);
+        py[0] = p[jj][py[0]];
+        py[1] = p[jj][py[1]];
+        py[2] = p[jj][py[2]];
+
+        /* Copy permuted vertices */
+
+        const real x[3][3] =
+          {{v[px[0]][0], v[px[0]][1], v[px[0]][2]},
+           {v[px[1]][0], v[px[1]][1], v[px[1]][2]},
+           {v[px[2]][0], v[px[2]][1], v[px[2]][2]}};
+
+        const real y[3][3] =
+          {{v[py[0]][0], v[py[0]][1], v[py[0]][2]},
+           {v[py[1]][0], v[py[1]][1], v[py[1]][2]},
+           {v[py[2]][0], v[py[2]][1], v[py[2]][2]}};
+
+        /* Perform remaining quadrature. */
+        for(uint q = 0; q < sq->nq; ++q)
+        {
+          real a1 = xq[q];
+          real a2 = xq[q + sq->nq];
+
+          const real xx[3] =
+            {(r_one - a1) * x[0][0] + (a1 - a2) * x[1][0] + a2 * x[2][0],
+             (r_one - a1) * x[0][1] + (a1 - a2) * x[1][1] + a2 * x[2][1],
+             (r_one - a1) * x[0][2] + (a1 - a2) * x[1][2] + a2 * x[2][2]};
+
+          a1 = yq[q];
+          a2 = yq[q + sq->nq];
+
+          const real yy[3] =
+            {(r_one - a1) * y[0][0] + (a1 - a2) * y[1][0] + a2 * y[2][0],
+             (r_one - a1) * y[0][1] + (a1 - a2) * y[1][1] + a2 * y[2][1],
+             (r_one - a1) * y[0][2] + (a1 - a2) * y[1][2] + a2 * y[2][2]};
+
+          sum += wq[q] * kernel(xx, yy, NULL, NULL, NULL);
+        }
+
+        const real factor2 =
+          ((bem->alpha != 0.0) && (ii == jj))
+          ? 0.5 * bem->alpha * g[ii]
+          : r_zero;
+
+        result += (sum * factor + factor2) * getentry_avector(xt, j);
       }
+    }
+//
+//    yt->v[i] += alpha * result;
+//  }
+//      real base;
+//      uint nq;
+//      uint px[3], py[3];
+//      real *xq, *yq, *wq;
+//
+//      /* Choose quadrature rule. */
+//
+//      select_quadrature_singquad2d(bem->sq,
+//                                   p[ii],
+//                                   p[jj],
+//                                   px,
+//                                   py,
+//                                   &xq,
+//                                   &yq,
+//                                   &wq,
+//                                   &nq,
+//                                   &base);
+//
+//      const int num_quad_points = nq - n_dist;
+//
+//      if(num_quad_points > 0)
+//      {
+//        const uint vnq = ROUNDUP(nq, VREAL);
+//
+//        wq += vnq * 9;
+//
+//        /* Copy permuted vertex numbers. */
+//
+//        px[0] = p[ii][px[0]];
+//        px[1] = p[ii][px[1]];
+//        px[2] = p[ii][px[2]];
+//
+//        py[0] = p[jj][py[0]];
+//        py[1] = p[jj][py[1]];
+//        py[2] = p[jj][py[2]];
+//
+//        /* Copy permuted vertices */
+//
+//        const real x[3][3] =
+//          { { v[px[0]][0], v[px[0]][1], v[px[0]][2] },
+//            { v[px[1]][0], v[px[1]][1], v[px[1]][2] },
+//            { v[px[2]][0], v[px[2]][1], v[px[2]][2] } };
+//
+//        const real y[3][3] =
+//          { { v[py[0]][0], v[py[0]][1], v[py[0]][2] },
+//            { v[py[1]][0], v[py[1]][1], v[py[1]][2] },
+//            { v[py[2]][0], v[py[2]][1], v[py[2]][2] } };
+//
+//        real sum = base;
+//
+//        /* Perform remaining quadrature. */
+//        for(int q = nq - n_vert; q < (int) (nq - n_dist); ++q)
+//        {
+//          real a1 = xq[q];
+//          real a2 = xq[q + nq];
+//
+//          const real xx[3] =
+//            { (r_one - a1) * x[0][0] + (a1 - a2) * x[1][0] + a2 * x[2][0],
+//              (r_one - a1) * x[0][1] + (a1 - a2) * x[1][1] + a2 * x[2][1],
+//              (r_one - a1) * x[0][2] + (a1 - a2) * x[1][2] + a2 * x[2][2] };
+//
+//          a1 = yq[q];
+//          a2 = yq[q + nq];
+//
+//          const real yy[3] =
+//            { (r_one - a1) * y[0][0] + (a1 - a2) * y[1][0] + a2 * y[2][0],
+//              (r_one - a1) * y[0][1] + (a1 - a2) * y[1][1] + a2 * y[2][1],
+//              (r_one - a1) * y[0][2] + (a1 - a2) * y[1][2] + a2 * y[2][2] };
+//
+//          sum += wq[q] * kernel(xx, yy, NULL, NULL, NULL);
+//        }
+//
+//        const real factor2 =
+//          ((bem->alpha != 0.0) && (ii == jj))
+//          ? 0.5 * bem->alpha * g[ii]
+//          : r_zero;
+//
+//        result += (sum * factor + factor2) * getentry_avector(xt, j);
+//      }
+//    }
 
-      assert(ytoff == rb->ktree);
+    yt->v[i] += alpha * result;
+  }
+}
+
+void
+fastaddeval_nearfield_partial_h2matrix_avector_gca(pcgreencross gc,
+                                                   field        alpha,
+                                                   pavector     xt,
+                                                   pavector     yt)
+{
+  pgcopencl ocl_info = gc->ocl_info_nf;
+
+  avector tmp1, tmp2;
+
+//  #pragma omp parallel for private(tmp1, tmp2)
+  for(uint i = 0; i < ocl_info->num_row_leafs; ++i)
+  {
+    pavector yt1 = init_sub_avector(&tmp1,
+                                    yt,
+                                    ocl_info->ridx_sizes[i],
+                                    ocl_info->ytoffs[i]);
+
+    const uint idx_off = ocl_info->idx_off[i];
+    const uint *ridx   = ocl_info->host_ridx + ocl_info->ridx_off[i];
+
+    for(uint j = 0; j < ocl_info->num_h2_leafs_per_row[i]; ++j)
+    {
+      pavector xt1 = init_sub_avector(&tmp2,
+                                      xt,
+                                      ocl_info->cidx_sizes[idx_off + j],
+                                      ocl_info->xtoffs[i][j]);
+
+      nearfield_3d_partial_gca(gc,
+                               yt1->dim,
+                               xt1->dim,
+                               ridx,
+                               ocl_info->host_cidx + ocl_info->cidx_off[i][j],
+                               alpha,
+                               xt1,
+                               yt1);
 
       uninit_avector(xt1);
-
-      xtoff += (cb->sons > 0 ? cb->son[j]->ktree : cb->t->size);
     }
 
-    assert(xtoff == cb->ktree);
+    uninit_avector(yt1);
+  }
+}
+
+void
+fastaddeval_nearfield_partial_min_id_edge_gca_ref(pcgreencross gc,
+                                                  field        alpha,
+                                                  pavector     xt,
+                                                  pavector     yt)
+{
+  pgcopencl ocl_info = gc->ocl_info_nf;
+
+  avector tmp1, tmp2;
+
+//  #pragma omp parallel for private(tmp1, tmp2)
+  for(uint i = 0; i < ocl_info->num_row_leafs; ++i)
+  {
+    pavector yt1 = init_sub_avector(&tmp1,
+                                    yt,
+                                    ocl_info->ridx_sizes[i],
+                                    ocl_info->ytoffs[i]);
+
+    const uint idx_off = ocl_info->idx_off[i];
+    const uint *ridx   = ocl_info->host_ridx + ocl_info->ridx_off[i];
+
+    for(uint j = 0; j < ocl_info->num_h2_leafs_per_row[i]; ++j)
+    {
+      pavector xt1 = init_sub_avector(&tmp2,
+                                      xt,
+                                      ocl_info->cidx_sizes[idx_off + j],
+                                      ocl_info->xtoffs[i][j]);
+
+      nearfield_3d_partial_min_id_edge
+        (gc,
+         yt1->dim,
+         xt1->dim,
+         ridx,
+         ocl_info->host_cidx + ocl_info->cidx_off[i][j],
+         alpha,
+         xt1,
+         yt1);
+
+      uninit_avector(xt1);
+    }
+
+    uninit_avector(yt1);
+  }
+}
+
+void
+fastaddeval_nearfield_partial_min_id_edge_gca(pcgreencross gc,
+                                              field        alpha,
+                                              pavector     xt,
+                                              pavector     yt)
+{
+  const real kernel_const = ((pbem3d) gc->bem)->kernel_const;
+  const real bem_alpha    = ((pbem3d) gc->bem)->alpha;
+
+  const real (*v)[3]      = (const real(*)[3]) ((psurface3d) gc->geom)->x;
+  const uint (*p)[3]      = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
+  const real *g           = ((psurface3d) gc->geom)->g;
+
+  kernel_func3d kernel    = gc->kernel_3d;
+
+  pgcopencl      ocl_info = gc->ocl_info_nf;
+  pintegralinfos iinfos   = gc->iinfos_min_edge;
+  psingquadgca   sq       = gc->sq_partial_min_edge;
+
+  for(uint i = 0; i < iinfos->num_integral_grps; ++i)
+  {
+    const uint ytoff = ocl_info->ytoffs[i];
+
+    const uint *ridx = ocl_info->host_ridx + ocl_info->ridx_off[i];
+
+    const uint *rows = iinfos->rows[i];
+    const uint *cidx = iinfos->cidx[i];
+    const uint *cols = iinfos->cols[i];
+
+    for(uint j = 0; j < iinfos->num_integrals[i]; ++j)
+    {
+      const uint ii = ridx[rows[j]];
+      const uint jj = cidx[j];
+
+      const real factor = g[ii] * g[jj] * kernel_const;
+
+      real sum;
+      uint px[3], py[3];
+      real *xq, *yq, *wq;
+
+      select_quadrature_singquadgca(sq,
+                                    p[ii],
+                                    p[jj],
+                                    px,
+                                    py,
+                                    &xq,
+                                    &yq,
+                                    &wq,
+                                    &sum);
+
+      px[0] = p[ii][px[0]];
+      px[1] = p[ii][px[1]];
+      px[2] = p[ii][px[2]];
+
+      py[0] = p[jj][py[0]];
+      py[1] = p[jj][py[1]];
+      py[2] = p[jj][py[2]];
+
+      /* Copy permuted vertices */
+
+      const real x[3][3] =
+        { { v[px[0]][0], v[px[0]][1], v[px[0]][2] },
+          { v[px[1]][0], v[px[1]][1], v[px[1]][2] },
+          { v[px[2]][0], v[px[2]][1], v[px[2]][2] } };
+
+      const real y[3][3] =
+        { { v[py[0]][0], v[py[0]][1], v[py[0]][2] },
+          { v[py[1]][0], v[py[1]][1], v[py[1]][2] },
+          { v[py[2]][0], v[py[2]][1], v[py[2]][2] } };
+
+      for(uint q = 0; q < sq->nq; ++q)
+      {
+        real a1 = xq[q];
+        real a2 = xq[q + sq->nq];
+
+        const real xx[3] =
+          { (r_one - a1) * x[0][0] + (a1 - a2) * x[1][0] + a2 * x[2][0],
+            (r_one - a1) * x[0][1] + (a1 - a2) * x[1][1] + a2 * x[2][1],
+            (r_one - a1) * x[0][2] + (a1 - a2) * x[1][2] + a2 * x[2][2] };
+
+        a1 = yq[q];
+        a2 = yq[q + sq->nq];
+
+        const real yy[3] =
+          { (r_one - a1) * y[0][0] + (a1 - a2) * y[1][0] + a2 * y[2][0],
+            (r_one - a1) * y[0][1] + (a1 - a2) * y[1][1] + a2 * y[2][1],
+            (r_one - a1) * y[0][2] + (a1 - a2) * y[1][2] + a2 * y[2][2] };
+
+        sum += wq[q] * kernel(xx, yy, NULL, NULL, NULL);
+      }
+
+      const real factor2 =
+        ((bem_alpha != 0.0) && (ii == jj))
+        ? 0.5 * bem_alpha * g[ii]
+        : r_zero;
+
+      const uint yt_idx = ytoff + rows[j];
+
+      setentry_avector(yt,
+                       yt_idx,
+                       getentry_avector(yt, yt_idx)     +
+                       alpha * (sum * factor + factor2) *
+                       getentry_avector(xt, cols[j]));
+    }
+  }
+}
+
+void
+fastaddeval_nearfield_partial_min_id_vert_gca(pcgreencross gc,
+                                              field        alpha,
+                                              pavector     xt,
+                                              pavector     yt)
+{
+  const real kernel_const = ((pbem3d) gc->bem)->kernel_const;
+  const real bem_alpha    = ((pbem3d) gc->bem)->alpha;
+
+  const real (*v)[3]      = (const real(*)[3]) ((psurface3d) gc->geom)->x;
+  const uint (*p)[3]      = (const uint(*)[3]) ((psurface3d) gc->geom)->t;
+  const real *g           = ((psurface3d) gc->geom)->g;
+
+  kernel_func3d kernel    = gc->kernel_3d;
+
+  pgcopencl    ocl_info   = gc->ocl_info_nf;
+  psingquadgca sq         = gc->sq_partial_min_vert;
+
+  for(uint i = 0; i < ocl_info->num_row_leafs; ++i)
+  {
+    const uint ytoff        = ocl_info->ytoffs[i];
+
+    const uint *ridx        = ocl_info->host_ridx + ocl_info->ridx_off[i];
+    const uint *rows_any_id = ocl_info->rows_any_id[i];
+    const uint *cidx_any_id = ocl_info->cidx_any_id[i];
+    const uint *cols_any_id = ocl_info->cols_any_id[i];
+
+    for(uint j = 0; j < ocl_info->num_any_id[i]; ++j)
+    {
+      const uint ii = ridx[rows_any_id[j]];
+      const uint jj = cidx_any_id[j];
+
+      const real factor = g[ii] * g[jj] * kernel_const;
+
+      real sum;
+      uint px[3], py[3];
+      real *xq, *yq, *wq;
+
+      select_quadrature_singquadgca(sq,
+                                    p[ii],
+                                    p[jj],
+                                    px,
+                                    py,
+                                    &xq,
+                                    &yq,
+                                    &wq,
+                                    &sum);
+
+      px[0] = p[ii][px[0]];
+      px[1] = p[ii][px[1]];
+      px[2] = p[ii][px[2]];
+
+      py[0] = p[jj][py[0]];
+      py[1] = p[jj][py[1]];
+      py[2] = p[jj][py[2]];
+
+      /* Copy permuted vertices */
+
+      const real x[3][3] =
+        { { v[px[0]][0], v[px[0]][1], v[px[0]][2] },
+          { v[px[1]][0], v[px[1]][1], v[px[1]][2] },
+          { v[px[2]][0], v[px[2]][1], v[px[2]][2] } };
+
+      const real y[3][3] =
+        { { v[py[0]][0], v[py[0]][1], v[py[0]][2] },
+          { v[py[1]][0], v[py[1]][1], v[py[1]][2] },
+          { v[py[2]][0], v[py[2]][1], v[py[2]][2] } };
+
+      for(uint q = 0; q < sq->nq; ++q)
+      {
+        real a1 = xq[q];
+        real a2 = xq[q + sq->nq];
+
+        const real xx[3] =
+          { (r_one - a1) * x[0][0] + (a1 - a2) * x[1][0] + a2 * x[2][0],
+            (r_one - a1) * x[0][1] + (a1 - a2) * x[1][1] + a2 * x[2][1],
+            (r_one - a1) * x[0][2] + (a1 - a2) * x[1][2] + a2 * x[2][2] };
+
+        a1 = yq[q];
+        a2 = yq[q + sq->nq];
+
+        const real yy[3] =
+          { (r_one - a1) * y[0][0] + (a1 - a2) * y[1][0] + a2 * y[2][0],
+            (r_one - a1) * y[0][1] + (a1 - a2) * y[1][1] + a2 * y[2][1],
+            (r_one - a1) * y[0][2] + (a1 - a2) * y[1][2] + a2 * y[2][2] };
+
+        sum += wq[q] * kernel(xx, yy, NULL, NULL, NULL);
+      }
+
+      const real factor2 =
+        ((bem_alpha != 0.0) && (ii == jj))
+        ? 0.5 * bem_alpha * g[ii]
+        : r_zero;
+
+      const uint yt_idx = ytoff + rows_any_id[j];
+
+      setentry_avector(yt,
+                       yt_idx,
+                       getentry_avector(yt, yt_idx)     +
+                       alpha * (sum * factor + factor2) *
+                       getentry_avector(xt, cols_any_id[j]));
+    }
   }
 }
 
@@ -1738,8 +2616,6 @@ fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,
       uninit_avector(xt1);
     }
 
-//    print_avector(yt1);
-
     uninit_avector(yt1);
   }
 }
@@ -1761,7 +2637,6 @@ fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,
                                     gcocl->ridx_sizes[i],
                                     gcocl->ytoffs[i]);
 
-//    printf("%u %u", gcocl->ytoffs[i], gcocl->ridx_sizes[i]);
     const uint idx_off = gcocl->idx_off[i];
 
     for (uint j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
@@ -1797,61 +2672,86 @@ fastaddeval_h2matrix_avector_greencross(pgreencross gc,
 			                                  pavector    yt,
                                         uint        kernel_idx)
 {
-//#pragma omp parallel
-//{
-//  #pragma omp task shared(yt)
-  fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(gc,
-                                                            alpha,
-                                                            H2,
-                                                            xt,
-                                                            yt);
+  (void) H2;
 
-//  #pragma omp task shared(yt)
-  fastaddeval_farfield_h2matrix_avector_greencross(gc,
-                                                   alpha,
-                                                   xt,
-                                                   yt,
-                                                   kernel_idx);
-
-//  #pragma omp taskwait
-
-  pfastaddevalgca feval = gc->feval;
-  poclworkpgs oclwrk = gc->oclwrk;
-
+  pcfastaddevalgca feval   = gc->feval;
+  pcoclworkpgs     oclwrk  = gc->oclwrk;
   cl_command_queue *queues = ocl_system.queues;
 
-//  #pragma omp for
-  for (uint j = 0; j < oclwrk->num_wrk_pkgs; ++j) {
-    const uint num_comp = oclwrk->last_idx_of_pkg[j] -
-                          oclwrk->first_idx_of_pkgs[j];
+  pavector yt_gca = new_zero_avector(yt->dim);
 
-    avector tmp;
-    pavector cpu = init_sub_avector(&tmp,
-                                    yt,
-                                    num_comp,
-                                    oclwrk->first_idx_of_pkgs[j]);
-
-    pavector gpu = new_avector(num_comp);
-
-    clFinish(queues[j * ocl_system.queues_per_device]);
-
-    CL_CHECK(clEnqueueReadBuffer
-               (queues[j * ocl_system.queues_per_device],
-                feval->buf_yt[j],
-                CL_TRUE,
-                oclwrk->first_idx_of_pkgs[j] * sizeof(real),
-                num_comp * sizeof(real),
-                gpu->v,
+  for(uint i = 0; i < gc->oclwrk->num_wrk_pkgs; ++i)
+  {
+    CL_CHECK(clEnqueueWriteBuffer
+               (queues[i * ocl_system.queues_per_device],
+                feval->buf_xt[i],
+                CL_FALSE,
+                0,
+                xt->dim * sizeof(real),
+                xt->v,
                 0,
                 NULL,
-                NULL));
+                &feval->events_xt[i]));
 
-    add_avector(r_one, gpu, cpu);
+    for(uint k = 0; k < ocl_system.queues_per_device; ++k)
+    {
+      cl_kernel kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device];/* +
+                                         kernel_idx * ocl_system.num_devices *
+                                         ocl_system.queues_per_device];*/
 
-    del_avector(gpu);
-    uninit_avector(cpu);
+      CL_CHECK(clSetKernelArg(kernel, 45, sizeof(real), &alpha));
+
+      kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device +
+                               2 * ocl_system.num_devices *
+                               ocl_system.queues_per_device];
+
+      CL_CHECK(clSetKernelArg(kernel, 28, sizeof(real), &alpha));
+
+      kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device +
+                               3 * ocl_system.num_devices *
+                               ocl_system.queues_per_device];
+
+      CL_CHECK(clSetKernelArg(kernel, 28, sizeof(real), &alpha));
+    }
   }
-//}
+
+//  fastaddeval_nearfield_partial_min_id_edge_gca(gc, alpha, xt, yt);
+
+  fastaddeval_part_2_h2matrix_avector_gca(gc, kernel_idx, alpha, xt, yt_gca);
+
+  fastaddeval_nearfield_min_vert_h2matrix_avector_gca(gc);
+
+  fastaddeval_nearfield_min_edge_h2matrix_avector_gca(gc);
+
+  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
+  {
+    const uint offset   = oclwrk->first_idx_of_pkgs[i];
+    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
+
+    avector  tmp;
+
+    pavector sub_yt_gca = init_sub_avector(&tmp, yt_gca, num_comp, offset);
+
+    clFinish(queues[i * ocl_system.queues_per_device]);
+
+    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
+                                  feval->buf_yt[i],
+                                  CL_TRUE,
+                                  offset * sizeof(real),
+                                  num_comp * sizeof(real),
+                                  sub_yt_gca->v,
+                                  0,
+                                  NULL,
+                                  &feval->events_yt[i]));
+
+    uninit_avector(sub_yt_gca);
+  }
+
+  clWaitForEvents(oclwrk->num_wrk_pkgs, feval->events_yt);
+
+  add_avector(f_one, yt_gca, yt);
+
+  del_avector(yt_gca);
 }
 
 void
@@ -1885,6 +2785,7 @@ addeval_h2matrix_avector_greencross(pgreencross gc,
 
   forward_clusterbasis_avector(H2->cb, x, xt);
 
+//  fastaddeval_h2matrix_avector(alpha, H2, xt, yt);
   fastaddeval_h2matrix_avector_greencross(gc, alpha, H2, xt, yt, kernel_idx);
 
   backward_clusterbasis_avector(H2->rb, yt, y);

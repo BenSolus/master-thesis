@@ -37,6 +37,8 @@ struct _singquadgca
   real *wqs;
   real *bases;
 
+  int    offset;
+
   /** @brief OpenCL buffer objects for the first quadratur points. */
   cl_mem *buf_xqs;
 
@@ -60,6 +62,12 @@ del_singquadgca(psingquadgca sq_gca);
 
 HEADER_PREFIX psingquadgca
 build_from_singquad2d(psingquad2d sq);
+
+HEADER_PREFIX psingquadgca
+build_min_vert_from_singquad2d(psingquad2d sq);
+
+HEADER_PREFIX psingquadgca
+build_min_edge_from_singquad2d(psingquad2d sq);
 
 HEADER_PREFIX void
 select_quadrature_singquadgca(psingquadgca sq_gca,

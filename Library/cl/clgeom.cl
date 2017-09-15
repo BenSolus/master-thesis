@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------
  * This is the file "clgeom.cl" of this master thesis.
- * All rights reserved, Steffen Boerm 2009
+ * All rights reserved, Bennet Carstensen 2017
  * ------------------------------------------------------------ */
 
 /**
@@ -12,11 +12,14 @@
 
 #include "clbasic.cl"
 
+#ifndef GEOM_CL
+#define GEOM_CL
+
 #ifdef USE_FLOAT
 typedef float2 real2;
 typedef float3 real3;
 #else
-typedef double3 real2;
+typedef double2 real2;
 typedef double3 real3;
 #endif
 
@@ -36,31 +39,35 @@ struct _geom
           uint n;
 
    global const real *v;
-
-   local        void *v_tmp;
-
    global const uint *p;
-
    global const real *g;
 
-   local        real *g_tmp;
+   local        real3 (*vl)[3];
+   local        uint3 *pl;
+   local        real  *gl;
 };
 
 void
-init_geom(       pgeom      sur,
-                 const uint dim,
-                 const uint n,
-          global const real *v,
-          global const uint *p,
-          global const real *g,
-          local        void *v_tmp,
-          local        real *g_tmp)
+init_geom(       pgeom       sur,
+                 const uint  dim,
+                 const uint  n,
+          global const real  *v,
+          global const uint  *p,
+          global const real  *g,
+          local        real3 (*vl)[3],
+          local        uint3 *pl,
+          local        real  *gl)
 {
-  sur->dim   = dim;
-  sur->n     = n;
-  sur->g     = g;
-  sur->g_tmp = g_tmp;
-  sur->v     = v;
-  sur->v_tmp = v_tmp;
-  sur->p     = p;
+  sur->dim = dim;
+  sur->n   = n;
+
+  sur->v   = v;
+  sur->p   = p;
+  sur->g   = g;
+
+  sur->vl  = vl;
+  sur->pl  = pl;
+  sur->gl  = gl;
 }
+
+#endif // GEOM_CL

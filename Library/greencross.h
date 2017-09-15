@@ -17,6 +17,7 @@
 #include "fastaddevalgca.h"
 #include "gcopencl.h"
 #include "h2matrix.h"
+#include "oclintegralinfos.h"
 #include "oclworkpkgs.h"
 #include "singquadgca.h"
 
@@ -39,7 +40,7 @@ typedef const greencross *pcgreencross;
 static const uint greencross_min_dim = 2;
 static const uint greencross_max_dim = 3;
 
-static const size_t num_kernels = 1;
+static const size_t num_kernels = 4;
 
 /** @brief Main container object for performing the Green cross approximation
  *         (GCA) method. */
@@ -97,9 +98,17 @@ struct _greencross
 
   psingquadgca sq_gca;
 
+  psingquadgca   sq_partial_min_vert;
+
+  psingquadgca   sq_partial_min_edge;
+
   pfastaddevalgca feval;
 
   kernel_func3d kernel_3d;
+
+#ifdef USE_SIMD
+  kernel_simd_func3d kernel_simd_3d;
+#endif
 
   cl_kernel *ocl_kernels;
 
@@ -107,7 +116,9 @@ struct _greencross
     *        of leaf-matrices. */
   pgcopencl gcocl;
 
-  pgcopencl ocl_info_nf;
+  pgcopencl      ocl_info_nf;
+
+  pintegralinfos iinfos_min_edge;
 
   /** @brief Object which distributes the work described in @p gcocl. */
   poclworkpgs  oclwrk;
@@ -255,17 +266,47 @@ HEADER_PREFIX ph2matrix
 build_green_cross_h2matrix_greencross(pgreencross gc, void *eta);
 
 HEADER_PREFIX void
+fastaddeval_farfield_h2matrix_avector(field      alpha,
+                                      pch2matrix h2,
+                                      pavector   xt,
+                                      pavector   yt);
+
+HEADER_PREFIX void
 fastaddeval_nearfield_h2matrix_avector(field      alpha,
                                        pch2matrix h2,
                                        pavector   xt,
                                        pavector   yt);
 
 HEADER_PREFIX void
-fastaddeval_nearfield_nodist_h2matrix_avectors_greencross(pcgreencross gc,
-                                                          field        alpha,
-                                                          pch2matrix   H2,
-                                                          pavector     xt,
-                                                          pavector     yt);
+fastaddeval_nearfield_partial_h2matrix_avector_gca(pcgreencross gc,
+                                                   field        alpha,
+                                                   pavector     xt,
+                                                   pavector     yt);
+
+HEADER_PREFIX void
+fastaddeval_nearfield_partial_min_id_edge_gca(pcgreencross gc,
+                                              field        alpha,
+                                              pavector     xt,
+                                              pavector     yt);
+
+HEADER_PREFIX void
+fastaddeval_nearfield_partial_min_id_vert_gca(pcgreencross gc,
+                                              field        alpha,
+                                              pavector     xt,
+                                              pavector     yt);
+
+HEADER_PREFIX void
+fastaddeval_part_2_h2matrix_avector_gca(pgreencross gca,
+                                        const uint  kernel_idx,
+                                        const field alpha,
+                                        pcavector   xt,
+                                        pavector    yt);
+
+HEADER_PREFIX void
+fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gc);
+
+HEADER_PREFIX void
+fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gc);
 
 HEADER_PREFIX void
 fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,

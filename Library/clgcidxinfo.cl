@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------
  * This is the file "clgcidxinfo.cl" of this master thesis.
- * All rights reserved, Steffen Boerm 2009
+ * All rights reserved, Bennet Carstensen 2017
  * ------------------------------------------------------------ */
 
 /**
@@ -20,6 +20,9 @@
  *         @ref gcidxinfo via OpenCL as a string. */
 static const char clgcidxinfo_src[] =
 {
+  "#ifndef IDXINFO_CL\n"
+  "#define IDXINFO_CL\n"
+  "\n"
   "\n"
   "typedef struct _gcidxinfo gcidxinfo;\n"
   "\n"
@@ -43,6 +46,8 @@ static const char clgcidxinfo_src[] =
   "\n"
   "  global       real *yt;\n"
   "\n"
+  "  local        real *ytl;\n"
+  "\n"
   "               uint cidx_size;\n"
   "\n"
   "               uint cidx_off;\n"
@@ -52,8 +57,6 @@ static const char clgcidxinfo_src[] =
   "               uint xt_off;\n"
   "\n"
   "  global const real *xt;\n"
-  "\n"
-  "  local        real *xt_tmp;\n"
   "};\n"
   "\n"
   "void\n"
@@ -65,7 +68,7 @@ static const char clgcidxinfo_src[] =
   "                   global const uint *ridxs,\n"
   "                          const uint yt_off,\n"
   "                   global       real *yts,\n"
-  "                   local        real *xt_tmp)\n"
+  "                   local        real *ytl)\n"
   "{\n"
   "  gcii->num_h2_leafs = num_h2_leafs;\n"
   "  gcii->idx_off      = idx_off;\n"
@@ -74,13 +77,13 @@ static const char clgcidxinfo_src[] =
   "  gcii->ridx         = ridxs + ridx_off;\n"
   "  gcii->yt_off       = yt_off;\n"
   "  gcii->yt           = yts + yt_off;\n"
+  "  gcii->ytl          = ytl;\n"
   "\n"
   "  gcii->cidx_size    = 0;\n"
   "  gcii->cidx_off     = 0;\n"
   "  gcii->cidx         = 0;\n"
   "  gcii->xt_off       = 0;\n"
   "  gcii->xt           = 0;\n"
-  "  gcii->xt_tmp       = xt_tmp;\n"
   "}\n"
   "\n"
   "void\n"
@@ -97,6 +100,8 @@ static const char clgcidxinfo_src[] =
   "  gcii->xt_off    = xt_off;\n"
   "  gcii->xt        = xts + xt_off;\n"
   "}\n"
+  "\n"
+  "#endif // IDXINFO_CL\n"
 };
 
 /** @} */

@@ -11,6 +11,8 @@ ADD_LIBRARY(MasterThesis
             laplace3dgca.h
             ocl_system.c
             ocl_system.h
+            oclintegralinfos.c
+            oclintegralinfos.h
             oclworkpkgs.c
             oclworkpkgs.h
             singquadgca.c

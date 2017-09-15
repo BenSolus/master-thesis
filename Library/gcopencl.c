@@ -13,6 +13,7 @@
 #include "gcopencl.h"
 
 #include "ocl_system.h"
+#include "singquad2d.h"
 
 #include <string.h>
 
@@ -51,6 +52,19 @@ init_gcopencl(pgcopencl gcocl)
     gcocl->buf_cidx_off             = NULL;
     gcocl->host_cidx                = NULL;
     gcocl->buf_cidx                 = NULL;
+    gcocl->num_any_id               = NULL;
+    gcocl->buf_num_any_id           = NULL;
+    gcocl->idx_off_any_id           = NULL;
+    gcocl->buf_idx_off_any_id       = NULL;
+    gcocl->rows_any_id              = NULL;
+    gcocl->host_rows_any_id         = NULL;
+    gcocl->buf_rows_any_id          = NULL;
+    gcocl->cols_any_id              = NULL;
+    gcocl->host_cols_any_id         = NULL;
+    gcocl->buf_cols_any_id          = NULL;
+    gcocl->cidx_any_id              = NULL;
+    gcocl->host_cidx_any_id         = NULL;
+    gcocl->buf_cidx_any_id          = NULL;
     gcocl->xtoffs                   = NULL;
     gcocl->host_xtoffs              = NULL;
     gcocl->buf_xtoffs               = NULL;
@@ -188,9 +202,102 @@ uninit_gcopencl(pgcopencl gcocl)
       freemem(gcocl->buf_cidx);
     }
 
-    if (gcocl->xtoffs != NULL) {
-      for (uint i = 0; i < gcocl->num_row_leafs; ++i)
-        if (gcocl->xtoffs[i] != NULL) {
+    if(gcocl->num_any_id != NULL)
+      freemem(gcocl->num_any_id);
+
+    if(gcocl->buf_num_any_id != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_num_any_id[i]));
+
+      freemem(gcocl->buf_num_any_id);
+    }
+
+    if(gcocl->idx_off_any_id != NULL)
+      freemem(gcocl->idx_off_any_id);
+
+    if(gcocl->buf_idx_off_any_id != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_idx_off_any_id[i]));
+
+      freemem(gcocl->buf_idx_off_any_id);
+    }
+
+    if(gcocl->rows_any_id != NULL)
+    {
+      for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if(gcocl->rows_any_id[i] != NULL)
+        {
+          freemem(gcocl->rows_any_id[i]);
+          gcocl->rows_any_id[i] = NULL;
+        }
+
+      freemem(gcocl->rows_any_id);
+    }
+
+    if(gcocl->host_rows_any_id != NULL)
+      freemem(gcocl->host_rows_any_id);
+
+    if(gcocl->buf_rows_any_id != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_rows_any_id[i]));
+
+      freemem(gcocl->buf_rows_any_id);
+    }
+
+    if(gcocl->cols_any_id != NULL)
+    {
+      for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if(gcocl->cols_any_id[i] != NULL)
+        {
+          freemem(gcocl->cols_any_id[i]);
+          gcocl->cols_any_id[i] = NULL;
+        }
+
+      freemem(gcocl->cols_any_id);
+    }
+
+    if(gcocl->host_cols_any_id != NULL)
+      freemem(gcocl->host_cols_any_id);
+
+    if(gcocl->buf_cols_any_id != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_cols_any_id[i]));
+
+      freemem(gcocl->buf_cols_any_id);
+    }
+
+    if(gcocl->cidx_any_id != NULL)
+    {
+      for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if(gcocl->cidx_any_id[i] != NULL)
+        {
+          freemem(gcocl->cidx_any_id[i]);
+          gcocl->cidx_any_id[i] = NULL;
+        }
+
+      freemem(gcocl->cidx_any_id);
+    }
+
+    if(gcocl->host_cidx_any_id != NULL)
+      freemem(gcocl->host_cidx_any_id);
+
+    if(gcocl->buf_cidx_any_id != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i) CL_CHECK(
+        clReleaseMemObject(gcocl->buf_cidx_any_id[i]));
+
+      freemem(gcocl->buf_cidx_any_id);
+    }
+
+    if(gcocl->xtoffs != NULL)
+    {
+      for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+        if (gcocl->xtoffs[i] != NULL)
+        {
           freemem(gcocl->xtoffs[i]);
           gcocl->xtoffs[i] = NULL;
         }
@@ -224,7 +331,7 @@ uninit_gcopencl(pgcopencl gcocl)
 }
 
 pgcopencl
-new_gcopencl()
+new_gcopencl(const information_t info)
 {
   pgcopencl gcocl = (pgcopencl) allocmem(sizeof(gcopencl));
 
@@ -254,6 +361,24 @@ new_gcopencl()
   gcocl->buf_cidx =
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
+  if(info == NEARFIELD)
+  {
+    gcocl->buf_num_any_id =
+      (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+
+    gcocl->buf_idx_off_any_id =
+      (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+
+    gcocl->buf_rows_any_id =
+      (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+
+    gcocl->buf_cols_any_id =
+      (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+
+    gcocl->buf_cidx_any_id =
+      (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
+  }
+
   gcocl->buf_xtoffs =
     (cl_mem *) calloc(ocl_system.num_devices, sizeof(cl_mem));
 
@@ -264,11 +389,11 @@ new_gcopencl()
 }
 
 pgcopencl
-new_nearfield_gcopencl(ph2matrix H2)
+new_nearfield_gcopencl(ph2matrix H2, const uint dim, void *poly_idx)
 {
-  pgcopencl gcocl    = new_gcopencl();
+  pgcopencl gcocl    = new_gcopencl(NEARFIELD);
 
-  get_ocl_informations(H2, NEARFIELD, gcocl);
+  get_ocl_informations(H2, NEARFIELD, dim, poly_idx, gcocl);
 
   return gcocl;
 }
@@ -321,6 +446,51 @@ getsize_gcopencl(pcgcopencl gcocl)
   return sz;
 }
 
+static void
+push_back_h2matrix(ph2matrix **dest, const uint size, ph2matrix H2)
+{
+  *dest = realloc(*dest, (size + 1) * sizeof(ph2matrix*));
+
+  if(*dest == NULL)
+  {
+    fprintf(stderr, "error: failed to push back a H^2-matrix!\n");
+    abort();
+  }
+
+  (*dest)[size] = H2;
+}
+
+static void
+push_back_uint(uint **dest, const uint size, uint entry)
+{
+  *dest = realloc(*dest, (size + 1) * sizeof(uint*));
+
+  if(*dest == NULL)
+  {
+    fprintf(stderr, "error: failed to push back a uint!\n");
+    abort();
+  }
+
+  (*dest)[size] = entry;
+}
+
+static void
+push_back_memcpy_uint(uint       **dest,
+                      const uint size_dest,
+                      uint       *src,
+                      const uint size_src)
+{
+  *dest = realloc(*dest, (size_dest + size_src) * sizeof(uint));
+
+  if(*dest == NULL)
+  {
+    fprintf(stderr, "error: failed to push back a uint array!\n");
+    abort();
+  }
+
+  memcpy(*dest + size_dest, src, size_src * sizeof(uint));
+}
+
 void
 get_ocl_nearfild_informations(ph2matrix H2,
                               uint      mname,
@@ -345,24 +515,13 @@ get_ocl_nearfild_informations(ph2matrix H2,
 
         bool column_already_used = false;
 
-        // Update H2-matrix leaf counter for this cluster
+        const uint old_size = gcocl->num_h2_leafs_per_row[i];
+
         gcocl->num_h2_leafs_per_row[i] += 1;
 
-        /************************* h2_leafs_per_row ***************************/
+        push_back_h2matrix(&gcocl->h2_leafs_per_row[i], old_size, H2);
 
-        gcocl->h2_leafs_per_row[i] =
-          realloc(gcocl->h2_leafs_per_row[i],
-                  gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
-
-        gcocl->h2_leafs_per_row[i][gcocl->num_h2_leafs_per_row[i] - 1] = H2;
-
-        /************************* col_names_per_row **************************/
-
-        gcocl->col_names_per_row[i] =
-          realloc(gcocl->col_names_per_row[i],
-                  gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
-
-        gcocl->col_names_per_row[i][gcocl->num_h2_leafs_per_row[i] - 1] = cname;
+        push_back_uint(&gcocl->col_names_per_row[i], old_size, cname);
 
         for(uint j = 0; j < gcocl->num_row_leafs; ++j)
           for(uint k = 0; k < gcocl->num_h2_leafs_per_row[j]; ++k)
@@ -371,38 +530,28 @@ get_ocl_nearfild_informations(ph2matrix H2,
               {
                 column_already_used = true;
 
-                /********************** buf_cidx_off ************************/
-
-                gcocl->cidx_off[i] =
-                  realloc(gcocl->cidx_off[i],
-                          gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
-
-                gcocl->cidx_off[i][gcocl->num_h2_leafs_per_row[i] - 1] =
-                  gcocl->cidx_off[j][k];
+                push_back_uint(&gcocl->cidx_off[i], old_size, gcocl->cidx_off[j][k]);
 
                 break;
               }
 
         if(!column_already_used)
         {
-          /************************** buf_cidx_off ****************************/
+          push_back_uint(&gcocl->cidx_off[i], old_size, gcocl->coff);
 
-          gcocl->cidx_off[i] =
-            realloc(gcocl->cidx_off[i],
-                    gcocl->num_h2_leafs_per_row[i] * sizeof(ph2matrix*));
+          push_back_memcpy_uint(&gcocl->host_cidx,
+                                gcocl->coff,
+                                H2->cb->t->idx,
+                                H2->cb->t->size);
 
-          gcocl->cidx_off[i][gcocl->num_h2_leafs_per_row[i] - 1] = gcocl->coff;
-
-          /**************************** host_cidx *****************************/
-
-          gcocl->host_cidx = realloc
-            (gcocl->host_cidx, (gcocl->coff + H2->cb->t->size) * sizeof(uint));
-
-          assert(gcocl->host_cidx != NULL);
-
-          memcpy(gcocl->host_cidx + gcocl->coff,
-                 H2->cb->t->idx,
-                 H2->cb->t->size * sizeof(uint));
+//          gcocl->host_cidx = realloc
+//            (gcocl->host_cidx, (gcocl->coff + H2->cb->t->size) * sizeof(uint));
+//
+//          assert(gcocl->host_cidx != NULL);
+//
+//          memcpy(gcocl->host_cidx + gcocl->coff,
+//                 H2->cb->t->idx,
+//                 H2->cb->t->size * sizeof(uint));
 
           gcocl->coff += H2->cb->t->size;
         }
@@ -414,26 +563,13 @@ get_ocl_nearfild_informations(ph2matrix H2,
     {
       bool column_already_used = false;
 
-      // Update number of leafs
+      const uint old_size = gcocl->num_row_leafs;
+
       gcocl->num_row_leafs += 1;
 
-      /**************************** names_row_leafs ***************************/
+      push_back_uint(&gcocl->names_row_leafs, old_size, rname);
 
-      gcocl->names_row_leafs = realloc(gcocl->names_row_leafs,
-                                       gcocl->num_row_leafs * sizeof(uint));
-
-      assert(gcocl->names_row_leafs != NULL);
-
-      gcocl->names_row_leafs[gcocl->num_row_leafs - 1] = rname;
-
-      /************************* num_h2_leafs_per_row *************************/
-
-      gcocl->num_h2_leafs_per_row = realloc(gcocl->num_h2_leafs_per_row,
-                                            gcocl->num_row_leafs * sizeof(uint));
-
-      assert(gcocl->num_h2_leafs_per_row != NULL);
-
-      gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1] = 1;
+      push_back_uint(&gcocl->num_h2_leafs_per_row, old_size, 1);
 
       /*************************** h2_leafs_per_row ***************************/
 
@@ -460,25 +596,21 @@ get_ocl_nearfild_informations(ph2matrix H2,
 
       gcocl->col_names_per_row[gcocl->num_row_leafs - 1][0] = cname;
 
-      /******************************* ridx_off *******************************/
+      push_back_uint(&gcocl->ridx_off, old_size, gcocl->roff);
 
-      gcocl->ridx_off = realloc(gcocl->ridx_off,
-                                gcocl->num_row_leafs * sizeof(uint));
+      push_back_memcpy_uint(&gcocl->host_ridx,
+                            gcocl->roff,
+                            H2->rb->t->idx,
+                            H2->rb->t->size);
 
-      assert(gcocl->ridx_off != NULL);
-
-      gcocl->ridx_off[gcocl->num_row_leafs - 1] = gcocl->roff;
-
-      /****************************** host_ridx *******************************/
-
-      gcocl->host_ridx = realloc
-        (gcocl->host_ridx, (gcocl->roff + H2->rb->t->size) * sizeof(uint));
-
-      assert(gcocl->host_ridx != NULL);
-
-      memcpy(gcocl->host_ridx + gcocl->roff,
-             H2->rb->t->idx,
-             H2->rb->t->size * sizeof(uint));
+//      gcocl->host_ridx = realloc
+//        (gcocl->host_ridx, (gcocl->roff + H2->rb->t->size) * sizeof(uint));
+//
+//      assert(gcocl->host_ridx != NULL);
+//
+//      memcpy(gcocl->host_ridx + gcocl->roff,
+//             H2->rb->t->idx,
+//             H2->rb->t->size * sizeof(uint));
 
       gcocl->roff += H2->rb->t->size;
 
@@ -518,16 +650,10 @@ get_ocl_nearfild_informations(ph2matrix H2,
 
         gcocl->cidx_off[gcocl->num_row_leafs - 1][0] = gcocl->coff;
 
-        /**************************** host_cidx ****************************/
-
-        gcocl->host_cidx = realloc
-          (gcocl->host_cidx, (gcocl->coff + H2->cb->t->size) * sizeof(uint));
-
-        assert(gcocl->host_cidx != NULL);
-
-        memcpy(gcocl->host_cidx + gcocl->coff,
-               H2->cb->t->idx,
-               H2->cb->t->size * sizeof(uint));
+        push_back_memcpy_uint(&gcocl->host_cidx,
+                              gcocl->coff,
+                              H2->cb->t->idx,
+                              H2->cb->t->size);
 
         gcocl->coff += H2->cb->t->size;
       }
@@ -549,14 +675,16 @@ are_equal_clusters(pccluster a, pccluster b)
 }
 
 static void
-iterate_recursively_h2matrix(ph2matrix H2,
-                             uint      xtoff,
-                             uint      ytoff,
-                             pgcopencl gcocl)
+iterate_recursively_h2matrix(ph2matrix  H2,
+                             uint       xtoff,
+                             uint       ytoff,
+                             const uint dim,
+                             void       *poly_idx,
+                             pgcopencl  gcocl)
 {
   if((H2->u && gcocl->is_farfield) || (H2->f && !gcocl->is_farfield))
   {
-    /* Write offsets if we have reached a leaf. */
+    /* Store offsets if we have reached a leaf. */
 
     /* Nearfield matrices have an additional offset. */
     if(H2->f && !gcocl->is_farfield)
@@ -568,7 +696,6 @@ iterate_recursively_h2matrix(ph2matrix H2,
     /* Find the writing cluster of the current H^2-matrix inside the gcopencl
      * object.*/
     int  i = -1;
-    uint j;
 
     for(uint k = 0; k < gcocl->num_row_leafs; ++k)
       if(are_equal_clusters(H2->rb->t, gcocl->h2_leafs_per_row[k][0]->rb->t))
@@ -589,7 +716,9 @@ iterate_recursively_h2matrix(ph2matrix H2,
     /* Write the offsets in the corresponding entries. */
     gcocl->ytoffs[i] = ytoff;
 
-    for(j = 0; j < gcocl->num_h2_leafs_per_row[i]; ++j)
+    uint j = 0;
+
+    for(; j < gcocl->num_h2_leafs_per_row[i]; ++j)
       if(are_equal_clusters(H2->cb->t, gcocl->h2_leafs_per_row[i][j]->cb->t))
       {
         gcocl->xtoffs[i][j] = xtoff;
@@ -603,6 +732,44 @@ iterate_recursively_h2matrix(ph2matrix H2,
         "iterate_recursively_h2matrix!\n");
 
       abort();
+    }
+
+    /* Get the necessary informations of all entries of this matrix where the
+     * row and column polygon share at least one common vertex. */
+    if(H2->f)
+    {
+      const uint idx_off = gcocl->idx_off[i];
+      const uint *ridx   = gcocl->host_ridx + gcocl->ridx_off[i];
+      const uint *cidx   = gcocl->host_cidx + gcocl->cidx_off[i][j];
+
+      uint (*polys)[dim] = (uint(*)[dim]) poly_idx;
+
+      for(uint k = 0; k < gcocl->cidx_sizes[idx_off + j]; ++k)
+      {
+        const uint kk = cidx[k];
+
+        for(uint l = 0; l < gcocl->ridx_sizes[i]; ++l)
+        {
+          if(dim == 3)
+          {
+            if(fast_select_quadrature((uint(*)[3]) polys, kk, ridx[l]) > 0)
+            {
+              const uint old_size = gcocl->num_any_id[i];
+
+              gcocl->num_any_id[i] += 1;
+
+              push_back_uint(&gcocl->rows_any_id[i], old_size, l);
+
+              push_back_uint(&gcocl->cols_any_id[i], old_size, xtoff + k);
+
+              push_back_uint(&gcocl->cidx_any_id[i], old_size, kk);
+            }
+          }
+          else
+            fprintf(stderr, "2D not implemented yet in "
+                            "iterate_recursively_h2matrix");
+        }
+      }
     }
   }
   else if(H2->son)
@@ -630,6 +797,8 @@ iterate_recursively_h2matrix(ph2matrix H2,
         iterate_recursively_h2matrix(H2->son[i + j * rsons],
                                      xtoff + xtoff1 - (cb->sons > 0 ? 0 : cb->k),
                                      ytoff + ytoff1 - (rb->sons > 0 ? 0 : rb->k),
+                                     dim,
+                                     poly_idx,
                                      gcocl);
 
         ytoff1 += (rb->sons > 0 ? rb->son[i]->ktree : rb->t->size);
@@ -645,7 +814,11 @@ iterate_recursively_h2matrix(ph2matrix H2,
 }
 
 void
-get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl)
+get_ocl_informations(ph2matrix           H2,
+                     const information_t info,
+                     const uint          dim,
+                     void                *poly_idx,
+                     pgcopencl           gcocl)
 {
   gcocl->num_row_leafs            = 0;
   gcocl->max_num_h2_leafs_per_row = 0;
@@ -656,11 +829,11 @@ get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl)
 
   gcocl->names_row_leafs          = (uint *) calloc(0, sizeof(uint));
   gcocl->num_h2_leafs_per_row     = (uint *) calloc(0, sizeof(uint));
-  gcocl->h2_leafs_per_row         = (ph2matrix **) calloc(0, sizeof(ph2matrix *));
-  gcocl->col_names_per_row        = (uint **) calloc(0, sizeof(uint *));
+  gcocl->h2_leafs_per_row         = (ph2matrix **) calloc(0, sizeof(ph2matrix*));
+  gcocl->col_names_per_row        = (uint **) calloc(0, sizeof(uint*));
   gcocl->ridx_off                 = (uint *) calloc(0, sizeof(uint));
   gcocl->host_ridx                = (uint *) calloc(0, sizeof(uint));
-  gcocl->cidx_off                 = (uint **) calloc(0, sizeof(uint *));
+  gcocl->cidx_off                 = (uint **) calloc(0, sizeof(uint*));
   gcocl->host_cidx                = (uint *) calloc(0, sizeof(uint));
 
   switch(info)
@@ -680,14 +853,22 @@ get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl)
                     abort();
   }
 
-  gcocl->size_ridx  = gcocl->roff;
-  gcocl->size_cidx  = gcocl->coff;
+  gcocl->size_ridx   = gcocl->roff;
+  gcocl->size_cidx   = gcocl->coff;
   gcocl->workload_per_row = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
-  gcocl->idx_off    = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
-  gcocl->ridx_sizes = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
+  gcocl->idx_off     = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
+  gcocl->ridx_sizes  = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
+  gcocl->num_any_id  = (uint *) calloc(gcocl->num_row_leafs, sizeof(uint));
+  gcocl->rows_any_id = (uint **) calloc(gcocl->num_row_leafs, sizeof(uint*));
+  gcocl->cols_any_id = (uint **) calloc(gcocl->num_row_leafs, sizeof(uint*));
+  gcocl->cidx_any_id = (uint **) calloc(gcocl->num_row_leafs, sizeof(uint*));
 
   for(uint i = 0; i < gcocl->num_row_leafs; ++i)
   {
+    gcocl->rows_any_id[i] = (uint*) calloc(0, sizeof(uint));
+    gcocl->cols_any_id[i] = (uint*) calloc(0, sizeof(uint));
+    gcocl->cidx_any_id[i] = (uint*) calloc(0, sizeof(uint));
+
     /* Get maximum number of H2-matrix leafs which share the same writing
      * cluster. */
     if(gcocl->num_h2_leafs_per_row[i] > gcocl->max_num_h2_leafs_per_row)
@@ -814,9 +995,6 @@ get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl)
                            &gcocl->buf_cidx[i]);
   }
 
-  /* Get offsets of individual writing clusters relative to the whole
-   * H^2-matrix. */
-
   gcocl->xtoffs             = (uint **) calloc(gcocl->num_row_leafs,
                                                sizeof(uint*));
 
@@ -827,24 +1005,111 @@ get_ocl_informations(ph2matrix H2, const information_t info, pgcopencl gcocl)
     gcocl->xtoffs[i]       =
       (uint *) calloc(gcocl->num_h2_leafs_per_row[i], sizeof(uint));
 
-  iterate_recursively_h2matrix(H2, 0, 0, gcocl);
+  iterate_recursively_h2matrix(H2, 0, 0, dim, poly_idx, gcocl);
 
-  gcocl->host_xtoffs   =
+  gcocl->idx_off_any_id = (uint*) calloc(gcocl->num_row_leafs, sizeof(uint));
+
+  gcocl->host_xtoffs    =
     (uint *) calloc(gcocl->idx_off[gcocl->num_row_leafs - 1] +
                     gcocl->num_h2_leafs_per_row[gcocl->num_row_leafs - 1],
                     sizeof(uint));
 
-  /* Make the offsets ready to be written to OpenCL devices. */
+
   for(uint i = 0; i < gcocl->num_row_leafs; ++i)
   {
+    /* Get index offsets for informations about integrals where row and column
+     * polygon share at least one common vertex. */
+    if(i > 0)
+      gcocl->idx_off_any_id[i] = gcocl->idx_off_any_id[i - 1] +
+                                 gcocl->num_any_id[i - 1];
+
+    /* Make the offsets for xt ready to be written to OpenCL devices. */
     memcpy(gcocl->host_xtoffs + gcocl->idx_off[i],
            gcocl->xtoffs[i],
            gcocl->num_h2_leafs_per_row[i] * sizeof(uint));
   }
 
+  gcocl->host_rows_any_id =
+    (uint *) calloc(gcocl->idx_off_any_id[gcocl->num_row_leafs - 1] +
+                    gcocl->num_any_id[gcocl->num_row_leafs - 1],
+                    sizeof(uint));
+
+  gcocl->host_cols_any_id =
+    (uint *) calloc(gcocl->idx_off_any_id[gcocl->num_row_leafs - 1] +
+                    gcocl->num_any_id[gcocl->num_row_leafs - 1],
+                    sizeof(uint));
+
+  gcocl->host_cidx_any_id =
+    (uint *) calloc(gcocl->idx_off_any_id[gcocl->num_row_leafs - 1] +
+                    gcocl->num_any_id[gcocl->num_row_leafs - 1],
+                    sizeof(uint));
+
+  for(uint i = 0; i < gcocl->num_row_leafs; ++i)
+  {
+    memcpy(gcocl->host_rows_any_id + gcocl->idx_off_any_id[i],
+           gcocl->rows_any_id[i],
+           gcocl->num_any_id[i] * sizeof(uint));
+
+    memcpy(gcocl->host_cols_any_id + gcocl->idx_off_any_id[i],
+           gcocl->cols_any_id[i],
+           gcocl->num_any_id[i] * sizeof(uint));
+
+    memcpy(gcocl->host_cidx_any_id + gcocl->idx_off_any_id[i],
+           gcocl->cidx_any_id[i],
+           gcocl->num_any_id[i] * sizeof(uint));
+  }
+
   /* Write offsets to the devices. */
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->num_row_leafs,
+                           sizeof(uint),
+                           gcocl->num_any_id,
+                           NULL,
+                           &gcocl->buf_num_any_id[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->num_row_leafs,
+                           sizeof(uint),
+                           gcocl->idx_off_any_id,
+                           NULL,
+                           &gcocl->buf_idx_off_any_id[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->idx_off_any_id[gcocl->num_row_leafs - 1] +
+                           gcocl->num_any_id[gcocl->num_row_leafs - 1],
+                           sizeof(uint),
+                           gcocl->host_rows_any_id,
+                           NULL,
+                           &gcocl->buf_rows_any_id[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->idx_off_any_id[gcocl->num_row_leafs - 1] +
+                           gcocl->num_any_id[gcocl->num_row_leafs - 1],
+                           sizeof(uint),
+                           gcocl->host_cols_any_id,
+                           NULL,
+                           &gcocl->buf_cols_any_id[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           gcocl->idx_off_any_id[gcocl->num_row_leafs - 1] +
+                           gcocl->num_any_id[gcocl->num_row_leafs - 1],
+                           sizeof(uint),
+                           gcocl->host_cidx_any_id,
+                           NULL,
+                           &gcocl->buf_cidx_any_id[i]);
+
     create_and_fill_buffer(ocl_system.contexts[i],
                            CL_MEM_READ_ONLY,
                            ocl_system.queues[i * ocl_system.queues_per_device],

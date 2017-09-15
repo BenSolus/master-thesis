@@ -62,6 +62,8 @@ SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -std=c11 \
                                         -pedantic \
                                         -Wno-overlength-strings \
                                         -pipe \
+                                        -mfma \
+                                        -DUSE_SIMD=1 \
                                         -DUSE_OPENMP=1 \
                                         -DUSE_OPENCL=1 \
                                         ${OpenMP_C_FLAGS}")
@@ -71,6 +73,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 \
                                         -pedantic \
                                         -Wno-overlength-strings \
                                         -pipe \
+                                        -mfma \
+                                        -DUSE_SIMD=1 \
                                         -DUSE_OPENMP=1 \
                                         -DUSE_OPENCL=1 \
                                         ${OpenMP_CXX_FLAGS}")
@@ -78,8 +82,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 \
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} \
                             ${OpenMP_EXE_LINKER_FLAGS}")
 
-SET(CMAKE_C_FLAGS_RELEASE    "${CMAKE_C_FLAGS_RELEASE} -O2 -g")
-SET(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -O2 -g")
+SET(CMAKE_C_FLAGS_RELEASE    "${CMAKE_C_FLAGS_RELEASE} -O0 -g")
+SET(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -O0 -g")
 
 ################################################################################
 # Debug compiler flags                                                         #

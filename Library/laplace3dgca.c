@@ -38,13 +38,22 @@ slp_kernel_laplacebem3d(const real * x, const real * y,
   return res;
 }
 
-/*
- * @brief Substructure used for approximating @ref _hmatrix "h-", @ref
- * _uniformhmatrix "uniformh-" and @ref _h2matrix "h2matrices".
- *
- * This struct contains many needed parameters for the different approximation
- * techniques such as interpolation or green based methods.
- */
+#ifdef USE_SIMD
+static inline void
+slp_kernel_simd_laplace3dgca(const vreal *x, const vreal *y,
+                             const vreal *nx, const vreal * ny, void *data,
+                             vreal *res_re, vreal *res_im)
+{
+  (void) nx;
+  (void) ny;
+  (void) data;
+  (void) res_im;
+
+  const vreal dist[3] = { vsub(x[0], y[0]), vsub(x[1], y[1]), vsub(x[2], y[2]) };
+
+  *res_re = vrsqrt(vdot3((vreal*) dist, (vreal*) dist));
+}
+#endif
 
 pgreencross
 new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
@@ -109,7 +118,17 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
 
   gc->sq_gca    = build_from_singquad2d(((pbem3d) gc->bem)->sq);
 
+  gc->sq_partial_min_vert =
+    build_min_vert_from_singquad2d(((pbem3d) gc->bem)->sq);
+
+  gc->sq_partial_min_edge =
+    build_min_edge_from_singquad2d(((pbem3d) gc->bem)->sq);
+
   gc->kernel_3d = slp_kernel_laplacebem3d;
+
+#ifdef USE_SIMD
+  gc->kernel_simd_3d = slp_kernel_simd_laplace3dgca;
+#endif
 
   /* Set and get cluster(basis) from geometry. */
 

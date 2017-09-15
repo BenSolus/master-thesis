@@ -66,7 +66,7 @@ main(int argc, char *argv[])
 
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
-    cl_uint  num_compute_units;
+    cl_uint  num_compute_units, preferred_double_vector, preferred_float_vector;
     cl_ulong local_size;
     char     device_name[255];
 
@@ -88,10 +88,28 @@ main(int argc, char *argv[])
                              &num_compute_units,
                              NULL));
 
+    CL_CHECK(clGetDeviceInfo(ocl_system.devices[i],
+                             CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT,
+                             sizeof(cl_uint),
+                             &preferred_float_vector,
+                             NULL));
+
+    CL_CHECK(clGetDeviceInfo(ocl_system.devices[i],
+                             CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE,
+                             sizeof(cl_uint),
+                             &preferred_double_vector,
+                             NULL));
+
     printf("\n%s: CL_DEVICE_LOCAL_MEM_SIZE: %lu\n", device_name, local_size);
     printf("%s: CL_DEVICE_MAX_COMPUTE_UNITS: %u\n",
            device_name,
            num_compute_units);
+    printf("%s: CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT: %u\n",
+           device_name,
+           preferred_float_vector);
+    printf("%s: CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE: %u\n",
+           device_name,
+           preferred_double_vector);
   }
 
   std::clock_t    time(0);
@@ -103,6 +121,20 @@ main(int argc, char *argv[])
   gc      = new_greencross_laplace3d(gr, res, q, m, aca);
 
   H2      = build_green_cross_h2matrix_greencross(gc, (void *) &eta);
+
+//  psingquad2d sq2d = ((pbem3d) gc->bem)->sq;
+
+//  const uint vnq = ROUNDUP(sq2d->n_id, VREAL);
+
+//  psingquadgca sq = gc->sq_partial_min_vert;
+
+//  for(uint i = 0; i < sq->nq; ++i)
+//    printf("%3.u: xq1: %.5e, xq2: %.5e, yq1: %.5e, yq2: %.5e, wq: %.5e\n", i, (sq2d->x_id + (sq2d->n_id - sq2d->n_vert))[i], ((sq2d->x_id + (sq2d->n_id - sq2d->n_vert)) + vnq)[i], sq2d->y_id[(sq2d->n_id - sq2d->n_vert) + i], sq2d->y_id[(sq2d->n_id - sq2d->n_vert) + vnq + i], (sq2d->w_id + vnq * 9)[(sq2d->n_id - sq2d->n_vert) + i]);
+//
+//  std::cout << "\n";
+//
+//  for(uint i = 0; i < sq->nq; ++i)
+//    printf("%3.u: xq1: %.5e, xq2: %.5e, yq1: %.5e, yq2: %.5e, wq: %.5e\n", i, sq->xqs[4 * sq->nq + i], sq->xqs[5 * sq->nq + i], sq->yqs[4 * sq->nq + i], sq->yqs[5 * sq->nq + i], sq->wqs[2 * sq->nq + i]);
 
   printf("\nGeometry:\n"
          "  %u polygons\n"
@@ -165,29 +197,169 @@ main(int argc, char *argv[])
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms\n\n";
 
-  pavector  xt = new_coeffs_clusterbasis_avector(H2->cb);
+//  pavector xt = new_coeffs_clusterbasis_avector(H2->cb);
+//
+//  pavector yt = new_coeffs_clusterbasis_avector(H2->rb);
+//
+//  forward_clusterbasis_avector(H2->rb, x, xt);
 
-  pavector yt  = new_coeffs_clusterbasis_avector(H2->rb);
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(yt);
+//
+//    std::clock_t begin(std::clock());
+//
+//    fastaddeval_nearfield_partial_min_id_edge_gca(gc, 1.0, xt, yt);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  std::cout << "GCA fastaddeval nearfield minimum edges partial CPU:\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms"
+//            << "\n\n";
+//
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(yt);
+//
+//    std::clock_t begin(std::clock());
+//
+//    fastaddeval_part_2_h2matrix_avector_gca(gc, 2, r_one, xt, yt);
+//
+//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
+//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in global memory):\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms"
+//            << "\n\n";
+//
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(yt);
+//
+//    std::clock_t begin(std::clock());
+//
+//    fastaddeval_nearfield_partial_min_id_edge_gca(gc, 1.0f, xt, yt);
+//
+//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
+//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  std::cout << "GCA fastaddeval farfield CPU-Part:\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms"
+//            << "\n\n";
+//
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(yt);
+//
+//    std::clock_t begin(std::clock());
+//
+//    fastaddeval_part_2_h2matrix_avector_gca(gc, 3, r_one, xt, yt);
+//
+//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
+//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in global memory, prefetching):\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms"
+//            << "\n\n";
+//
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(yt);
+//
+//    std::clock_t begin(std::clock());
+//
+//    fastaddeval_part_2_h2matrix_avector_gca(gc, 4, r_one, xt, yt);
+//
+//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
+//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in constant memory):\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms"
+//            << "\n\n";
+//
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(yt);
+//
+//    std::clock_t begin(std::clock());
+//
+//    fastaddeval_part_2_h2matrix_avector_gca(gc, 5, r_one, xt, yt);
+//
+//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
+//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in local memory):\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms"
+//            << "\n\n";
 
-  time = 0;
-
-  for(uint i(0); i < tests; ++i)
-  {
-    clear_avector(yt);
-
-    std::clock_t begin(std::clock());
-
-    fastaddeval_farfield_cpu_h2matrix_avectors_greencross(gc, 1.0, xt, yt);
-
-    std::clock_t end(std::clock());
-
-    time += end - begin;
-  }
-
-  std::cout << "fastaddeval (farfield, CPU):\n  "
-            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-            << " ms"
-            << "\n\n";
+//  time = 0;
+//
+//  for(uint i(0); i < tests; ++i)
+//  {
+//    clear_avector(yt);
+//
+//    std::clock_t begin(std::clock());
+//
+//    fastaddeval_part_2_h2matrix_avector_gca(gc, 6, r_one, xt, yt);
+//
+//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
+//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
+//
+//    std::clock_t end(std::clock());
+//
+//    time += end - begin;
+//  }
+//
+//  std::cout << "GCA fastaddeval farfield GPU (Experimental):\n  "
+//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+//            << " ms"
+//            << "\n\n";
 
   /******************************** GCA H2-MVM ********************************/
 
@@ -210,12 +382,12 @@ main(int argc, char *argv[])
 
   add_avector(r_minusone, y_ref, y);
 
-  std::cout << "GCA H2-MVM (Quadrature in global memory):\n  "
+  std::cout << "GCA H2-MVM:\n  "
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms, rel. error: " << std::scientific
             << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
             << "\n\n";
-
+//
 //  time = 0;
 //
 //  for(uint i(0); i < tests; ++i)
@@ -233,37 +405,14 @@ main(int argc, char *argv[])
 //
 //  add_avector(r_minusone, y_ref, y);
 //
-//  std::cout << "GCA H2-MVM (Quadrature in global memory):\n  "
+//  std::cout << "GCA H2-MVM (Quadrature in constant memory):\n  "
 //            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
 //            << " ms, rel. error: " << std::scientific
 //            << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
 //            << "\n\n";
 //
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(y);
-//
-//    std::clock_t begin(std::clock());
-//
-//    mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y, 2);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  add_avector(r_minusone, y_ref, y);
-//
-//  std::cout << "GCA H2-MVM (Quadrature in local memory):\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms, rel. error: " << std::scientific
-//            << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
-//            << "\n\n";
-
-  del_avector(yt);
-  del_avector(xt);
+//  del_avector(yt);
+//  del_avector(xt);
   del_avector(y);
   del_avector(y_ref);
   del_avector(x);

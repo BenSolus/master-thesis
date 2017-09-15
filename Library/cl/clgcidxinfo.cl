@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------
  * This is the file "clgcidxinfo.cl" of this master thesis.
- * All rights reserved, Steffen Boerm 2009
+ * All rights reserved, Bennet Carstensen 2017
  * ------------------------------------------------------------ */
 
 /**
@@ -9,6 +9,9 @@
  * @date      2017
  * @copyright All rights reserved, Bennet Carstensen 2017
  */
+
+#ifndef IDXINFO_CL
+#define IDXINFO_CL
 
 #include "clbasic.cl"
 
@@ -37,6 +40,8 @@ struct _gcidxinfo
 
   global       real *yt;
 
+  local        real *ytl;
+
                uint cidx_size;
 
                uint cidx_off;
@@ -46,8 +51,6 @@ struct _gcidxinfo
                uint xt_off;
 
   global const real *xt;
-
-  local        real *xt_tmp;
 };
 
 void
@@ -59,7 +62,7 @@ init_row_gcidxinfo(       pgcidxinfo gcii,
                    global const uint *ridxs,
                           const uint yt_off,
                    global       real *yts,
-                   local        real *xt_tmp)
+                   local        real *ytl)
 {
   gcii->num_h2_leafs = num_h2_leafs;
   gcii->idx_off      = idx_off;
@@ -68,13 +71,13 @@ init_row_gcidxinfo(       pgcidxinfo gcii,
   gcii->ridx         = ridxs + ridx_off;
   gcii->yt_off       = yt_off;
   gcii->yt           = yts + yt_off;
+  gcii->ytl          = ytl;
 
   gcii->cidx_size    = 0;
   gcii->cidx_off     = 0;
   gcii->cidx         = 0;
   gcii->xt_off       = 0;
   gcii->xt           = 0;
-  gcii->xt_tmp       = xt_tmp;
 }
 
 void
@@ -91,3 +94,5 @@ set_column_info_gcidxinfo(       pgcidxinfo gcii,
   gcii->xt_off    = xt_off;
   gcii->xt        = xts + xt_off;
 }
+
+#endif // IDXINFO_CL
