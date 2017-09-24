@@ -38,22 +38,39 @@ slp_kernel_laplacebem3d(const real * x, const real * y,
   return res;
 }
 
-#ifdef USE_SIMD
 static inline void
-slp_kernel_simd_laplace3dgca(const vreal *x, const vreal *y,
-                             const vreal *nx, const vreal * ny, void *data,
-                             vreal *res_re, vreal *res_im)
+#ifdef __AVX__
+#ifdef USE_FLOAT
+slp_kernel_simd_laplace3dgca(const __m256 *x, const __m256 *y,
+                             const __m256 *nx, const __m256 * ny, void *data,
+                             __m256 *res_re, __m256 *res_im)
 {
   (void) nx;
   (void) ny;
   (void) data;
   (void) res_im;
 
-  const vreal dist[3] = { vsub(x[0], y[0]), vsub(x[1], y[1]), vsub(x[2], y[2]) };
+  const __m256 dist[3] = { _mm256_sub_ps(x[0], y[0]),
+                           _mm256_sub_ps(x[1], y[1]),
+                           _mm256_sub_ps(x[2], y[2])};
 
-  *res_re = vrsqrt(vdot3((vreal*) dist, (vreal*) dist));
+  *res_re = _mm256_mul_ps(dist[0], dist[0]);
+  *res_re = _mm256_add_ps(_mm256_mul_ps(dist[1], dist[1]), *res_re);
+  *res_re = _mm256_add_ps(_mm256_mul_ps(dist[2], dist[2]), *res_re);
+
+  __m256 s = _mm256_mul_ps(*res_re, _mm256_set1_ps(0.5f));
+  *res_re  = _mm256_rsqrt_ps(*res_re);
+
+  s = _mm256_mul_ps(s, *res_re);
+
+  const __m256 t = _mm256_mul_ps(*res_re, *res_re);
+
+  *res_re = _mm256_mul_ps(_mm256_set1_ps(1.5f), *res_re);
+
+  *res_re = _mm256_sub_ps(_mm256_mul_ps(s, t), *res_re);
 }
-#endif
+#endif // USE_FLOAT
+#endif // __AVX__
 
 pgreencross
 new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
@@ -126,7 +143,7 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
 
   gc->kernel_3d = slp_kernel_laplacebem3d;
 
-#ifdef USE_SIMD
+#ifdef __AVX__
   gc->kernel_simd_3d = slp_kernel_simd_laplace3dgca;
 #endif
 

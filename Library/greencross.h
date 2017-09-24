@@ -27,6 +27,12 @@
  *
  * @{*/
 
+#ifdef __AVX__
+typedef void (*kernel_avx_func3d)(const __m256 *x, const __m256 *y,
+                                  const __m256 *nx, const __m256 * ny, void *data,
+                                  __m256 *res_re, __m256 *res_im);
+#endif // __AVX__
+
 /** @brief @ref greencross is just an abbreviation for the struct @ref
                 _greencross. */
 typedef struct _greencross greencross;
@@ -106,11 +112,13 @@ struct _greencross
 
   kernel_func3d kernel_3d;
 
-#ifdef USE_SIMD
-  kernel_simd_func3d kernel_simd_3d;
+#ifdef __AVX__
+  kernel_avx_func3d kernel_simd_3d;
 #endif
 
   cl_kernel *ocl_kernels;
+
+  cl_event  *kernel_events;
 
   /** @brief Set of informations for OpenCL devices to calculate the MVM part
     *        of leaf-matrices. */
@@ -296,17 +304,35 @@ fastaddeval_nearfield_partial_min_id_vert_gca(pcgreencross gc,
                                               pavector     yt);
 
 HEADER_PREFIX void
-fastaddeval_part_2_h2matrix_avector_gca(pgreencross gca,
-                                        const uint  kernel_idx,
-                                        const field alpha,
-                                        pcavector   xt,
-                                        pavector    yt);
+#ifndef USE_OPENMP
+fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca);
+#else
+fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca, pavector yt);
+#endif
 
 HEADER_PREFIX void
-fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gc);
+#ifndef USE_OPENMP
+fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gca);
+#else
+fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gca,
+                                                  pavector    yt);
+#endif
 
 HEADER_PREFIX void
-fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gc);
+#ifndef USE_OPENMP
+fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gca);
+#else
+fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gca,
+                                                    pavector    yt);
+#endif
+
+HEADER_PREFIX void
+#ifndef USE_OPENMP
+fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gca);
+#else
+fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gca,
+                                                    pavector    yt);
+#endif
 
 HEADER_PREFIX void
 fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,
@@ -315,18 +341,17 @@ fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,
                                                 pavector    yt);
 
 HEADER_PREFIX void
-fastaddeval_farfield_cpu_h2matrix_avectors_greencross(pcgreencross gc,
-                                                      field        alpha,
-                                                      pavector     xt,
-                                                      pavector     yt);
+fastaddeval_farfield_cpu_h2matrix_avectors_gca(pcgreencross gc,
+                                               const field  alpha,
+                                               pavector     xt,
+                                               pavector     yt);
 
 HEADER_PREFIX void
 addeval_h2matrix_avector_greencross(pgreencross gc,
                                     field       alpha,
                                     pch2matrix  H2,
                                     pcavector   x,
-                                    pavector    y,
-                                    uint        kernel_idx);
+                                    pavector    y);
 
 HEADER_PREFIX void
 addevaltrans_h2matrix_avector_greencross(pgreencross gc,
@@ -341,8 +366,7 @@ mvm_h2matrix_avector_greencross(pgreencross gc,
                                 bool        h2trans,
                                 pch2matrix  H2,
                                 pcavector   x,
-		                            pavector    y,
-                                uint        kernel_idx);
+		                            pavector    y);
 
 /** @} */
 

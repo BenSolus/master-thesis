@@ -21,10 +21,17 @@ init_fastaddevalgca(pfastaddevalgca feval)
   {
     feval->num_wrk_pkgs = 0;
 
-    feval->buf_xt       = NULL;
-    feval->events_xt    = NULL;
-    feval->buf_yt       = NULL;
-    feval->events_yt    = NULL;
+    feval->buf_xt             = NULL;
+    feval->events_xt          = NULL;
+#ifndef USE_OPENMP
+    feval->buf_yt             = NULL;
+#else
+    feval->buf_yt_ff          = NULL;
+    feval->buf_yt_nf_common   = NULL;
+    feval->buf_yt_nf_min_vert = NULL;
+    feval->buf_yt_nf_min_edge = NULL;
+#endif
+    feval->events_yt          = NULL;
   }
 }
 
@@ -49,6 +56,7 @@ uninit_fastaddevalgca(pfastaddevalgca feval)
       freemem(feval->events_xt);
     }
 
+#ifndef USE_OPENMP
     if(feval->buf_yt != NULL)
     {
       for(uint i = 0; i < ocl_system.num_devices; ++i)
@@ -56,6 +64,39 @@ uninit_fastaddevalgca(pfastaddevalgca feval)
 
       freemem(feval->buf_yt);
     }
+#else
+    if(feval->buf_yt_ff != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseMemObject(feval->buf_yt_ff[i]));
+
+      freemem(feval->buf_yt_ff);
+    }
+
+    if(feval->buf_yt_nf_common != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseMemObject(feval->buf_yt_nf_common[i]));
+
+      freemem(feval->buf_yt_nf_common);
+    }
+
+    if(feval->buf_yt_nf_min_vert != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseMemObject(feval->buf_yt_nf_min_vert[i]));
+
+      freemem(feval->buf_yt_nf_min_vert);
+    }
+
+    if(feval->buf_yt_nf_min_edge != NULL)
+    {
+      for(uint i = 0; i < ocl_system.num_devices; ++i)
+      CL_CHECK(clReleaseMemObject(feval->buf_yt_nf_min_edge[i]));
+
+      freemem(feval->buf_yt_nf_min_edge);
+    }
+#endif
 
     if(feval->events_yt != NULL)
     {
@@ -78,15 +119,28 @@ new_fastaddevalgca(pcclusterbasis rb,
 
   init_fastaddevalgca(feval);
 
-  feval->num_wrk_pkgs = num_wrk_pkgs;
-  feval->buf_xt       =
+  feval->num_wrk_pkgs       = num_wrk_pkgs;
+  feval->buf_xt             =
     (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
-  feval->events_xt    =
+  feval->events_xt          =
     (cl_event *) calloc(feval->num_wrk_pkgs,    sizeof(cl_event));
-  feval->buf_yt       =
+#ifndef USE_OPENMP
+  feval->buf_yt             =
     (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
-  feval->events_yt =
+  feval->events_yt          =
     (cl_event *) calloc(feval->num_wrk_pkgs,    sizeof(cl_event));
+#else
+  feval->buf_yt_ff          =
+    (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
+  feval->buf_yt_nf_common   =
+    (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
+  feval->buf_yt_nf_min_vert =
+    (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
+  feval->buf_yt_nf_min_edge =
+    (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
+  feval->events_yt          =
+    (cl_event *) calloc(4 * feval->num_wrk_pkgs,    sizeof(cl_event));
+#endif
 
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {
@@ -100,6 +154,7 @@ new_fastaddevalgca(pcclusterbasis rb,
 
     CL_CHECK(res);
 
+#ifndef USE_OPENMP
     feval->buf_yt[i] = clCreateBuffer(ocl_system.contexts[i],
                                       CL_MEM_READ_ONLY,
                                       rb->ktree * sizeof(real),
@@ -107,6 +162,39 @@ new_fastaddevalgca(pcclusterbasis rb,
                                       &res);
 
     CL_CHECK(res);
+#else
+    feval->buf_yt_ff[i] = clCreateBuffer(ocl_system.contexts[i],
+                                      CL_MEM_READ_ONLY,
+                                      rb->ktree * sizeof(real),
+                                      NULL,
+                                      &res);
+
+    CL_CHECK(res);
+
+    feval->buf_yt_nf_common[i] = clCreateBuffer(ocl_system.contexts[i],
+                                      CL_MEM_READ_ONLY,
+                                      rb->ktree * sizeof(real),
+                                      NULL,
+                                      &res);
+
+    CL_CHECK(res);
+
+    feval->buf_yt_nf_min_vert[i] = clCreateBuffer(ocl_system.contexts[i],
+                                                  CL_MEM_READ_ONLY,
+                                                  rb->ktree * sizeof(real),
+                                                  NULL,
+                                                 &res);
+
+    CL_CHECK(res);
+
+    feval->buf_yt_nf_min_edge[i] = clCreateBuffer(ocl_system.contexts[i],
+                                                  CL_MEM_READ_ONLY,
+                                                  rb->ktree * sizeof(real),
+                                                  NULL,
+                                                  &res);
+
+    CL_CHECK(res);
+#endif
   }
 
   return feval;

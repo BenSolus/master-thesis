@@ -173,7 +173,68 @@ main(int argc, char *argv[])
          "  farfield: %.5f MB\n",
          getsize_gcopencl(gc->gcocl) / (1024.0 * 1024.0));
 
+  for(uint i(0); i < tests; ++i)
+  {
+    pblock    broot = build_strict_block(gc->rc,
+                                         gc->cc,
+                                         &eta,
+                                         admissible_max_cluster);
+
+    ph2matrix H2_feval = build_from_block_h2matrix(broot,
+                                                   gc->rb,
+                                                   gc->cb);
+
+    std::clock_t begin(std::clock());
+
+    assemble_bem3d_h2matrix_row_clusterbasis((pbem3d) gc->bem, H2->rb);
+    assemble_bem3d_h2matrix_col_clusterbasis((pbem3d) gc->bem, H2->cb);
+    assemble_bem3d_h2matrix((pbem3d) gc->bem, H2);
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+
+    del_h2matrix(H2_feval);
+    del_block(broot);
+  }
+
+  std::cout << "\nTime needed to construct H2-matrix:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
+  time = 0;
+
+  for(uint i(0); i < tests; ++i)
+  {
+    pblock    broot = build_strict_block(gc->rc,
+                                         gc->cc,
+                                         &eta,
+                                         admissible_max_cluster);
+
+    ph2matrix H2_feval = build_from_block_h2matrix(broot,
+                                                   gc->rb,
+                                                   gc->cb);
+
+    std::clock_t begin(std::clock());
+
+    assemble_bem3d_h2matrix((pbem3d) gc->bem, H2);
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+
+    del_h2matrix(H2_feval);
+    del_block(broot);
+  }
+
+  std::cout << "\nTime needed to construct nearfield and farfield coupling "
+            << "matrices:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
   /************************** Reference H2Lib H2-MVM **************************/
+
+  time    = 0;
 
   x       = new_avector(n);
   random_avector(x);
@@ -197,175 +258,16 @@ main(int argc, char *argv[])
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms\n\n";
 
-//  pavector xt = new_coeffs_clusterbasis_avector(H2->cb);
-//
-//  pavector yt = new_coeffs_clusterbasis_avector(H2->rb);
-//
-//  forward_clusterbasis_avector(H2->rb, x, xt);
-
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(yt);
-//
-//    std::clock_t begin(std::clock());
-//
-//    fastaddeval_nearfield_partial_min_id_edge_gca(gc, 1.0, xt, yt);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  std::cout << "GCA fastaddeval nearfield minimum edges partial CPU:\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms"
-//            << "\n\n";
-//
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(yt);
-//
-//    std::clock_t begin(std::clock());
-//
-//    fastaddeval_part_2_h2matrix_avector_gca(gc, 2, r_one, xt, yt);
-//
-//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
-//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in global memory):\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms"
-//            << "\n\n";
-//
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(yt);
-//
-//    std::clock_t begin(std::clock());
-//
-//    fastaddeval_nearfield_partial_min_id_edge_gca(gc, 1.0f, xt, yt);
-//
-//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
-//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  std::cout << "GCA fastaddeval farfield CPU-Part:\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms"
-//            << "\n\n";
-//
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(yt);
-//
-//    std::clock_t begin(std::clock());
-//
-//    fastaddeval_part_2_h2matrix_avector_gca(gc, 3, r_one, xt, yt);
-//
-//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
-//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in global memory, prefetching):\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms"
-//            << "\n\n";
-//
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(yt);
-//
-//    std::clock_t begin(std::clock());
-//
-//    fastaddeval_part_2_h2matrix_avector_gca(gc, 4, r_one, xt, yt);
-//
-//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
-//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in constant memory):\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms"
-//            << "\n\n";
-//
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(yt);
-//
-//    std::clock_t begin(std::clock());
-//
-//    fastaddeval_part_2_h2matrix_avector_gca(gc, 5, r_one, xt, yt);
-//
-//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
-//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  std::cout << "GCA fastaddeval farfield GPU (Quadrature in local memory):\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms"
-//            << "\n\n";
-
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(yt);
-//
-//    std::clock_t begin(std::clock());
-//
-//    fastaddeval_part_2_h2matrix_avector_gca(gc, 6, r_one, xt, yt);
-//
-//    for (uint j = 0; j < gc->oclwrk->num_wrk_pkgs; ++j)
-//      clFinish(ocl_system.queues[j * ocl_system.queues_per_device]);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  std::cout << "GCA fastaddeval farfield GPU (Experimental):\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms"
-//            << "\n\n";
-
   /******************************** GCA H2-MVM ********************************/
 
   pavector y = new_avector(n);
 
   time = 0;
+
+  real time_ff          = r_zero;
+  real time_nf_common   = r_zero;
+  real time_min_vert = r_zero;
+  real time_nf_min_edge = r_zero;
 
   for(uint i(0); i < tests; ++i)
   {
@@ -373,11 +275,72 @@ main(int argc, char *argv[])
 
     std::clock_t begin(std::clock());
 
-    mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y, 0);
+    mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y);
 
     std::clock_t end(std::clock());
 
     time += end - begin;
+
+    cl_ulong start = 0;
+    cl_ulong fin   = 0;
+
+    clGetEventProfilingInfo(gc->kernel_events[0],
+                            CL_PROFILING_COMMAND_START,
+                            sizeof(cl_ulong),
+                            &start,
+                            NULL);
+    clGetEventProfilingInfo(gc->kernel_events[0],
+                            CL_PROFILING_COMMAND_END,
+                            sizeof(cl_ulong),
+                            &fin,
+                            NULL);
+
+    time_ff += (real) (fin - start) * (real) 1e-06;
+
+    start = fin = 0;
+
+    clGetEventProfilingInfo(gc->kernel_events[1],
+                            CL_PROFILING_COMMAND_START,
+                            sizeof(cl_ulong),
+                            &start,
+                            NULL);
+    clGetEventProfilingInfo(gc->kernel_events[1],
+                            CL_PROFILING_COMMAND_END,
+                            sizeof(cl_ulong),
+                            &fin,
+                            NULL);
+
+    time_nf_common += (real) (fin - start) * (real) 1e-06;
+
+    start = fin = 0;
+
+    clGetEventProfilingInfo(gc->kernel_events[2],
+                            CL_PROFILING_COMMAND_START,
+                            sizeof(cl_ulong),
+                            &start,
+                            NULL);
+    clGetEventProfilingInfo(gc->kernel_events[2],
+                            CL_PROFILING_COMMAND_END,
+                            sizeof(cl_ulong),
+                            &fin,
+                            NULL);
+
+    time_min_vert += (real) (fin - start) * (real) 1e-06;
+
+    start = fin = 0;
+
+    clGetEventProfilingInfo(gc->kernel_events[3],
+                            CL_PROFILING_COMMAND_START,
+                            sizeof(cl_ulong),
+                            &start,
+                            NULL);
+    clGetEventProfilingInfo(gc->kernel_events[3],
+                            CL_PROFILING_COMMAND_END,
+                            sizeof(cl_ulong),
+                            &fin,
+                            NULL);
+
+    time_nf_min_edge += (real) (fin - start) * (real) 1e-06;
   }
 
   add_avector(r_minusone, y_ref, y);
@@ -387,32 +350,71 @@ main(int argc, char *argv[])
             << " ms, rel. error: " << std::scientific
             << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
             << "\n\n";
-//
-//  time = 0;
-//
-//  for(uint i(0); i < tests; ++i)
-//  {
-//    clear_avector(y);
-//
-//    std::clock_t begin(std::clock());
-//
-//    mvm_h2matrix_avector_greencross(gc, 1.0, false, H2, x, y, 1);
-//
-//    std::clock_t end(std::clock());
-//
-//    time += end - begin;
-//  }
-//
-//  add_avector(r_minusone, y_ref, y);
-//
-//  std::cout << "GCA H2-MVM (Quadrature in constant memory):\n  "
-//            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
-//            << " ms, rel. error: " << std::scientific
-//            << norm2_avector(y) / norm2_avector(y_ref) << std::fixed
-//            << "\n\n";
-//
-//  del_avector(yt);
-//  del_avector(xt);
+
+  std::cout << "GPU farfield fastaddeval:\n  "
+            << time_ff / (real) tests
+            << " ms\n\n";
+
+  std::cout << "GPU partial nearfield fastaddeval of all integrals:\n  "
+            << time_nf_common / (real) tests
+            << " ms\n\n";
+
+  std::cout << "GPU partial nearfield fastaddeval of integrals with at minimum of an identical vertex:\n  "
+            << time_min_vert / (real) tests
+            << " ms\n\n";
+
+  std::cout << "GPU partial nearfield fastaddeval of integrals with at minimum of an identical edge:\n  "
+            << time_nf_min_edge / (real) tests
+            << " ms\n\n";
+
+  time = 0;
+
+  for(uint i(0); i < tests; ++i)
+  {
+    random_avector(y);
+
+    std::clock_t begin(std::clock());
+
+    add_avector(f_one, y_ref, y);
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+  }
+
+  add_avector(r_minusone, y_ref, y);
+
+  std::cout << "add_avector:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
+  time = 0;
+
+  for(uint i(0); i < tests; ++i)
+  {
+    std::clock_t begin(std::clock());
+
+    CL_CHECK(clEnqueueReadBuffer (ocl_system.queues[0],
+                                  gc->feval->buf_yt_ff[0],
+                                  CL_TRUE,
+                                  sizeof(real),
+                                  y->dim * sizeof(real),
+                                  y->v,
+                                  0,
+                                  NULL,
+                                  NULL));
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+  }
+
+  add_avector(r_minusone, y_ref, y);
+
+  std::cout << "clEnqueueReadBuffer:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
   del_avector(y);
   del_avector(y_ref);
   del_avector(x);

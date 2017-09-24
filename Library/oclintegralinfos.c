@@ -22,7 +22,7 @@ init_integralinfos(pintegralinfos iinfos)
 {
   if(iinfos != NULL)
   {
-    iinfos->num_integral_grps = NULL;
+    iinfos->num_integral_grps = 0;
     iinfos->num_integrals     = NULL;
     iinfos->buf_num_integrals = NULL;
     iinfos->idx_off           = NULL;

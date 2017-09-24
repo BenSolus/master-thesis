@@ -62,8 +62,8 @@ SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -std=c11 \
                                         -pedantic \
                                         -Wno-overlength-strings \
                                         -pipe \
-                                        -mfma \
-                                        -DUSE_SIMD=1 \
+                                        -mavx2 \
+                                        -DUSE_FLOAT=1 \
                                         -DUSE_OPENMP=1 \
                                         -DUSE_OPENCL=1 \
                                         ${OpenMP_C_FLAGS}")
@@ -73,8 +73,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 \
                                         -pedantic \
                                         -Wno-overlength-strings \
                                         -pipe \
-                                        -mfma \
-                                        -DUSE_SIMD=1 \
+                                        -mavx2 \
+                                        -DUSE_FLOAT=1 \
                                         -DUSE_OPENMP=1 \
                                         -DUSE_OPENCL=1 \
                                         ${OpenMP_CXX_FLAGS}")

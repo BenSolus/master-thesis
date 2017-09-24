@@ -40,7 +40,17 @@ struct _fastaddevalgca
 
   cl_event *events_xt;
 
+#ifndef USE_OPENMP
   cl_mem   *buf_yt;
+#else
+  cl_mem   *buf_yt_ff;
+
+  cl_mem   *buf_yt_nf_common;
+
+  cl_mem   *buf_yt_nf_min_vert;
+
+  cl_mem   *buf_yt_nf_min_edge;
+#endif
 
   cl_event *events_yt;
 };
