@@ -14,7 +14,6 @@
 
 #include "bem2d.h"
 #include "ocl_system.h"
-#include "simd.h"
 
 #include "clfastaddevalgca.cl"
 #include "clgcidxinfo.cl"
@@ -1121,7 +1120,7 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
   char add_flags[100];
 
   int n = sprintf(add_flags,
-                  "-DQUADRATUR_ORDER=%u -DSIZE=%u "
+                  "-cl-nv-verbose -DQUADRATUR_ORDER=%u -DSIZE=%u "
                   "-DMAX_WRK_GRP_SIZE=%u",
                   ((pbem3d) gc->bem)->sq->n_dist,
                   16,
@@ -1844,65 +1843,86 @@ nearfield_3d_partial_gca(pcgreencross gc,
 
         uint q   = 0;
 
-#ifdef USE_SIMD
-        for(q = 0; (i + q) < (nq - n_dist); q += VREAL)
+#ifdef __AVX__
+#ifdef USE_FLOAT
+        for(; (q + 8) <= nq; q += 8)
         {
-          const vreal one = vset1(r_one);
-          const vreal w   = vload(wq + q);
+          const __m256 one = _mm256_set1_ps(r_one);
+          const __m256 w   = _mm256_load_ps(wq + q);
 
-          vreal a1 = vload(xq + q);
-          vreal a2 = vload(xq + nq + q);
+          __m256 a1 = _mm256_load_ps(xq + q);
+          __m256 a2 = _mm256_load_ps(xq + vnq + q);
 
-          vreal xx[3] = { vset1(r_zero), vset1(r_zero), vset1(r_zero) };
+          __m256 xx[3] = { _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero) };
 
-          vreal scalar;
+          __m256 scalar;
 
-          scalar = vset1(x[0][0]); xx[0] = vfmadd(vsub(one, a1), scalar, xx[0]);
-          scalar = vset1(x[1][0]); xx[0] = vfmadd(vsub(a1,  a2), scalar, xx[0]);
-          scalar = vset1(x[2][0]); xx[0] = vfmadd(a2,            scalar, xx[0]);
+          scalar = _mm256_set1_ps(x[0][0]);
+          xx[0]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(x[1][0]);
+          xx[0]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[0]);
+          scalar = _mm256_set1_ps(x[2][0]);
+          xx[0]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[0]);
 
-          scalar = vset1(x[0][1]); xx[1] = vfmadd(vsub(one, a1), scalar, xx[1]);
-          scalar = vset1(x[1][1]); xx[1] = vfmadd(vsub(a1,  a2), scalar, xx[1]);
-          scalar = vset1(x[2][1]); xx[1] = vfmadd(a2,            scalar, xx[1]);
+          scalar = _mm256_set1_ps(x[0][1]);
+          xx[1]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(x[1][1]);
+          xx[1]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[1]);
+          scalar = _mm256_set1_ps(x[2][1]);
+          xx[1]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[1]);
 
-          scalar = vset1(x[0][2]); xx[2] = vfmadd(vsub(one, a1), scalar, xx[2]);
-          scalar = vset1(x[1][2]); xx[2] = vfmadd(vsub(a1,  a2), scalar, xx[2]);
-          scalar = vset1(x[2][2]); xx[2] = vfmadd(a2,            scalar, xx[2]);
+          scalar = _mm256_set1_ps(x[0][2]);
+          xx[2]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(x[1][2]);
+          xx[2]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[2]);
+          scalar = _mm256_set1_ps(x[2][2]);
+          xx[2]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[2]);
 
-          a1 = vload(yq + q);
-          a2 = vload(yq + nq + q);
+          a1 = _mm256_load_ps(yq + q);
+          a2 = _mm256_load_ps(yq + vnq + q);
 
-          vreal yy[3] = { vset1(r_zero), vset1(r_zero), vset1(r_zero) };
+          __m256 yy[3] = { _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero) };
 
-          scalar = vset1(y[0][0]); yy[0] = vfmadd(vsub(one, a1), scalar, yy[0]);
-          scalar = vset1(y[1][0]); yy[0] = vfmadd(vsub(a1,  a2), scalar, yy[0]);
-          scalar = vset1(y[2][0]); yy[0] = vfmadd(a2,            scalar, yy[0]);
+          scalar = _mm256_set1_ps(y[0][0]);
+          yy[0]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(y[1][0]);
+          yy[0]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[0]);
+          scalar = _mm256_set1_ps(y[2][0]);
+          yy[0]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[0]);
 
-          scalar = vset1(y[0][1]); yy[1] = vfmadd(vsub(one, a1), scalar, yy[1]);
-          scalar = vset1(y[1][1]); yy[1] = vfmadd(vsub(a1,  a2), scalar, yy[1]);
-          scalar = vset1(y[2][1]); yy[1] = vfmadd(a2,            scalar, yy[1]);
+          scalar = _mm256_set1_ps(y[0][1]);
+          yy[1]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(y[1][1]);
+          yy[1]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[1]);
+          scalar = _mm256_set1_ps(y[2][1]);
+          yy[1]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[1]);
 
-          scalar = vset1(y[0][2]); yy[2] = vfmadd(vsub(one, a1), scalar, yy[2]);
-          scalar = vset1(y[1][2]); yy[2] = vfmadd(vsub(a1,  a2), scalar, yy[2]);
-          scalar = vset1(y[2][2]); yy[2] = vfmadd(a2,            scalar, yy[2]);
+          scalar = _mm256_set1_ps(y[0][2]);
+          yy[2]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(y[1][2]);
+          yy[2]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[2]);
+          scalar = _mm256_set1_ps(y[2][2]);
+          yy[2]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[2]);
 
-          vreal kernel_result;
+          __m256 kernel_result;
 
           gc->kernel_simd_3d(xx, yy, NULL, NULL, NULL, &kernel_result, NULL);
 
-          kernel_result = vmul(w, kernel_result);
+          kernel_result = _mm256_mul_ps(w, kernel_result);
 
-          real results[VREAL];
+          real results[8];
 
-          vstore(results, kernel_result);
+          _mm256_store_ps(results, kernel_result);
 
-          for(uint k = (VREAL >> 1); k > 0; k >>= 1)
-            for(uint l = 0; l < k; ++l)
-              results[l] += results[k + l];
-
-          sum += results[0];
+          sum += results[0] + results[1] + results[2] + results[3] +
+                 results[4] + results[5] + results[6] + results[7];
         }
-#endif
+#endif // USE_FLOAT
+#endif // __AVX__
         
         for(; q < (nq - n_dist); ++q)
         {
@@ -2027,7 +2047,90 @@ nearfield_3d_partial_min_id_edge(pcgreencross gc,
 
         const uint nq = gc->sq_partial_min_edge->nq;
 
-        for(uint q = 0; q < nq; ++q)
+        uint q = 0;
+
+#ifdef __AVX__
+#ifdef USE_FLOAT
+        for(; (q + 8) <= nq; q += 8)
+        {
+          const __m256 one = _mm256_set1_ps(r_one);
+          const __m256 w   = _mm256_load_ps(wq + q);
+
+          __m256 a1 = _mm256_load_ps(xq + q);
+          __m256 a2 = _mm256_load_ps(xq + nq + q);
+
+          __m256 xx[3] = { _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero) };
+
+          __m256 scalar;
+
+          scalar = _mm256_set1_ps(x[0][0]);
+          xx[0]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(x[1][0]);
+          xx[0]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[0]);
+          scalar = _mm256_set1_ps(x[2][0]);
+          xx[0]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[0]);
+
+          scalar = _mm256_set1_ps(x[0][1]);
+          xx[1]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(x[1][1]);
+          xx[1]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[1]);
+          scalar = _mm256_set1_ps(x[2][1]);
+          xx[1]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[1]);
+
+          scalar = _mm256_set1_ps(x[0][2]);
+          xx[2]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(x[1][2]);
+          xx[2]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[2]);
+          scalar = _mm256_set1_ps(x[2][2]);
+          xx[2]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[2]);
+
+          a1 = _mm256_load_ps(yq + q);
+          a2 = _mm256_load_ps(yq + nq + q);
+
+          __m256 yy[3] = { _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero),
+                           _mm256_set1_ps(r_zero) };
+
+          scalar = _mm256_set1_ps(y[0][0]);
+          yy[0]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(y[1][0]);
+          yy[0]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[0]);
+          scalar = _mm256_set1_ps(y[2][0]);
+          yy[0]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[0]);
+
+          scalar = _mm256_set1_ps(y[0][1]);
+          yy[1]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(y[1][1]);
+          yy[1]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[1]);
+          scalar = _mm256_set1_ps(y[2][1]);
+          yy[1]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[1]);
+
+          scalar = _mm256_set1_ps(y[0][2]);
+          yy[2]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+          scalar = _mm256_set1_ps(y[1][2]);
+          yy[2]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[2]);
+          scalar = _mm256_set1_ps(y[2][2]);
+          yy[2]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[2]);
+
+          __m256 kernel_result;
+
+          gc->kernel_simd_3d(xx, yy, NULL, NULL, NULL, &kernel_result, NULL);
+
+          kernel_result = _mm256_mul_ps(w, kernel_result);
+
+          real results[8];
+
+          _mm256_store_ps(results, kernel_result);
+
+          sum += results[0] + results[1] + results[2] + results[3] +
+                 results[4] + results[5] + results[6] + results[7];
+        }
+#endif // USE_FLOAT
+#endif // __AVX__
+
+        for(; q < nq; ++q)
         {
           real a1 = xq[q];
           real a2 = xq[q + nq];
@@ -2684,7 +2787,90 @@ fastaddeval_nearfield_partial_min_id_vert_gca(pcgreencross gc,
           { v[py[1]][0], v[py[1]][1], v[py[1]][2] },
           { v[py[2]][0], v[py[2]][1], v[py[2]][2] } };
 
-      for(uint q = 0; q < sq->nq; ++q)
+      uint q = 0;
+
+#ifdef __AVX__
+#ifdef USE_FLOAT
+      for(; (q + 8) <= sq->nq; q += 8)
+      {
+        const __m256 one = _mm256_set1_ps(r_one);
+        const __m256 w   = _mm256_load_ps(wq + q);
+
+        __m256 a1 = _mm256_load_ps(xq + q);
+        __m256 a2 = _mm256_load_ps(xq + sq->nq + q);
+
+        __m256 xx[3] = { _mm256_set1_ps(r_zero),
+                         _mm256_set1_ps(r_zero),
+                         _mm256_set1_ps(r_zero) };
+
+        __m256 scalar;
+
+        scalar = _mm256_set1_ps(x[0][0]);
+        xx[0]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+        scalar = _mm256_set1_ps(x[1][0]);
+        xx[0]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[0]);
+        scalar = _mm256_set1_ps(x[2][0]);
+        xx[0]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[0]);
+
+        scalar = _mm256_set1_ps(x[0][1]);
+        xx[1]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+        scalar = _mm256_set1_ps(x[1][1]);
+        xx[1]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[1]);
+        scalar = _mm256_set1_ps(x[2][1]);
+        xx[1]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[1]);
+
+        scalar = _mm256_set1_ps(x[0][2]);
+        xx[2]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+        scalar = _mm256_set1_ps(x[1][2]);
+        xx[2]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), xx[2]);
+        scalar = _mm256_set1_ps(x[2][2]);
+        xx[2]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), xx[2]);
+
+        a1 = _mm256_load_ps(yq + q);
+        a2 = _mm256_load_ps(yq + sq->nq + q);
+
+        __m256 yy[3] = { _mm256_set1_ps(r_zero),
+                         _mm256_set1_ps(r_zero),
+                         _mm256_set1_ps(r_zero) };
+
+        scalar = _mm256_set1_ps(y[0][0]);
+        yy[0]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+        scalar = _mm256_set1_ps(y[1][0]);
+        yy[0]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[0]);
+        scalar = _mm256_set1_ps(y[2][0]);
+        yy[0]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[0]);
+
+        scalar = _mm256_set1_ps(y[0][1]);
+        yy[1]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+        scalar = _mm256_set1_ps(y[1][1]);
+        yy[1]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[1]);
+        scalar = _mm256_set1_ps(y[2][1]);
+        yy[1]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[1]);
+
+        scalar = _mm256_set1_ps(y[0][2]);
+        yy[2]  = _mm256_mul_ps(_mm256_sub_ps(one, a1), scalar);
+        scalar = _mm256_set1_ps(y[1][2]);
+        yy[2]  = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(a1, a2), scalar), yy[2]);
+        scalar = _mm256_set1_ps(y[2][2]);
+        yy[2]  = _mm256_add_ps(_mm256_mul_ps(a2, scalar), yy[2]);
+
+        __m256 kernel_result;
+
+        gc->kernel_simd_3d(xx, yy, NULL, NULL, NULL, &kernel_result, NULL);
+
+        kernel_result = _mm256_mul_ps(w, kernel_result);
+
+        real results[8];
+
+        _mm256_store_ps(results, kernel_result);
+
+        sum += results[0] + results[1] + results[2] + results[3] +
+               results[4] + results[5] + results[6] + results[7];
+      }
+#endif // USE_FLOAT
+#endif // __AVX__
+
+      for(; q < sq->nq; ++q)
       {
         real a1 = xq[q];
         real a2 = xq[q + sq->nq];
@@ -2731,7 +2917,7 @@ fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,
 
   avector tmp1, tmp2;
 
-//  #pragma omp parallel for num_threads(4) private(tmp1, tmp2)
+  #pragma omp parallel for num_threads(8) private(tmp1, tmp2)
   for(uint i = 0; i < ocl_info->num_row_leafs; ++i)
   {
     pavector yt1 = init_sub_avector(&tmp1,

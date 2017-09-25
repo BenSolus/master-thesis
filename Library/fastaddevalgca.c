@@ -140,7 +140,13 @@ new_fastaddevalgca(pcclusterbasis rb,
     (cl_mem *)   calloc(ocl_system.num_devices, sizeof(cl_mem));
   feval->events_yt          =
     (cl_event *) calloc(4 * feval->num_wrk_pkgs,    sizeof(cl_event));
+
+  for(uint i = 0; i < 4 * feval->num_wrk_pkgs; ++i)
+    feval->events_yt[i] = CL_SUCCESS;
 #endif
+
+  for(uint i = 0; i < feval->num_wrk_pkgs; ++i)
+    feval->events_xt[i] = CL_SUCCESS;
 
   for(uint i = 0; i < ocl_system.num_devices; ++i)
   {

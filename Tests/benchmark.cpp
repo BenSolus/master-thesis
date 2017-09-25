@@ -369,6 +369,86 @@ main(int argc, char *argv[])
 
   time = 0;
 
+  pavector xt = new_avector(H2->cb->ktree);
+  pavector yt = new_zero_avector(H2->rb->ktree);
+
+  forward_clusterbasis_avector(H2->cb, x, xt);
+  for(uint i(0); i < tests; ++i)
+  {
+    clear_avector(yt);
+
+    std::clock_t begin(std::clock());
+
+    fastaddeval_farfield_cpu_h2matrix_avectors_gca(gc, r_one, xt, yt);
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+  }
+
+  std::cout << "CPU farfield fastaddeval:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
+  time = 0;
+
+  for(uint i(0); i < tests; ++i)
+  {
+    clear_avector(yt);
+
+    std::clock_t begin(std::clock());
+
+    fastaddeval_nearfield_partial_h2matrix_avector_gca(gc, r_one, xt, yt);
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+  }
+
+  std::cout << "CPU partial nearfield fastaddeval of all integrals:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
+  time = 0;
+
+  for(uint i(0); i < tests; ++i)
+  {
+    clear_avector(yt);
+
+    std::clock_t begin(std::clock());
+
+    fastaddeval_nearfield_partial_min_id_vert_gca(gc, r_one, xt, yt);
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+  }
+
+  std::cout << "CPU partial nearfield fastaddeval of integrals with at minimum of an identical vertex:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
+  time = 0;
+
+  for(uint i(0); i < tests; ++i)
+  {
+    clear_avector(yt);
+
+    std::clock_t begin(std::clock());
+
+    fastaddeval_nearfield_partial_min_id_edge_gca(gc, r_one, xt, yt);
+
+    std::clock_t end(std::clock());
+
+    time += end - begin;
+  }
+
+  std::cout << "CPU partial nearfield fastaddeval of integrals with at minimum of an identical edge:\n  "
+            << 1000.0 * time / (tests * CLOCKS_PER_SEC)
+            << " ms\n\n";
+
+  time = 0;
+
   for(uint i(0); i < tests; ++i)
   {
     random_avector(y);
@@ -415,6 +495,8 @@ main(int argc, char *argv[])
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms\n\n";
 
+  del_avector(yt);
+  del_avector(xt);
   del_avector(y);
   del_avector(y_ref);
   del_avector(x);

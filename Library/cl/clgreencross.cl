@@ -52,7 +52,9 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
                                global   const real *xts,
                                global         real *yt)
 {
-  if(get_group_id(0) >= num_row_leafs)
+  const size_t grpid0 = get_group_id(0);
+
+  if(grpid0 >= num_row_leafs)
     /* Stop work-groups which won't have any writing cluster assigned to. */
     return;
   else
@@ -60,13 +62,13 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
     const real kernel_factor = r_four_pi; // TODO: Move this to an kernel parameter
 
     /* Index of the writing cluster for this group. */
-    const uint wcidx        = rows_this_device[get_group_id(0)];
+    const uint wcidx        = rows_this_device[grpid0];
 
     /* Get the number of leaf H^2-matrices which the writing cluster is a part
      * of. */
     const uint num_h2_leafs = num_h2_leafs_per_cluster[wcidx];
 
-    if(get_local_id(0) >= num_row_leafs)
+    if(grpid0 >= num_row_leafs)
       /* Stop work-items which won't have any leaf H^2-matrix assigned to. */
       return; //
 
@@ -106,12 +108,14 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
                        yt,
                        0);
 
+    const size_t lid0 = get_local_id(0);
+
     /* Different farfield H2-matrix information for all threads in a work group */
     set_column_info_gcidxinfo(&gcii,
-                              cidx_sizes[gcii.idx_off + get_local_id(0)],
-                              cidx_offs[gcii.idx_off + get_local_id(0)],
+                              cidx_sizes[gcii.idx_off + lid0],
+                              cidx_offs[gcii.idx_off + lid0],
                               cidxs,
-                              xt_offs[gcii.idx_off + get_local_id(0)],
+                              xt_offs[gcii.idx_off + lid0],
                               xts);
 
     /* Finally reconstruct the farfield and perform the corresponding MVM. */
@@ -156,7 +160,7 @@ fastaddeval_nf_common(         const uint dim,
     const size_t lid0          = get_local_id(0);
 
     const uint   row_this_group = nf_writings_this_device[grpid0];
-    const num_h2_leafs          = num_nf_h2_leafs_per_cluster[row_this_group];
+    const uint   num_h2_leafs   = num_nf_h2_leafs_per_cluster[row_this_group];
     const real   kernel_factor  = r_four_pi;
 
     gcidxinfo gcii;
@@ -242,7 +246,7 @@ fastaddeval_nf_min_vert(         const uint dim,
     intinfo    iinfo;
     singquadc  sq;
 
-    local real ytl[SIZE + 1];
+    local real ytl[1];
 
     init_row_gcidxinfo(&gcii,
                        num_h2_leafs,
@@ -334,7 +338,7 @@ fastaddeval_nf_min_edge(         const uint dim,
     intinfo    iinfo;
     singquadc  sq;
 
-    local real ytl[SIZE + 1];
+    local real ytl[1];
 
     init_row_gcidxinfo(&gcii,
                        num_h2_leafs,

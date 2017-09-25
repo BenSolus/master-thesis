@@ -24,7 +24,7 @@ fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadg sq,
                      private const real kernel_factor,
                      private const real alpha)
 {
-  const lid0 = get_local_id(0);
+  const size_t lid0 = get_local_id(0);
 
   for(uint i = 0; i < gcii->ridx_size; ++i)
   {
@@ -59,14 +59,10 @@ fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadg sq,
       y[1] = vload3(p.y, sur->v);
       y[2] = vload3(p.z, sur->v);
 
-      const real xt_j   = gcii->xt[j];
-
       real sum = sq->bases.x;
 
       for(uint q = 0; q < sq->nq; ++q)
       {
-        const float w = sq->wqs[q];
-
         float s, t;
 
 #ifndef USE_FLOAT
@@ -99,10 +95,10 @@ fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadg sq,
         yy = (r_one - t) * y[0] + (t - s) * y[1] + s * y[2];
 #endif
 
-        sum += w * laplace3d(xx, yy);
+        sum += sq->wqs[q] * laplace3d(xx, yy);
       }
 
-      res += xt_j * ((gc * gr * kernel_factor * sum) + factor);
+      res += gcii->xt[j] * ((gc * gr * kernel_factor * sum) + factor);
     }
 
     for(uint j = 0; j < gcii->num_h2_leafs; ++j)
