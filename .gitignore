@@ -1,53 +1,27 @@
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# LaTeX temporary files
+*.aux
+*.fls
+*.log
+*.toc
 
-# Precompiled Headers
-*.gch
-*.pch
+# PDF output - usually a bad idea to keep this in Git
+*.pdf
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
+# Latexmk
+*.fdb_latexmk
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# SyncTeX
+*.synctex.gz
 
-# Executables
-*.exe
+# LaTeX Beamer
+*.snm
+*.vrb
+*.nav
 *.out
-*.app
-*.i*86
-*.x86_64
-*.hex
 
-# Debug files
-*.dSYM/
-*.su
+# BibTeX
+*.bbl
+*.blg
 
-# Folders
-archive
-builds
-
-# Atom Editor (plugins)
-.atom-build.json
-.build.sh
-.clang_complete
-.gcc-flags.json
-.nvcc_complete
-.opencl-config.json
-compile_commands.json
-
-# CLion
-.idea
-
-# Misc
-make-hydra.sh
-master-thesis-hydra.sh
+# XeLatex
+*.xdv
