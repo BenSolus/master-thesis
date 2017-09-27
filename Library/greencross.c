@@ -1189,11 +1189,11 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
         }
 
         CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->feval->buf_xt[i]));
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
         CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->feval->buf_yt[i]));
-#else
-        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->feval->buf_yt_ff[i]));
-#endif
+//#else
+//        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->feval->buf_yt_ff[i]));
+//#endif
 
         kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device +
                                  ocl_system.num_devices *
@@ -1228,11 +1228,11 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
         }
 
         CL_CHECK(clSetKernelArg(kernel, 24, sizeof(cl_mem), &gc->feval->buf_xt[i]));
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
         CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->feval->buf_yt[i]));
-#else
-        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->feval->buf_yt_nf_common[i]));
-#endif
+//#else
+//        CL_CHECK(clSetKernelArg(kernel, 25, sizeof(cl_mem), &gc->feval->buf_yt_nf_common[i]));
+//#endif
 
         kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device +
                                  2 * ocl_system.num_devices *
@@ -1273,11 +1273,11 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
         }
 
         CL_CHECK(clSetKernelArg(kernel, 29, sizeof(cl_mem), &gc->feval->buf_xt[i]));
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
         CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt[i]));
-#else
-        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt_nf_min_vert[i]));
-#endif
+//#else
+//        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt_nf_min_vert[i]));
+//#endif
 
         kernel = gc->ocl_kernels[k + i * ocl_system.queues_per_device +
                                  3 * ocl_system.num_devices *
@@ -1318,11 +1318,11 @@ build_green_cross_h2matrix_greencross(pgreencross gc, void *eta)
         }
 
         CL_CHECK(clSetKernelArg(kernel, 29, sizeof(cl_mem), &gc->feval->buf_xt[i]));
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
         CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt[i]));
-#else
-        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt_nf_min_edge[i]));
-#endif
+//#else
+//        CL_CHECK(clSetKernelArg(kernel, 30, sizeof(cl_mem), &gc->feval->buf_yt_nf_min_edge[i]));
+//#endif
       }
   }
 
@@ -1441,11 +1441,11 @@ fastaddeval_nearfield_h2matrix_avector(field      alpha,
 
 void
 fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
 )
-#else
-                                        , pavector    yt)
-#endif
+//#else
+//                                        , pavector    yt)
+//#endif
 {
   const size_t max_num_h2_leafs         = gca->gcocl->max_num_h2_leafs_per_row;
 
@@ -1461,11 +1461,11 @@ fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca
 
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
   {
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
     cl_event events[2] = { feval->events_xt[i], feval->events_yt[i] };
-#else
-    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i] };
-#endif
+//#else
+//    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i] };
+//#endif
 
     clWaitForEvents(2, events);
 
@@ -1482,47 +1482,47 @@ fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca
                 &gca->kernel_events[0]));
   }
 
-#ifdef USE_OPENMP
-
-  cl_event events[oclwrk->num_wrk_pkgs];
-
-  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
-  {
-    const uint offset   = oclwrk->first_idx_of_pkgs[i];
-    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
-
-    avector  tmp;
-
-    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
-
-    clWaitForEvents(1, &gca->kernel_events[0]);
-
-    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
-                                  feval->buf_yt_ff[i],
-                                  CL_FALSE,
-                                  offset * sizeof(real),
-                                  num_comp * sizeof(real),
-                                  sub_yt->v,
-                                  0,
-                                  NULL,
-                                  &feval->events_yt[4 * i]));
-
-    events[i] = feval->events_yt[4 * i];
-
-    uninit_avector(sub_yt);
-  }
-
-  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
-#endif
+//#ifdef USE_OPENMP
+//
+//  cl_event events[oclwrk->num_wrk_pkgs];
+//
+//  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
+//  {
+//    const uint offset   = oclwrk->first_idx_of_pkgs[i];
+//    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
+//
+//    avector  tmp;
+//
+//    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
+//
+//    clWaitForEvents(1, &gca->kernel_events[0]);
+//
+//    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
+//                                  feval->buf_yt_ff[i],
+//                                  CL_FALSE,
+//                                  offset * sizeof(real),
+//                                  num_comp * sizeof(real),
+//                                  sub_yt->v,
+//                                  0,
+//                                  NULL,
+//                                  &feval->events_yt[4 * i]));
+//
+//    events[i] = feval->events_yt[4 * i];
+//
+//    uninit_avector(sub_yt);
+//  }
+//
+//  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
+//#endif
 }
 
 void
 fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gc
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
   )
-#else
-  , pavector    yt)
-#endif
+//#else
+//  , pavector    yt)
+//#endif
 {
   const size_t max_num_h2_leafs      = gc->ocl_info_nf->max_num_h2_leafs_per_row;
   const size_t num_writing_clusters  = gc->ocl_info_nf->num_row_leafs;
@@ -1530,21 +1530,22 @@ fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gc
 
   pcoclworkpgs     oclwrk  = gc->oclwrk;
 
-#ifdef USE_OPENMP
-  pcfastaddevalgca feval   = gc->feval;
-#endif
+//#ifdef USE_OPENMP
+//  pcfastaddevalgca feval   = gc->feval;
+//#endif
 
   cl_command_queue *queues = ocl_system.queues;
 
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
   {
-#ifndef USE_OPENMP
-    clFinish(queues[i * ocl_system.queues_per_device]);
-#else
-    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i + 1] };
-
-    clWaitForEvents(2, events);
-#endif
+//#ifndef USE_OPENMP
+//    clFinish(queues[i * ocl_system.queues_per_device]);
+    clWaitForEvents(1, &gc->kernel_events[0]);
+//#else
+//    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i + 1] };
+//
+//    clWaitForEvents(2, events);
+//#endif
 
     /* Start kernel */
     CL_CHECK(clEnqueueNDRangeKernel
@@ -1561,47 +1562,47 @@ fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gc
                 &gc->kernel_events[1]));
   }
 
-#ifdef USE_OPENMP
-
-  cl_event events[oclwrk->num_wrk_pkgs];
-
-  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
-  {
-    const uint offset   = oclwrk->first_idx_of_pkgs[i];
-    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
-
-    avector  tmp;
-
-    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
-
-    clWaitForEvents(1, &gc->kernel_events[1]);
-
-    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
-                                  feval->buf_yt_nf_common[i],
-                                  CL_FALSE,
-                                  offset * sizeof(real),
-                                  num_comp * sizeof(real),
-                                  sub_yt->v,
-                                  0,
-                                  NULL,
-                                  &feval->events_yt[4 * i + 1]));
-
-    events[i] = feval->events_yt[4 * i + 1];
-
-    uninit_avector(sub_yt);
-  }
-
-  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
-#endif
+//#ifdef USE_OPENMP
+//
+//  cl_event events[oclwrk->num_wrk_pkgs];
+//
+//  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
+//  {
+//    const uint offset   = oclwrk->first_idx_of_pkgs[i];
+//    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
+//
+//    avector  tmp;
+//
+//    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
+//
+//    clWaitForEvents(1, &gc->kernel_events[1]);
+//
+//    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
+//                                  feval->buf_yt_nf_common[i],
+//                                  CL_FALSE,
+//                                  offset * sizeof(real),
+//                                  num_comp * sizeof(real),
+//                                  sub_yt->v,
+//                                  0,
+//                                  NULL,
+//                                  &feval->events_yt[4 * i + 1]));
+//
+//    events[i] = feval->events_yt[4 * i + 1];
+//
+//    uninit_avector(sub_yt);
+//  }
+//
+//  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
+//#endif
 }
 
 void
 fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gc
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
   )
-#else
-  , pavector    yt)
-#endif
+//#else
+//  , pavector    yt)
+//#endif
 {
   const size_t max_num_h2_leafs      = gc->ocl_info_nf->max_num_h2_leafs_per_row;
   const size_t num_writing_clusters  = gc->ocl_info_nf->num_row_leafs;
@@ -1609,21 +1610,22 @@ fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gc
 
   pcoclworkpgs     oclwrk  = gc->oclwrk;
 
-#ifdef USE_OPENMP
-  pcfastaddevalgca feval   = gc->feval;
-#endif
+//#ifdef USE_OPENMP
+//  pcfastaddevalgca feval   = gc->feval;
+//#endif
 
   cl_command_queue *queues = ocl_system.queues;
 
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
   {
-#ifndef USE_OPENMP
-    clFinish(queues[i * ocl_system.queues_per_device]);
-#else
-    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i + 2] };
-
-    clWaitForEvents(2, events);
-#endif
+//#ifndef USE_OPENMP
+//    clFinish(queues[i * ocl_system.queues_per_device]);
+    clWaitForEvents(1, &gc->kernel_events[1]);
+//#else
+//    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i + 2] };
+//
+//    clWaitForEvents(2, events);
+//#endif
     /* Start kernel */
     CL_CHECK(clEnqueueNDRangeKernel
                (queues[i * ocl_system.queues_per_device],
@@ -1639,47 +1641,47 @@ fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gc
                 &gc->kernel_events[2]));
   }
 
-#ifdef USE_OPENMP
-
-  cl_event events[oclwrk->num_wrk_pkgs];
-
-  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
-  {
-    const uint offset   = oclwrk->first_idx_of_pkgs[i];
-    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
-
-    avector  tmp;
-
-    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
-
-    clWaitForEvents(1, &gc->kernel_events[2]);
-
-    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
-                                  feval->buf_yt_nf_min_vert[i],
-                                  CL_FALSE,
-                                  offset * sizeof(real),
-                                  num_comp * sizeof(real),
-                                  sub_yt->v,
-                                  0,
-                                  NULL,
-                                  &feval->events_yt[4 * i + 2]));
-
-    events[i] = feval->events_yt[4 * i + 2];
-
-    uninit_avector(sub_yt);
-  }
-
-  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
-#endif
+//#ifdef USE_OPENMP
+//
+//  cl_event events[oclwrk->num_wrk_pkgs];
+//
+//  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
+//  {
+//    const uint offset   = oclwrk->first_idx_of_pkgs[i];
+//    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
+//
+//    avector  tmp;
+//
+//    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
+//
+//    clWaitForEvents(1, &gc->kernel_events[2]);
+//
+//    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
+//                                  feval->buf_yt_nf_min_vert[i],
+//                                  CL_FALSE,
+//                                  offset * sizeof(real),
+//                                  num_comp * sizeof(real),
+//                                  sub_yt->v,
+//                                  0,
+//                                  NULL,
+//                                  &feval->events_yt[4 * i + 2]));
+//
+//    events[i] = feval->events_yt[4 * i + 2];
+//
+//    uninit_avector(sub_yt);
+//  }
+//
+//  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
+//#endif
 }
 
 void
 fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gc
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
   )
-#else
-  , pavector    yt)
-#endif
+//#else
+//  , pavector    yt)
+//#endif
 {
   const size_t max_num_h2_leafs      = gc->ocl_info_nf->max_num_h2_leafs_per_row;
   const size_t num_groups            = gc->iinfos_min_edge->num_integral_grps;
@@ -1687,21 +1689,22 @@ fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gc
 
   pcoclworkpgs     oclwrk            = gc->oclwrk;
 
-#ifdef USE_OPENMP
-  pcfastaddevalgca feval   = gc->feval;
-#endif
+//#ifdef USE_OPENMP
+//  pcfastaddevalgca feval   = gc->feval;
+//#endif
 
   cl_command_queue *queues           = ocl_system.queues;
 
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
   {
-#ifndef USE_OPENMP
-    clFinish(queues[i * ocl_system.queues_per_device]);
-#else
-    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i + 3] };
-
-    clWaitForEvents(2, events);
-#endif
+//#ifndef USE_OPENMP
+//    clFinish(queues[i * ocl_system.queues_per_device]);
+    clWaitForEvents(1, &gc->kernel_events[2]);
+//#else
+//    cl_event events[2] = { feval->events_xt[i], feval->events_yt[4 * i + 3] };
+//
+//    clWaitForEvents(2, events);
+//#endif
 
     /* Start kernel */
     CL_CHECK(clEnqueueNDRangeKernel
@@ -1718,38 +1721,38 @@ fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gc
                 &gc->kernel_events[3]));
   }
 
-#ifdef USE_OPENMP
-
-  cl_event events[oclwrk->num_wrk_pkgs];
-
-  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
-  {
-    const uint offset   = oclwrk->first_idx_of_pkgs[i];
-    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
-
-    avector  tmp;
-
-    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
-
-    clWaitForEvents(1, &gc->kernel_events[3]);
-
-    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
-                                  feval->buf_yt_nf_min_edge[i],
-                                  CL_FALSE,
-                                  offset * sizeof(real),
-                                  num_comp * sizeof(real),
-                                  sub_yt->v,
-                                  0,
-                                  NULL,
-                                  &feval->events_yt[4 * i + 3]));
-
-    events[i] = feval->events_yt[4 * i + 3];
-
-    uninit_avector(sub_yt);
-  }
-
-  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
-#endif
+//#ifdef USE_OPENMP
+//
+//  cl_event events[oclwrk->num_wrk_pkgs];
+//
+//  for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
+//  {
+//    const uint offset   = oclwrk->first_idx_of_pkgs[i];
+//    const uint num_comp = oclwrk->last_idx_of_pkg[i] - offset;
+//
+//    avector  tmp;
+//
+//    pavector sub_yt = init_sub_avector(&tmp, yt, num_comp, offset);
+//
+//    clWaitForEvents(1, &gc->kernel_events[3]);
+//
+//    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
+//                                  feval->buf_yt_nf_min_edge[i],
+//                                  CL_FALSE,
+//                                  offset * sizeof(real),
+//                                  num_comp * sizeof(real),
+//                                  sub_yt->v,
+//                                  0,
+//                                  NULL,
+//                                  &feval->events_yt[4 * i + 3]));
+//
+//    events[i] = feval->events_yt[4 * i + 3];
+//
+//    uninit_avector(sub_yt);
+//  }
+//
+//  clWaitForEvents(oclwrk->num_wrk_pkgs, events);
+//#endif
 }
 
 static void
@@ -3049,7 +3052,7 @@ fastaddeval_h2matrix_avector_greencross(pgreencross gca,
     }
   }
 
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
   fastaddeval_farfield_h2matrix_avector_gca(gca);
 
   fastaddeval_nearfield_common_h2matrix_avector_gca(gca);
@@ -3057,6 +3060,8 @@ fastaddeval_h2matrix_avector_greencross(pgreencross gca,
   fastaddeval_nearfield_min_vert_h2matrix_avector_gca(gca);
 
   fastaddeval_nearfield_min_edge_h2matrix_avector_gca(gca);
+
+  printf("yt->dim: %u\n", yt->dim);
 
   for(uint i = 0; i < oclwrk->num_wrk_pkgs; ++i)
   {
@@ -3069,22 +3074,22 @@ fastaddeval_h2matrix_avector_greencross(pgreencross gca,
 
     clFinish(queues[i * ocl_system.queues_per_device]);
 
-    CL_CHECK(clEnqueueReadBuffer (queues[i * ocl_system.queues_per_device],
-                                  feval->buf_yt[i],
-                                  CL_FALSE,
-                                  offset * sizeof(real),
-                                  num_comp * sizeof(real),
-                                  sub_yt->v,
-                                  0,
-                                  NULL,
-                                  &feval->events_yt[i]));
+    CL_CHECK(clEnqueueReadBuffer(queues[i * ocl_system.queues_per_device],
+                                 feval->buf_yt[i],
+                                 CL_FALSE,
+                                 offset * sizeof(real),
+                                 num_comp * sizeof(real),
+                                 sub_yt->v,
+                                 0,
+                                 NULL,
+                                 &feval->events_yt[i]));
 
     uninit_avector(sub_yt);
   }
 
   clWaitForEvents(oclwrk->num_wrk_pkgs, feval->events_yt);
-#else
-
+//#else
+//
 //  pavector yt_1 = new_zero_avector(yt->dim);
 //  pavector yt_2 = new_zero_avector(yt->dim);
 //  pavector yt_3 = new_zero_avector(yt->dim);
@@ -3109,11 +3114,11 @@ fastaddeval_h2matrix_avector_greencross(pgreencross gca,
 //  del_avector(yt_3);
 //  del_avector(yt_2);
 //  del_avector(yt_1);
+//
+//#endif
 
-#endif
-
-  fastaddeval_farfield_cpu_h2matrix_avectors_gca(gca, alpha, xt, yt);
-  fastaddeval_nearfield_cpu_h2matrix_avectors_gca(gca, alpha, xt, yt);
+//  fastaddeval_farfield_cpu_h2matrix_avectors_gca(gca, alpha, xt, yt);
+//  fastaddeval_nearfield_cpu_h2matrix_avectors_gca(gca, alpha, xt, yt);
 }
 
 void
@@ -3132,7 +3137,7 @@ addeval_h2matrix_avector_greencross(pgreencross gc,
 
   for(uint i = 0; i < gc->oclwrk->num_wrk_pkgs; ++i)
   {
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
     CL_CHECK(clEnqueueWriteBuffer
                (ocl_system.queues[i * ocl_system.queues_per_device],
                 gc->feval->buf_yt[i],
@@ -3143,50 +3148,50 @@ addeval_h2matrix_avector_greencross(pgreencross gc,
                 0,
                 NULL,
                 &gc->feval->events_yt[i]));
-#else
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->feval->buf_yt_ff[i],
-                CL_FALSE,
-                0,
-                yt->dim * sizeof(real),
-                yt->v,
-                0,
-                NULL,
-                &gc->feval->events_yt[4 * i]));
-
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->feval->buf_yt_nf_common[i],
-                CL_FALSE,
-                0,
-                yt->dim * sizeof(real),
-                yt->v,
-                0,
-                NULL,
-                &gc->feval->events_yt[4 * i + 1]));
-
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->feval->buf_yt_nf_min_vert[i],
-                CL_FALSE,
-                0,
-                yt->dim * sizeof(real),
-                yt->v,
-                0,
-                NULL,
-                &gc->feval->events_yt[4 * i + 2]));
-    CL_CHECK(clEnqueueWriteBuffer
-               (ocl_system.queues[i * ocl_system.queues_per_device],
-                gc->feval->buf_yt_nf_min_edge[i],
-                CL_FALSE,
-                0,
-                yt->dim * sizeof(real),
-                yt->v,
-                0,
-                NULL,
-                &gc->feval->events_yt[4 * i + 3]));
-#endif
+//#else
+//    CL_CHECK(clEnqueueWriteBuffer
+//               (ocl_system.queues[i * ocl_system.queues_per_device],
+//                gc->feval->buf_yt_ff[i],
+//                CL_FALSE,
+//                0,
+//                yt->dim * sizeof(real),
+//                yt->v,
+//                0,
+//                NULL,
+//                &gc->feval->events_yt[4 * i]));
+//
+//    CL_CHECK(clEnqueueWriteBuffer
+//               (ocl_system.queues[i * ocl_system.queues_per_device],
+//                gc->feval->buf_yt_nf_common[i],
+//                CL_FALSE,
+//                0,
+//                yt->dim * sizeof(real),
+//                yt->v,
+//                0,
+//                NULL,
+//                &gc->feval->events_yt[4 * i + 1]));
+//
+//    CL_CHECK(clEnqueueWriteBuffer
+//               (ocl_system.queues[i * ocl_system.queues_per_device],
+//                gc->feval->buf_yt_nf_min_vert[i],
+//                CL_FALSE,
+//                0,
+//                yt->dim * sizeof(real),
+//                yt->v,
+//                0,
+//                NULL,
+//                &gc->feval->events_yt[4 * i + 2]));
+//    CL_CHECK(clEnqueueWriteBuffer
+//               (ocl_system.queues[i * ocl_system.queues_per_device],
+//                gc->feval->buf_yt_nf_min_edge[i],
+//                CL_FALSE,
+//                0,
+//                yt->dim * sizeof(real),
+//                yt->v,
+//                0,
+//                NULL,
+//                &gc->feval->events_yt[4 * i + 3]));
+//#endif
   }
 
   forward_clusterbasis_avector(H2->cb, x, xt);

@@ -304,35 +304,35 @@ fastaddeval_nearfield_partial_min_id_vert_gca(pcgreencross gc,
                                               pavector     yt);
 
 HEADER_PREFIX void
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
 fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca);
-#else
-fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca, pavector yt);
-#endif
+//#else
+//fastaddeval_farfield_h2matrix_avector_gca(pgreencross gca, pavector yt);
+//#endif
 
 HEADER_PREFIX void
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
 fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gca);
-#else
-fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gca,
-                                                  pavector    yt);
-#endif
+//#else
+//fastaddeval_nearfield_common_h2matrix_avector_gca(pgreencross gca,
+//                                                  pavector    yt);
+//#endif
 
 HEADER_PREFIX void
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
 fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gca);
-#else
-fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gca,
-                                                    pavector    yt);
-#endif
+//#else
+//fastaddeval_nearfield_min_vert_h2matrix_avector_gca(pgreencross gca,
+//                                                    pavector    yt);
+//#endif
 
 HEADER_PREFIX void
-#ifndef USE_OPENMP
+//#ifndef USE_OPENMP
 fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gca);
-#else
-fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gca,
-                                                    pavector    yt);
-#endif
+//#else
+//fastaddeval_nearfield_min_edge_h2matrix_avector_gca(pgreencross gca,
+//                                                    pavector    yt);
+//#endif
 
 HEADER_PREFIX void
 fastaddeval_nearfield_cpu_h2matrix_avectors_gca(pgreencross gc,

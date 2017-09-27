@@ -169,10 +169,6 @@ main(int argc, char *argv[])
          getfarsize_h2matrix(H2) / (1024.0 * 1024.0 * 1024.0),
          getnearsize_h2matrix(H2) / (1024.0 * 1024.0 * 1024.0));
 
-  printf("\nOpenCL informations:\n"
-         "  farfield: %.5f MB\n",
-         getsize_gcopencl(gc->gcocl) / (1024.0 * 1024.0));
-
   for(uint i(0); i < tests; ++i)
   {
     pblock    broot = build_strict_block(gc->rc,
@@ -474,15 +470,15 @@ main(int argc, char *argv[])
   {
     std::clock_t begin(std::clock());
 
-    CL_CHECK(clEnqueueReadBuffer (ocl_system.queues[0],
-                                  gc->feval->buf_yt_ff[0],
-                                  CL_TRUE,
-                                  sizeof(real),
-                                  y->dim * sizeof(real),
-                                  y->v,
-                                  0,
-                                  NULL,
-                                  NULL));
+    CL_CHECK(clEnqueueReadBuffer(ocl_system.queues[0],
+                                 gc->feval->buf_yt[0],
+                                 CL_TRUE,
+                                 sizeof(real),
+                                 y->dim * sizeof(real),
+                                 y->v,
+                                 0,
+                                 NULL,
+                                 NULL));
 
     std::clock_t end(std::clock());
 

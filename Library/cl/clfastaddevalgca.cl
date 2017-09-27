@@ -106,91 +106,11 @@ fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadg sq,
       barrier(CLK_GLOBAL_MEM_FENCE);
 
       if(lid0 == j)
+        // gcii->xt[j % gcii->cidx_size] *= r_one;
         gcii->yt[i] += alpha * res;
     }
   }
 }
-
-// bool buf_switch = 0;
-//
-// for(uint k = 0; k < sq->nq; k += SIZE)
-// {
-//   const size_t size = (k + SIZE) < sq->nq ? SIZE : sq->nq - k;
-//
-//   local real *xq, *yq, *wq;
-//
-//   event_t *events;
-//
-//   if((sq->nq - k - size) > 0)
-//   {
-//     xq = sq->xqs_buf + (2 + 2 * buf_switch) * SIZE;
-//     yq = sq->yqs_buf + (2 + 2 * buf_switch) * SIZE;
-//     wq = sq->wqs_buf + (1 + 1 * buf_switch) * SIZE;
-//
-//     events      = sq->events + 5 * buf_switch;
-//
-//     const size_t next = (k + 2 * SIZE) < sq->nq ? SIZE : sq - (k + SIZE);
-//
-//     events[0] = async_work_group_copy(xq,        sq->xqs + k + SIZE,          next, 0);
-//     events[1] = async_work_group_copy(xq + SIZE, sq->xqs + sq->nq + k + SIZE, next, 0);
-//     events[2] = async_work_group_copy(yq,        sq->yqs + k + SIZE,          next, 0);
-//     events[3] = async_work_group_copy(yq + SIZE, sq->yqs + sq->nq + k + SIZE, next, 0);
-//     events[4] = async_work_group_copy(wq,        sq->wqs + k + SIZE,          next, 0);
-//   }
-//
-//   buf_switch = !buf_switch;
-//
-//   xq = sq->xqs_buf + (k != 0) * (2 + 2 * buf_switch) * SIZE;
-//   yq = sq->yqs_buf + (k != 0) * (2 + 2 * buf_switch) * SIZE;
-//   wq = sq->wqs_buf + (k != 0) * (1 + 1 * buf_switch) * SIZE;
-//
-//   events = sq->events + 5 * buf_switch;
-//
-//   wait_group_events(5, events);
-//
-//   for(uint q = 0; q < size; ++q)
-//   {
-//     const float w = wq[q];
-//
-//     float s, t;
-//
-// #ifndef USE_FLOAT
-//     t  = convert_float(xq[q]);
-//     s  = convert_float(xq[q + SIZE]);
-//
-//     if(get_global_id(0) == 0 && i == 0 && j == 0)
-//       printf("%u: %.5e %.5e ", k + q, t, s);
-//
-//     private float3 xx, yy;
-//
-//     xx = (1.0f - t) * convert_float3(x[0]) +
-//          (t - s)    * convert_float3(x[1]) +
-//          s          * convert_float3(x[2]);
-//
-//     t  = convert_float(yq[q]);
-//     s  = convert_float(yq[q + SIZE]);
-//
-//     if(get_global_id(0) == 0 && i == 0 && j == 0)
-//       printf("%.5e %.5e %.5e\n",  t, s, wq[q]);
-//
-//     yy = (1.0f - t) * convert_float3(y[0]) +
-//          (t - s)    * convert_float3(y[1]) +
-//          s          * convert_float3(y[2]);
-// #else
-//     t  = sq->xqs[q];
-//     s  = sq->xqs[q + sq->nq];
-//
-//     xx = (r_one - t) * x[0] + (t - s) * x[1] + s * x[2];
-//
-//     t  = yq[q];
-//     s  = yq[q + quad->nq];
-//
-//     yy = (r_one - t) * y[yp[0]] + (t - s) * y[yp[1]] + s * y[yp[2]];
-// #endif
-//
-//     sum += w * laplace3d(xx, yy);
-//   }
-// }
 
 void
 fastaddeval_farfield_back(pgcidxinfo gcii, pgeom sur, psingquadl sq,

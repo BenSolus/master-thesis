@@ -68,7 +68,9 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
      * of. */
     const uint num_h2_leafs = num_h2_leafs_per_cluster[wcidx];
 
-    if(grpid0 >= num_row_leafs)
+    const size_t lid0 = get_local_id(0);
+
+    if(lid0 >= num_h2_leafs)
       /* Stop work-items which won't have any leaf H^2-matrix assigned to. */
       return; //
 
@@ -81,18 +83,6 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
 
     /* The quadrature rule needed to reconstruct the farfield. */
     singquadg sq;
-
-    // local real xql[6 * SIZE];
-    // local real yql[6 * SIZE];
-    // local real wql[3 * SIZE];
-    //
-    // const size_t size = SIZE < nq ? SIZE : nq;
-    //
-    // sq.events[5] = async_work_group_copy(xql,        xqs,      size, 0);
-    // sq.events[6] = async_work_group_copy(xql + SIZE, xqs + nq, size, 0);
-    // sq.events[7] = async_work_group_copy(yql,        yqs,      size, 0);
-    // sq.events[8] = async_work_group_copy(yql + SIZE, yqs + nq, size, 0);
-    // sq.events[9] = async_work_group_copy(wql,        wqs,      size, 0);
 
     init_singquadg(&sq, dim, nq, xqs, yqs, wqs, bases, 0, 0, 0);
     init_geom(&sur, dim, n, vs, p, g, 0, 0, 0);
@@ -107,8 +97,6 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
                        yt_offs[wcidx],
                        yt,
                        0);
-
-    const size_t lid0 = get_local_id(0);
 
     /* Different farfield H2-matrix information for all threads in a work group */
     set_column_info_gcidxinfo(&gcii,
