@@ -64,10 +64,23 @@
 
 \maketitle
 
+\begin{frame}{Agenda}
+  \setbeamertemplate{section in toc}[sections numbered]
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+\section{Einleitung}
+
 \begin{frame}{Randwertprobleme}
   \begin{columns}
     \column{0.575\linewidth}
       \begin{itemize}
+        \visible<1->{\item Wird verwendet in der
+                     \begin{itemize}
+                       \item Elektrostatik
+                       \item Wärmeleitung
+                       \item Akustik
+                     \end{itemize}}
         \item \visible<1->{Sei \(\Omega \subseteq \mathbb{R}^{d}\) gegeben,
                            \(d \in \{ 2, 3 \}\)}
         \item \visible<2->{\(\int\limits_{\Omega} g(x, y) u(y) dy = f(x)
@@ -129,19 +142,32 @@
 \end{frame}
 
 \begin{frame}{Probleme \& Lösungsansätze}
-  \begin{figure}
-    \begin{overprint}
-      \onslide<1-2>
-        \centering
-        \includegraphics[width=.5\linewidth]{figures/fg-memory-galerkin.pdf}
-        \caption{Speicherbedarf einer Galerkin-Diskretisierung.}
-      \onslide<3>
-        \centering
-        \includegraphics[width=.5\linewidth]{figures/fg-memory-galerkin-h2.pdf}
-        \caption{Speicherbedarf einer Galerkin-Diskretisierung und deren
-                 \(\mathcal{H}^2\)-Matrix-Approximation.}
-    \end{overprint}
-  \end{figure}
+  \begin{overprint}
+    \onslide<1-2>
+      \begin{table}[h]
+        \begin{tabular}{ccc} \toprule
+                    & \multicolumn{2}{c}{Speicherbedarf (in GB)} \\
+          Dimension & Galerkin & \\ \midrule
+              16384 &      1.0 & \\
+              32768 &      4.0 & \\
+              65536 &     16.0 & \\
+             131072 &     64.0 & \\
+             262144 &    256.0 & \\ \bottomrule
+        \end{tabular}
+      \end{table}
+    \onslide<3>
+      \begin{table}[h]
+        \begin{tabular}{ccc} \toprule
+                    & \multicolumn{2}{c}{Speicherbedarf (in GB)} \\
+          Dimension & Galerkin & \(\mathcal{H}^2\)-Matrix \\ \midrule
+              16384 &      1.0 & 0.20613 \\
+              32768 &      4.0 & 0.43834 \\
+              65536 &     16.0 & 0.88314 \\
+             131072 &     64.0 & 1.80900 \\
+             262144 &    256.0 & 3.57143 \\ \bottomrule
+        \end{tabular}
+      \end{table}
+  \end{overprint}
 
   \begin{itemize}
     \item \visible<1->{Problem: \(G\) meist vollbesetzt \(\Rightarrow\) hohe
@@ -161,10 +187,16 @@
 \end{frame}
 
 \begin{frame}{Problem \& Lösungsansätze}
+  \begin{figure}
+    \centering
+    \includegraphics[width=.45\linewidth]{figures/fg-memory-h2-nf-ff.pdf}
+    \caption{Speicherbedarf einer \(\mathcal{H}^2\)-Matrix und deren Blockmatrizen.}
+
+  \end{figure}
   \begin{itemize}
-    \item Problem: Reale Probleme erfordern das Lösen immer größerer
-          Problemstellungen \(\Rightarrow\) reduzierte Speicheranforderungen
-          durch \(\mathcal{H}^2\)-Matrizen haben ihre Grenzen
+    \item Problem: Reale Problemstellungen benötigen immer größere Matrizen
+          \(\Rightarrow\) reduzierte Speicheranforderungen durch
+          \(\mathcal{H}^2\)-Matrizen haben ihre Grenzen
     \item Lösungsansätz:
     \begin{itemize}
       \item Mehr Arbeitsspeicher
@@ -176,13 +208,16 @@
 \end{frame}
 
 \begin{frame}{Problem \& Lösungsansätze}
-  \begin{figure}
-    \centering
-    \includegraphics[width=.5\linewidth]{figures/fg-performance-h2-gca.pdf}
-    \caption{Das Aufstellen reproduzierbarer Blockmatrizen verglichen mit der
-             \(\mathcal{H}^2\)-Matrix-Vektor-Multiplikation (MVM)}
-
-  \end{figure}
+  \begin{table}[h]
+    \begin{tabular}{ccc} \toprule
+                & \multicolumn{2}{c}{Performanz in ms} \\
+      Dimension & \(\mathcal{H}^2\)-MVM & \(\mathcal{H}^2\)-MVM + Blockmatrizen on-the-fly \\ \midrule
+          16384 &                66.239 &   50985.5 \\
+          32768 &               149.201 &  109092 \\
+          65536 &               227.471 &  220589 \\
+         131072 &               476.539 &  451777 \\ \bottomrule
+    \end{tabular}
+  \end{table}
   \begin{itemize}
     \item Problem: Wesentlich größerer Rechenaufwand bei letzterem Ansatz
     \item Lösungsansatz (diese Masterarbeit):
@@ -192,11 +227,6 @@
       \item Auslagern der Auswertungen auf eine Grafikkarte
     \end{itemize}
   \end{itemize}
-\end{frame}
-
-\begin{frame}{Agenda}
-  \setbeamertemplate{section in toc}[sections numbered]
-  \tableofcontents[hideallsubsections]
 \end{frame}
 
 \section{\(\mathcal{H}^2\)-Matrizen}
@@ -716,23 +746,121 @@
     \item Nahfeld besteht aus allen Integraltypen
     \item Interpertation als Integrale mit unterschiedlichen/unterschiedlich
           vielen Quadraturpunkten
-    \item Betrachte Vertices zweier Dreiecke als zwei Arrays
-    \item Arrays müssen zueinander permutiert werden\footnotemark[1]
+    \item Vertices zweier Dreiecke müssen zueinander permutiert werden\footnotemark[1]
   \end{itemize}
   \footnotesize
-  \footnotetext[1]{Quelle: On the efficient computation of singular and nearly singular surface integrals arising in 3D-Galerkin BEM}
+  \footnotetext[1]{Quelle: Efficient automatic quadrature in 3-d galerkin bem.
+Computer Methods in Applied Mechanics and Engineering}
   \normalsize
 \end{frame}
 
 \begin{frame}{2.-4. Phase (Nahfeld)}
-  \begin{tabular}{ccccc} \toprule
-     & \multicolumn{4}{c}{Anzahl gemeinsamer Vertices} \\ \cmidrule{2-5}
-    \multirow{2}{*}{Anzahl Quadraturpunkte} & 0 & 1 & 2 & 3 \\ \cmidrule{2-5}
-     & k & l & m & m \\
-    \bottomrule
+  \begin{tabular}{cccccc} \cmidrule[\heavyrulewidth]{1-5}
+     & \multicolumn{4}{c}{Anzahl gemeinsamer Vertices} & \\ \cmidrule{2-5}
+    \multirow{2}{*}{Anzahl Quadraturpunkte} & 0 & 1 & 2 & 3 & \\ \cmidrule{2-5}
+     & k & l & m & m & \(\Leftarrow\) 2.-4. Phase\\
+    \cmidrule[\heavyrulewidth]{1-5}
   \end{tabular}
   \begin{itemize}
     \item \(k, l, m \in \mathbb{N}, k < l < m\)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{2.-4. Phase (Nahfeld)}
+  \begin{tabular}{cccccc} \cmidrule[\heavyrulewidth]{1-5}
+     & \multicolumn{4}{c}{Anzahl gemeinsamer Vertices} & \\ \cmidrule{2-5}
+    \multirow{2}{*}{Anzahl Quadraturpunkte} & 0 & 1 & 2 & 3 & \\ \cmidrule{2-5}
+     & k & k     & k         & k         & \(\Leftarrow\) 2. Phase \\
+     &   & l - k & l - k     & l - k     & \(\Leftarrow\) 3. Phase \\
+     &   &       & m - l - k & m - l - k & \(\Leftarrow\) 4. Phase \\
+    \cmidrule[\heavyrulewidth]{1-5}
+  \end{tabular}
+  \begin{itemize}
+    \item \(k, l, m \in \mathbb{N}, k < l < m\)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{2. Phase}
+  \begin{itemize}
+    \item Ähnlich wie in der 1. Phase, bis auf dass
+    \begin{itemize}
+      \item für jeden Matrixeintrag entschieden werden muss, welche
+            Quadraturpunkte zu wählen sind.
+      \item für jeden Matrixeintrag die entsprechenden Dreiecksvertices
+            zueinander permutiert werden müssen.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{2. Phase}
+  \begin{figure}
+    \centering
+    \caption{Performanz der 2.Phase.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{3.-4. Phase}
+  \begin{columns}
+    \column{0.425\linewidth}
+      \begin{algorithm}[H]
+        \begin{algorithmic}[1]
+          \footnotesize
+          {
+          \State{sum = 0}
+          \For{q = 0; q < nq; ++q}
+            \State{sum += \(w_{q}\) * kernel\relax(\(x_{q}, y_{q}\))}
+          \EndFor{}
+          }
+          \State{result += sum}
+        \end{algorithmic}
+      \end{algorithm}
+    \column{0.6\linewidth}
+      \begin{algorithm}[H]
+        \begin{algorithmic}[1]
+          \footnotesize
+          {
+          \State{lid = get\_local\_id\relax(0)}
+          \State{lsize = get\_local\_size\relax(0)}
+          \State{sum = 0}
+          \For{q = 0; q < nq; q += lsize}
+            \If{(q + lid) < nq}
+              \State{\(sum_{lid}\) += \(w_{q + lid}\) * kernel\relax(\(x_{q + lid}, y_{q + lid}\))}
+            \EndIf{}
+          \EndFor{}
+          }
+          \State{result += \(\sum\limits_{i = 0}^{lsize} sum_{i}\)}
+        \end{algorithmic}
+      \end{algorithm}
+  \end{columns}
+  \begin{center}
+    Pseudocode zum sequentiellen (links) und Thread-level vektorisierten
+    (rechts) Auswerten einer Quadratur.
+  \end{center}
+\end{frame}
+
+\begin{frame}{3. Phase}
+  \begin{figure}
+    \centering
+    \caption{Performanz der 3.Phase.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{4. Phase}
+  \begin{figure}
+    \centering
+    \caption{Performanz der 4.Phase.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Vergleiche}
+
+\end{frame}
+
+\begin{frame}{Zusammenfassung}
+  \begin{itemize}
+    \item Wir können den Speicherbedarf einer \(\mathcal{H}^2\)-Matrix um
+          75-90\% reduzieren
+    \item Der Rechenaufwand für eine
   \end{itemize}
 \end{frame}
 

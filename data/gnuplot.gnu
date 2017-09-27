@@ -3,7 +3,7 @@
 reset
 
 set terminal pdf transparent
-set output 'fg-memory-galerking-h2.pdf'
+set output 'fg-memory-h2-nf-ff.pdf'
 
 # png
 # set terminal pngcairo transparent size 800,400 enhanced font 'Verdana,9'
@@ -39,7 +39,12 @@ set ylabel 'Speicherbedarf in GB'
 
 set datafile separator ","
 
+set style data histogram
+set style fill solid border
 set boxwidth 0.75
 
-plot 'memory-galerkin-h2.csv' u 1:2 t 'Galerkin'  w lp ls 1, \
-     ''                       u 1:3 t 'H2-Matrix' w lp ls 2
+plot 'memory-h2-ff-nf.csv' u 2:xtic(1) t 'H2-Matrix' linecolor rgb '#8b1a0e', \
+     ''                    u 3         t 'Fernfeld' linecolor rgb '#5e9c36', \
+     ''                    u 4         t 'Nahfeld' linecolor rgb '#800080'
+#plot 'memory-galerkin-h2.csv' u 1:2 t 'Galerkin'  w ls 1, \
+#     ''                       u 1:3 t 'H2-Matrix' w ls 2
