@@ -736,9 +736,30 @@
 \begin{frame}{1. Phase (Fernfeld)}
   \begin{figure}
     \centering
-    \caption{Performanz der 1.Phase auf der GPU verglichen mit einer
-             CPU-Implementierung.}
+    \includegraphics[width=\linewidth]{figures/fg-performance-ff.pdf}
+    \caption{Performanz der 1.Phase auf verschiedenen GPUs.}
   \end{figure}
+\end{frame}
+
+\begin{frame}{1. Phase (Fernfeld)}
+  \small
+  \begin{table}
+    \begin{tabular}{rrrrrr} \toprule
+      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
+      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
+      & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
+      & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
+      & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
+       16384 &  16830.000 &  76423.179 &  367.612 &  430.675 &  469.848 \\
+       32768 &  36960.000 & 167487.521 &  721.806 &  840.885 &  935.754 \\
+       65536 &  74710.000 & 337433.000 & 1056.583 & 1182.343 & 1226.704 \\
+      131072 & 154540.000 & 700738.240 & 2110.852 & 2387.168 & --- \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \normalsize
 \end{frame}
 
 \begin{frame}{2.-4. Phase (Nahfeld)}
@@ -749,8 +770,7 @@
     \item Vertices zweier Dreiecke müssen zueinander permutiert werden\footnotemark[1]
   \end{itemize}
   \footnotesize
-  \footnotetext[1]{Quelle: Efficient automatic quadrature in 3-d galerkin bem.
-Computer Methods in Applied Mechanics and Engineering}
+  \footnotetext[1]{Quelle: Efficient automatic quadrature in 3-d galerkin bem.}
   \normalsize
 \end{frame}
 
@@ -793,10 +813,24 @@ Computer Methods in Applied Mechanics and Engineering}
 \end{frame}
 
 \begin{frame}{2. Phase}
-  \begin{figure}
-    \centering
-    \caption{Performanz der 2.Phase.}
-  \end{figure}
+  \small
+  \begin{table}
+    \begin{tabular}{rrrrrr} \toprule
+      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
+      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
+      & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
+      & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
+      & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
+       16384 &  900.000 &  4547.475 &  72.462 &  64.436 &  75.006 \\
+       32768 & 1780.000 &  9167.462 & 138.161 & 125.223 & 147.785 \\
+       65536 & 3550.000 & 18162.474 & 273.268 & 246.615 & 291.429\\
+      131072 & 7070.000 & 36480.016 & 528.493 & 480.287 & --- \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \normalsize
 \end{frame}
 
 \begin{frame}{3.-4. Phase}
