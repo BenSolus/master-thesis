@@ -8,9 +8,9 @@ comments: false
 
 ## Home
 
-This is the website of my master thesis with the working title *"An efficient
-solver for the Green cross approximation method on GPUs"* based on the
-article
+This is the website of my master thesis with the working title *"Scalable
+solving of boundary element methods utilizing the Green cross approximation
+method and GPUs"* based on the article
 [Approximation of integral operators by Green quadrature and nested cross approximation](https://link.springer.com/article/10.1007/s00211-015-0757-y)
 [\[1\]]({{ site.baseurl }}/refs). Here I am going to collect ideas and
 provide the documentation of the source code.

@@ -1,6 +1,6 @@
 title:              My master thesis
-tagline:            An efficient solver for the Green cross approximation
-                    method on GPUs
+tagline:            Scalable solving of boundary element methods utilizing the
+                    Green cross approximation method and GPUs
 baseurl:            "/master-thesis"
 url:                "https://bensolus.github.io/master-thesis"
 markdown:           kramdown
