@@ -1,11 +1,11 @@
 SHELL = sh
-CC    = gcc
-CXX   = g++
+CC    = gcc-4.6
+CXX   = g++-4.6
 
 
-GFLAGS   = -std=c99 -O2 -g -march=native -Wall -Wextra -pedantic -fPIC -Wno-overlength-strings -pipe -mavx2 -DUSE_FLOAT=1 -DUSE_OPENMP=1 -DUSE_OPENCL=1 -fopenmp
+GFLAGS   = -std=c99 -O2 -g -march=native -Wall -Wextra -pedantic -fPIC -Wno-overlength-strings -pipe -mavx -DUSE_FLOAT=1 -DUSE_OPENMP=1 -DUSE_OPENCL=1 -fopenmp
 INCLUDES = -I../../H2Lib/Library -I./
-BFLAGS   = -std=c++98 -O2 -g -march=native -Wall -Wextra -pedantic -fPIC -Wno-overlength-strings -pipe -mavx2 -DUSE_FLOAT=1 -DUSE_OPENMP=1 -DUSE_OPENCL=1 -fopenmp
+BFLAGS   = -std=c++98 -O2 -g -march=native -Wall -Wextra -pedantic -fPIC -Wno-overlength-strings -pipe -mavx -DUSE_FLOAT=1 -DUSE_OPENMP=1 -DUSE_OPENCL=1 -fopenmp
 LDFLAGS  = ../../H2Lib/libh2.a  -shared
 
 LIBRARY   = libMT.so

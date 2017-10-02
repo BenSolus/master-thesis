@@ -70,6 +70,24 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
 
     const size_t lid0 = get_local_id(0);
 
+    local real xql[2 * QUADRATUR_ORDER];
+    local real yql[2 * QUADRATUR_ORDER];
+    local real wql[QUADRATUR_ORDER];
+
+    for(uint i = 0; i < nq; i += get_local_size(0))
+    {
+      if((i + lid0) < nq)
+      {
+        xql[i + lid0]      = xqs[i + lid0];
+        xql[nq + i + lid0] = xqs[nq + i + lid0];
+        yql[i + lid0]      = yqs[i + lid0];
+        yql[nq + i + lid0] = yqs[nq + i + lid0];
+        wql[i + lid0]      = wqs[i + lid0];
+      }
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
     if(lid0 >= num_h2_leafs)
       /* Stop work-items which won't have any leaf H^2-matrix assigned to. */
       return; //
@@ -82,9 +100,9 @@ fastaddeval_h2matrix_avector_0(         const uint dim,
     geom      sur;
 
     /* The quadrature rule needed to reconstruct the farfield. */
-    singquadg sq;
+    singquadl sq;
 
-    init_singquadg(&sq, dim, nq, xqs, yqs, wqs, bases, 0, 0, 0);
+    init_singquadl(&sq, dim, nq, xql, yql, wql, bases);
     init_geom(&sur, dim, n, vs, p, g, 0, 0, 0);
 
     /* Same H2-matrix farfield information for all threads in a work group. */

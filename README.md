@@ -2,8 +2,9 @@
 
 # My master thesis
 
-This is the git repository for the source code of my master thesis *"An
-efficient solver for the Green cross approximation method on GPUs"*
+This is the git repository for the source code of my master thesis *"Scalable
+solving of boundary element methods utilizing the Green cross approximation
+method and GPUs"*
 based on [Approximation of integral operators by Green quadrature and nested
 cross approximation](https://link.springer.com/article/10.1007/s00211-015-0757-y) and
 building on the implementation of the [Green cross approximation for boundary element methods](https://arxiv.org/abs/1510.07244) for the

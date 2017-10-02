@@ -57,8 +57,6 @@ struct _singquadl
   local const real *wqs;
 
   real4 bases;
-
-  event_t *events;
 };
 
 struct _singquadc
@@ -100,8 +98,7 @@ init_singquadl(             psingquadl sq,
                local  const real       *xqs,
                local  const real       *yqs,
                local  const real       *wqs,
-               global const real       *bases,
-                            event_t    *events)
+               global const real       *bases)
 {
   sq->nq    = nq;
 
@@ -110,8 +107,6 @@ init_singquadl(             psingquadl sq,
   sq->wqs   = wqs;
 
   sq->bases = vload4(0, bases);
-
-  sq->events = events;
 }
 
 void

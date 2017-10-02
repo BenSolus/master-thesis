@@ -19,7 +19,7 @@
 #define FASTADDEVAL_CL
 
 void
-fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadg sq,
+fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadl sq,
                      private const real bem_alpha,
                      private const real kernel_factor,
                      private const real alpha)
@@ -61,7 +61,33 @@ fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadg sq,
 
       real sum = sq->bases.x;
 
-      for(uint q = 0; q < sq->nq; ++q)
+      uint q = 0;
+
+      for(; (q + 4) <= sq->nq; q += 4)
+      {
+        const float4 w = vload4(q / 4, sq->wqs);
+
+        float4 a1 = vload4(q / 4, sq->xqs);
+        float4 a2 = vload4(q / 4, sq->xqs + sq->nq);
+
+        float4 xx[3] = { 0, 0, 0 };
+
+        xx[0] = (r_one - a1) * x[0].x + (a1 - a2) * x[1].x + a2 * x[2].x;
+        xx[1] = (r_one - a1) * x[0].y + (a1 - a2) * x[1].y + a2 * x[2].y;
+        xx[2] = (r_one - a1) * x[0].z + (a1 - a2) * x[1].z + a2 * x[2].z;
+
+        float4 yy[3] = { 0, 0, 0 };
+
+        yy[0] = (r_one - a1) * y[0].x + (a1 - a2) * y[1].x + a2 * y[2].x;
+        yy[1] = (r_one - a1) * y[0].y + (a1 - a2) * y[1].y + a2 * y[2].y;
+        yy[2] = (r_one - a1) * y[0].z + (a1 - a2) * y[1].z + a2 * y[2].z;
+
+        const float4 quad = w * laplace3d4(xx, yy);
+
+        sum += quad.x + quad.y + quad.z + quad.w;
+      }
+
+      for(; q < sq->nq; ++q)
       {
         float s, t;
 
@@ -84,6 +110,9 @@ fastaddeval_farfield(pgcidxinfo gcii, pgeom sur, psingquadg sq,
 #else
         t  = sq->xqs[q];
         s  = sq->xqs[q + sq->nq];
+
+        // if(get_global_id(0) == 0 && i == 0 && j == 0)
+        //   printf("%2.u: %.5e %.5e ", q, t, s);
 
         private float3 xx, yy;
 
@@ -121,8 +150,6 @@ fastaddeval_farfield_back(pgcidxinfo gcii, pgeom sur, psingquadl sq,
   // prefetch(sq->xqs, 2 * QUADRATUR_ORDER);
   // prefetch(sq->yqs, 2 * QUADRATUR_ORDER);
   // prefetch(sq->wqs,     QUADRATUR_ORDER);
-
-  wait_group_events(3, sq->events);
 
   for(uint i = 0; i < gcii->ridx_size; ++i)
   {

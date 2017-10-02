@@ -44,4 +44,24 @@ laplace3d2(private float2 x[3], private float2 y[3])
                       dist[2] * dist[2]);
 }
 
+float4
+laplace3d4(private float4 x[3], private float4 y[3])
+{
+  private const float4 dist[3] = { x[0] - y[0], x[1] - y[1], x[2] - y[2] };
+
+  return native_rsqrt(dist[0] * dist[0] +
+                      dist[1] * dist[1] +
+                      dist[2] * dist[2]);
+}
+
+float8
+laplace3d8(private float8 x[3], private float8 y[3])
+{
+  private const float8 dist[3] = { x[0] - y[0], x[1] - y[1], x[2] - y[2] };
+
+  return native_rsqrt(dist[0] * dist[0] +
+                      dist[1] * dist[1] +
+                      dist[2] * dist[2]);
+}
+
 #endif // KERNELS_CL
