@@ -85,6 +85,9 @@
                            \(d \in \{ 2, 3 \}\)}
         \item \visible<2->{\(\int\limits_{\Omega} g(x, y) u(y) dy = f(x)
                            \text{ für alle } x \in \Omega\)}
+        \item \visible<2->{z.B. \(g(x, y) = \frac{1}{4\pi\left\lVert x - y
+                           \right\rVert_{2}}\) (Fundamentallösung der
+                           Laplacegleichung)}
       \end{itemize}
     \column{0.33\linewidth}
       \centering
@@ -191,7 +194,6 @@
     \centering
     \includegraphics[width=.45\linewidth]{figures/fg-memory-h2-nf-ff.pdf}
     \caption{Speicherbedarf einer \(\mathcal{H}^2\)-Matrix und deren Blockmatrizen.}
-
   \end{figure}
   \begin{itemize}
     \item Problem: Reale Problemstellungen benötigen immer größere Matrizen
@@ -208,16 +210,19 @@
 \end{frame}
 
 \begin{frame}{Problem \& Lösungsansätze}
+  \small
   \begin{table}[h]
-    \begin{tabular}{ccc} \toprule
-                & \multicolumn{2}{c}{Performanz in ms} \\
-      Dimension & \(\mathcal{H}^2\)-MVM & \(\mathcal{H}^2\)-MVM + Blockmatrizen on-the-fly \\ \midrule
-          16384 &                66.239 &   50985.5 \\
-          32768 &               149.201 &  109092 \\
-          65536 &               227.471 &  220589 \\
-         131072 &               476.539 &  451777 \\ \bottomrule
+    \begin{tabular}{rrr} \toprule
+                & \multicolumn{2}{c}{Performanz in ms\footnotemark[1]} \\ \cmidrule{2-3}
+      Dimension & \(\mathcal{H}^2\)-MVM &
+      \begin{tabular}{@{}c@{}}\(\mathcal{H}^2\)-MVM + \\ Blockmatrizen \\ on-the-fly\end{tabular} \\ \midrule
+        16384 &  140 &   23390 \\
+        32768 &  300 &   50740 \\
+        65536 &  660 &  100160 \\
+       131072 & 1190 &  205210 \\ \bottomrule
     \end{tabular}
   \end{table}
+  \normalsize
   \begin{itemize}
     \item Problem: Wesentlich größerer Rechenaufwand bei letzterem Ansatz
     \item Lösungsansatz (diese Masterarbeit):
@@ -227,6 +232,10 @@
       \item Auslagern der Auswertungen auf eine Grafikkarte
     \end{itemize}
   \end{itemize}
+  \footnotesize
+  \footnotetext[1]{Gleikommazahlen einfacher Genauigkeit auf einer Intel Xeon
+                   E5-4640 mit OpenMP parallelisiert und AVX beschleunigt.}
+  \normalsize
 \end{frame}
 
 \section{\(\mathcal{H}^2\)-Matrizen}
@@ -362,69 +371,28 @@
 \section{GCA-Methode}
 
 \begin{frame}{GCA-Methode}
-  \begin{enumerate}
-    \item Niedrigrangapproximation eines zulässigen Blocks durch Greens zweite
-          Identität
-  \end{enumerate}
-
-  \begin{overprint}
-      \onslide<1>
-        \begin{itemize}
-          \item \(g(x, y) = \int\limits_{\partial \omega} g(x, z)
-                  \frac{\partial g}{\partial n(z)}(z, y) \ dz \ -
-                  \int\limits_{\partial \omega}
-                  \frac{\partial g}{\partial n(z)}(x, z) g(z, y) \ dz\)
-          \item[] \hfil für alle \(x \in \omega, y \notin \omega\)
-        % \item \visible<2->{\(G|_{\hat{\tau} \times \hat{\sigma}} \approx
-        %                      A_{\tau} B_{\tau\omega}^{*} \qquad A_{\tau} =
-        %                      (A_{\tau+} A_{\tau-}) \qquad B_{\tau\sigma} =
-        %                      (B_{\tau\sigma+} B_{\tau\sigma-})\)}
-        \end{itemize}
-      \onslide<2>
-        \begin{itemize}
-          \item \(G|_{\hat{\tau} \times \hat{\sigma}} \approx A_{\tau}
-                  B_{\tau\omega}^{*} \qquad A_{\tau} = (A_{\tau+} \ A_{\tau-})
-                  \qquad B_{\tau\sigma} = (B_{\tau\sigma+} \ B_{\tau\sigma-})\)
-          \item[] \hfil \(A_{\tau+}, A_{\tau-} \in \mathbb{R}^{\hat{\tau}
-                  \times K}, B_{\tau\sigma+}, B_{\tau\sigma-} \in
-                  \mathbb{R}^{\hat{\sigma} \times K}\)
-          \item[] \hfil \(K := \{1, \hdots, 2d \} \times \{1, \hdots, m\}^{d-1},
-                  m \in \mathbb{N}\)
-          \begin{align*}
-            a_{\tau+, i, \nu} &:= w_{\nu} \int\limits_{\Omega} \varphi_{i}(x)
-                                  g(x, z_{\nu}) dx, && b_{\tau\sigma+, j\nu} &:=
-                                  \int\limits_{\Omega} \psi_{j}(y)
-                                  \frac{\partial g}{\partial n_{\iota}}
-                                  (z_{\nu}, y) \ dy \\
-            a_{\tau-, i, \nu} &:= w_{\nu} \int\limits_{\Omega} \varphi_{i}(x)
-                                  \frac{\partial g}{\partial n_{\iota}}
-                                  (x, z_{\nu}) dx, && b_{\tau\sigma-, j\nu} &:=
-                                  -\int\limits_{\Omega} \psi_{j}(y)
-                                  g(z_{\nu}, y) \ dy
-          \end{align*}
-          \item[] \hfil \(\nu = (\iota, \mu) \in K, i \in \hat{\tau}, j \in
-                          \hat{\sigma}, w_{\nu} \in \mathbb{R}, z \in
-                          \mathbb{R}^{d}\)
-        \end{itemize}
-  \end{overprint}
-
-  \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
-  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
-  \normalsize
-\end{frame}
-
-\begin{frame}{Kreuzapproximationsmethode}
   \begin{itemize}
-    \item \visible<1->{\(i_{1} \in \hat{\tau}, j_{1} \in \hat{\sigma} \qquad
-                         c_{i}^{(1)} := \frac{x_{i, j_{1}}}{x_{i_{1}, j_{1}}}
-                         \qquad d_{j}^{(1)} := x_{i_{1}, j}\)}
-    \item[] \visible<1->{\hfil \(\tilde{X}^{(1)} := c^{(1)} (d^{(1)})^{*}\)}
-    \item \visible<2->{Bereche ab, wenn der Fehler (\(X^{(1)} := X -
-                       \tilde{X}^{(1)}\)) klein genug ist, ansonsten wiederhole
-                       Prozedur mit \(X^{(1)}\).}
-    \item \visible<3->{\(X = CD^{*} = (c^{(1)} \hdots c^{(l)}) (d^{(1)} \hdots
-                         d^{(l)})^{*}\)}
+    \item Sei ein zulässiger Block \(b = (\tau \times \sigma)\) gegeben
+    \item Algebraische Interpolation in zulässigen Blättern
+    \begin{itemize}
+      \item Greens zweite Identität, Quadratur und adaptive Kreuzapproximation
+      \item \visible<2->{\(\mathfrak{I}_{\tau} = V_{\tau}P_{\tau}, \qquad
+                           \mathfrak{I}_{\sigma} = W_{\sigma}P_{\sigma}\)}
+      \item \visible<2->{\(V_{\tau} \in \mathbb{R}^{\tau \times \tilde{\tau}},
+                           \qquad W_{\sigma} \in \mathbb{R}^{\sigma \times
+                           \tilde{\sigma}}\): \glqq Interpolationspolynome \grqq}
+      \item \visible<2->{\(P_{\tau} \in \mathbb{R}^{\tilde{\tau} \times \tau},
+                           \qquad P_{\sigma} \in \mathbb{R}^{\tilde{\sigma}
+                           \times \sigma}\): \glqq Interpolationpunkte \grqq}
+      \item \visible<2->{\(\tilde{\tau} \subseteq \tau, \qquad, \tilde{\sigma}
+                           \subseteq \sigma\)}
+      \item \visible<3->{\(G|_{\tau \times \sigma} \approx
+                           \mathfrak{I}_{\tau} G|_{\tau \times \sigma}
+                           \mathfrak{I}_{\sigma}^{*} =
+                           V_{\tau} G|_{\tilde{\tau} \times \tilde{\sigma}}
+                           W_{\sigma}^{*}\)}
+    \end{itemize}
+    \item \visible<4->{Adaptive Kreuzapproximation in Nicht-Blättern}
   \end{itemize}
 
   \footnotesize
@@ -432,93 +400,164 @@
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
-
-\begin{frame}{Algebraische Interpolation}
-  \begin{itemize}
-    \item \visible<1->{Zeilenpermuationsmatrix \(P \in \mathbb{R}^{l \times
-                         \hat{\tau}}\)}
-    \item[] \visible<1->{\hfil \(Pz :=
-                                 \begin{pmatrix}
-                                   z_{i_{1}} \\
-                                   \vdots \\
-                                   z_{i_{l}}
-                                 \end{pmatrix}
-                                 \qquad \text{für alle } z \in \mathbb{R}^{\tau}
-                               \)}
-    \item \visible<2->{\(V := C{(PC)}^{-1} \qquad \mathfrak{J} := VP\)}
-    \item \visible<3->{\(\mathfrak{I}C = VPC = C{(PC)}^{-1}PC = C\)}
-    \item \visible<3->{\(\mathfrak{I}X = VPX = VPCD^{*} = CD^{*}\)}
-  \end{itemize}
-
-  \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
-  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
-  \normalsize
-\end{frame}
-
-\begin{frame}{GCA-Methode}
-  \begin{enumerate}
-    \item \visible<1->{Niedrigrangapproximation eines zulässigen Blocks durch
-                       Greens zweite Identität}
-    \item \visible<1->{Approximation von \(A_{\tau}\) mithilfe der
-                       Kreuzapproximationsmethode}
-    \item \visible<2->{Wiederhole 1.\ und 2.\ für
-                       \(G|_{\hat{\tau} \times \hat{\sigma}}^{*}\) }
-    \item \visible<3->{Wende Kreuzapproximation auf permutierte Nicht-Blätter
-                       an}
-  \end{enumerate}
-
-  \begin{overprint}
-      \onslide<1>
-        \begin{itemize}
-          \item \(A_{t} \approx C_{\tau}D_{\tau}^{*} = \mathfrak{I}A_{\tau} =
-                  V_{\tau}P_{\tau}A_{\tau} \qquad G|_{\hat{\tau} \times \hat{\sigma}} \approx V_{\tau}P_{\tau}
-                  G|_{\hat{\tau} \times \hat{\sigma}}\)
-        \end{itemize}
-      \onslide<2>
-        \begin{itemize}
-          \item \(G|_{\hat{\tau} \times \hat{\sigma}} \approx V_{\tau}
-                  \underbrace{P_{\tau}G|_{\hat{\tau} \times \hat{\sigma}}P_{\sigma}^{*}}_{S_{b}}
-                  V_{\sigma}^{*}\)
-        \end{itemize}
-      \onslide<3>
-        \begin{itemize}
-          \small
-          \item \(\begin{pmatrix}
-                    V_{\tau 1} & \\
-                               & V_{\tau 2}
-                  \end{pmatrix}
-                  \begin{pmatrix}
-                    P_{\tau 1} & \\
-                               & P_{\tau 2}
-                  \end{pmatrix} A_{\tau} \approx
-                  \begin{pmatrix}
-                    V_{\tau 1} & \\
-                               & V_{\tau 2}
-                  \end{pmatrix} \widehat{V}_{\tau}\widehat{P}_{\tau}
-                  \begin{pmatrix}
-                    P_{\tau 1} & \\
-                               & P_{\tau 2}
-                  \end{pmatrix} A_{\tau}\)
-          \normalsize
-          \item \( \begin{pmatrix}
-                     E_{\tau 1} \\ E_{\tau 2}
-                   \end{pmatrix} := \widehat{V}_{\tau} \Rightarrow V_{\tau} :=
-                   \begin{pmatrix}
-                      V_{\tau 1} & \\
-                                 & V_{\tau 2}
-                   \end{pmatrix}\widehat{V}_{\tau} =
-                   \begin{pmatrix}
-                     V_{\tau 1} E_{\tau 1} \\ V_{\tau 2} E_{\tau 2}
-                   \end{pmatrix}\)
-        \end{itemize}
-  \end{overprint}
-
-  \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
-  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
-  \normalsize
-\end{frame}
+% \begin{frame}{GCA-Methode}
+%   \begin{enumerate}
+%     \item Niedrigrangapproximation eines zulässigen Blocks durch Greens zweite
+%           Identität
+%   \end{enumerate}
+%
+%   \begin{overprint}
+%       \onslide<1>
+%         \begin{itemize}
+%           \item \(g(x, y) = \int\limits_{\partial \omega} g(x, z)
+%                   \frac{\partial g}{\partial n(z)}(z, y) \ dz \ -
+%                   \int\limits_{\partial \omega}
+%                   \frac{\partial g}{\partial n(z)}(x, z) g(z, y) \ dz\)
+%           \item[] \hfil für alle \(x \in \omega, y \notin \omega\)
+%         % \item \visible<2->{\(G|_{\hat{\tau} \times \hat{\sigma}} \approx
+%         %                      A_{\tau} B_{\tau\omega}^{*} \qquad A_{\tau} =
+%         %                      (A_{\tau+} A_{\tau-}) \qquad B_{\tau\sigma} =
+%         %                      (B_{\tau\sigma+} B_{\tau\sigma-})\)}
+%         \end{itemize}
+%       \onslide<2>
+%         \begin{itemize}
+%           \item \(G|_{\hat{\tau} \times \hat{\sigma}} \approx A_{\tau}
+%                   B_{\tau\omega}^{*} \qquad A_{\tau} = (A_{\tau+} \ A_{\tau-})
+%                   \qquad B_{\tau\sigma} = (B_{\tau\sigma+} \ B_{\tau\sigma-})\)
+%           \item[] \hfil \(A_{\tau+}, A_{\tau-} \in \mathbb{R}^{\hat{\tau}
+%                   \times K}, B_{\tau\sigma+}, B_{\tau\sigma-} \in
+%                   \mathbb{R}^{\hat{\sigma} \times K}\)
+%           \item[] \hfil \(K := \{1, \hdots, 2d \} \times \{1, \hdots, m\}^{d-1},
+%                   m \in \mathbb{N}\)
+%           \begin{align*}
+%             a_{\tau+, i, \nu} &:= w_{\nu} \int\limits_{\Omega} \varphi_{i}(x)
+%                                   g(x, z_{\nu}) dx, && b_{\tau\sigma+, j\nu} &:=
+%                                   \int\limits_{\Omega} \psi_{j}(y)
+%                                   \frac{\partial g}{\partial n_{\iota}}
+%                                   (z_{\nu}, y) \ dy \\
+%             a_{\tau-, i, \nu} &:= w_{\nu} \int\limits_{\Omega} \varphi_{i}(x)
+%                                   \frac{\partial g}{\partial n_{\iota}}
+%                                   (x, z_{\nu}) dx, && b_{\tau\sigma-, j\nu} &:=
+%                                   -\int\limits_{\Omega} \psi_{j}(y)
+%                                   g(z_{\nu}, y) \ dy
+%           \end{align*}
+%           \item[] \hfil \(\nu = (\iota, \mu) \in K, i \in \hat{\tau}, j \in
+%                           \hat{\sigma}, w_{\nu} \in \mathbb{R}, z \in
+%                           \mathbb{R}^{d}\)
+%         \end{itemize}
+%   \end{overprint}
+%
+%   \footnotesize
+%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
+%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+%   \normalsize
+% \end{frame}
+%
+% \begin{frame}{Kreuzapproximationsmethode}
+%   \begin{itemize}
+%     \item \visible<1->{\(i_{1} \in \hat{\tau}, j_{1} \in \hat{\sigma} \qquad
+%                          c_{i}^{(1)} := \frac{x_{i, j_{1}}}{x_{i_{1}, j_{1}}}
+%                          \qquad d_{j}^{(1)} := x_{i_{1}, j}\)}
+%     \item[] \visible<1->{\hfil \(\tilde{X}^{(1)} := c^{(1)} (d^{(1)})^{*}\)}
+%     \item \visible<2->{Bereche ab, wenn der Fehler (\(X^{(1)} := X -
+%                        \tilde{X}^{(1)}\)) klein genug ist, ansonsten wiederhole
+%                        Prozedur mit \(X^{(1)}\).}
+%     \item \visible<3->{\(X = CD^{*} = (c^{(1)} \hdots c^{(l)}) (d^{(1)} \hdots
+%                          d^{(l)})^{*}\)}
+%   \end{itemize}
+%
+%   \footnotesize
+%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
+%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+%   \normalsize
+% \end{frame}
+%
+% \begin{frame}{Algebraische Interpolation}
+%   \begin{itemize}
+%     \item \visible<1->{Zeilenpermuationsmatrix \(P \in \mathbb{R}^{l \times
+%                          \hat{\tau}}\)}
+%     \item[] \visible<1->{\hfil \(Pz :=
+%                                  \begin{pmatrix}
+%                                    z_{i_{1}} \\
+%                                    \vdots \\
+%                                    z_{i_{l}}
+%                                  \end{pmatrix}
+%                                  \qquad \text{für alle } z \in \mathbb{R}^{\tau}
+%                                \)}
+%     \item \visible<2->{\(V := C{(PC)}^{-1} \qquad \mathfrak{J} := VP\)}
+%     \item \visible<3->{\(\mathfrak{I}C = VPC = C{(PC)}^{-1}PC = C\)}
+%     \item \visible<3->{\(\mathfrak{I}X = VPX = VPCD^{*} = CD^{*}\)}
+%   \end{itemize}
+%
+%   \footnotesize
+%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
+%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+%   \normalsize
+% \end{frame}
+%
+% \begin{frame}{GCA-Methode}
+%   \begin{enumerate}
+%     \item \visible<1->{Niedrigrangapproximation eines zulässigen Blocks durch
+%                        Greens zweite Identität}
+%     \item \visible<1->{Approximation von \(A_{\tau}\) mithilfe der
+%                        Kreuzapproximationsmethode}
+%     \item \visible<2->{Wiederhole 1.\ und 2.\ für
+%                        \(G|_{\hat{\tau} \times \hat{\sigma}}^{*}\) }
+%     \item \visible<3->{Wende Kreuzapproximation auf permutierte Nicht-Blätter
+%                        an}
+%   \end{enumerate}
+%
+%   \begin{overprint}
+%       \onslide<1>
+%         \begin{itemize}
+%           \item \(A_{t} \approx C_{\tau}D_{\tau}^{*} = \mathfrak{I}A_{\tau} =
+%                   V_{\tau}P_{\tau}A_{\tau} \qquad G|_{\hat{\tau} \times \hat{\sigma}} \approx V_{\tau}P_{\tau}
+%                   G|_{\hat{\tau} \times \hat{\sigma}}\)
+%         \end{itemize}
+%       \onslide<2>
+%         \begin{itemize}
+%           \item \(G|_{\hat{\tau} \times \hat{\sigma}} \approx V_{\tau}
+%                   \underbrace{P_{\tau}G|_{\hat{\tau} \times \hat{\sigma}}P_{\sigma}^{*}}_{S_{b}}
+%                   V_{\sigma}^{*}\)
+%         \end{itemize}
+%       \onslide<3>
+%         \begin{itemize}
+%           \small
+%           \item \(\begin{pmatrix}
+%                     V_{\tau 1} & \\
+%                                & V_{\tau 2}
+%                   \end{pmatrix}
+%                   \begin{pmatrix}
+%                     P_{\tau 1} & \\
+%                                & P_{\tau 2}
+%                   \end{pmatrix} A_{\tau} \approx
+%                   \begin{pmatrix}
+%                     V_{\tau 1} & \\
+%                                & V_{\tau 2}
+%                   \end{pmatrix} \widehat{V}_{\tau}\widehat{P}_{\tau}
+%                   \begin{pmatrix}
+%                     P_{\tau 1} & \\
+%                                & P_{\tau 2}
+%                   \end{pmatrix} A_{\tau}\)
+%           \normalsize
+%           \item \( \begin{pmatrix}
+%                      E_{\tau 1} \\ E_{\tau 2}
+%                    \end{pmatrix} := \widehat{V}_{\tau} \Rightarrow V_{\tau} :=
+%                    \begin{pmatrix}
+%                       V_{\tau 1} & \\
+%                                  & V_{\tau 2}
+%                    \end{pmatrix}\widehat{V}_{\tau} =
+%                    \begin{pmatrix}
+%                      V_{\tau 1} E_{\tau 1} \\ V_{\tau 2} E_{\tau 2}
+%                    \end{pmatrix}\)
+%         \end{itemize}
+%   \end{overprint}
+%
+%   \footnotesize
+%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
+%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+%   \normalsize
+% \end{frame}
 
 \section{GPUs}
 
@@ -639,6 +678,7 @@
   \begin{columns}
     \column{.5\linewidth}
       \begin{itemize}
+        \item Berechne reproduzierbare Matrizen nur bei Bedarf:
         \item \(S_{b} = P_{\tau}G|_{\tau \times \sigma} P_{\sigma}^{*}\)
         \begin{itemize}
           \item Permutierte Einträge der Galerkin-Diskretisierung
@@ -706,7 +746,7 @@
       \onslide<1>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-ff-initial-situation.pdf}
-        \caption{Ausgangssituation einer Opencl work-group in der 1. Phase.}
+        \caption{Ausgangssituation einer OpenCL work-group in der 1. Phase.}
       \onslide<2>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-ff-compute-matrix-entry.pdf}
@@ -770,7 +810,7 @@
     \item Vertices zweier Dreiecke müssen zueinander permutiert werden\footnotemark[1]
   \end{itemize}
   \footnotesize
-  \footnotetext[1]{Quelle: Efficient automatic quadrature in 3-d galerkin bem.}
+  \footnotetext[1]{Quelle: On the efficient computation of singular and nearly singular surface integrals arising in 3D-Galerkin BEM}
   \normalsize
 \end{frame}
 
@@ -873,36 +913,210 @@
 \end{frame}
 
 \begin{frame}{3. Phase}
-  \begin{figure}
-    \centering
-    \caption{Performanz der 3.Phase.}
-  \end{figure}
+  \small
+  \begin{table}
+    \begin{tabular}{rrrrrr} \toprule
+      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
+      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
+      & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
+      & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
+      & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
+       16384 &  420.000 &  2453.863 &  63.717 &  89.152 &  83.960 \\
+       32768 &  850.000 &  4963.603 & 132.433 & 197.693 & 177.870 \\
+       65536 & 1680.000 &  9840.110 & 255.715 & 428.641 & 354.457 \\
+      131072 & 3380.000 & 19829.370 & 508.279 & 734.910 & --- \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \normalsize
 \end{frame}
 
 \begin{frame}{4. Phase}
+  \small
+  \begin{table}
+    \begin{tabular}{rrrrrr} \toprule
+      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
+      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
+      & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
+      & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
+      & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
+      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
+       16384 & 1160.000 &  6007.246 &  32.705 &  50.510 &  46.254 \\
+       32768 & 2360.000 & 12146.984 &  70.949 & 114.736 & 103.447 \\
+       65536 & 4650.000 & 24019.114 & 137.341 & 247.243 & 200.640 \\
+      131072 & 9440.000 & 48587.012 & 261.457 & 410.919 & --- \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \normalsize
+\end{frame}
+
+\begin{frame}{1.-4.Phase im Vergleich}
   \begin{figure}
     \centering
-    \caption{Performanz der 4.Phase.}
+    \includegraphics[width=\linewidth]{figures/fg-performance-feval-1-4.pdf}
+    \caption{Performanz der einzelnen Phasen im Vergleich auf einer Tesla
+             K20xm.}
   \end{figure}
 \end{frame}
 
-\begin{frame}{Vergleiche}
-
+\begin{frame}{Optimierung: Lokalität von Speicher}
+  \begin{algorithm}[H]
+    \begin{algorithmic}[1]
+      \normalsize
+      {
+      \Function{fastaddeval\_1\_phase}{}
+      \For{i = 0; i < rows; ++i}
+       \State{// Hole Informationen über Zeile i.}
+        \For{j = 0; j < cols; ++j}
+          \State{// Hole Informationen über Spalte j.}
+          \For{q = 0; q < nq; ++q}
+            \State{// Führe Quadratur bzgl. i, j und q-ten Quadraturpunkt}
+            \State{// und -gewicht durch.}
+          \EndFor{}
+        \EndFor{}
+      \EndFor{}
+      \EndFunction{}
+      }
+    \end{algorithmic}
+    \caption{Verschachtelte Schleifen in der 1. Phase. Eine tiefere
+             Verschachtelungsebene bedeutet mehr Speicherzugriffe.}
+  \end{algorithm}
 \end{frame}
 
-\begin{frame}{Zusammenfassung}
+\begin{frame}{Optimierung: Lokalität von Speicher}
+  \begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fg-gpu_architecture.png}
+    \caption{Erinnerung: (Speicher-)Architektur einer Grafikkarte.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Optimierung: Lokalität von Speicher}
+  \small
+  \begin{table}
+    \begin{tabular}{rrr} \toprule
+      \multirow{3}{*}{Dimension} & \multicolumn{2}{c}{Preformanz in ms} \\ \cmidrule{2-3}
+      & \multicolumn{2}{c}{Lokalität der Quadraturpunkte} \\ \cmidrule{2-3}
+      & Globaler Speicher & Lokaler Speicher \\ \cmidrule{1-3}
+       16384 &  367.612 & 305.763  \\ %324 bytes
+       32768 &  721.806 & 614.329  \\
+       65536 & 1056.583 & 805.513  \\
+      131072 & 2110.852 & 1665.412 \\
+      \bottomrule
+    \end{tabular}
+    \caption{Performanzvergleiche von der Verfügbarkeit von Quadraturpunkten
+             in unterschiedlichen Speicherbereichen auf einer Tesla K20Xm.}
+  \end{table}
+  \normalsize
+\end{frame}
+
+\begin{frame}{Optimierung: Vektorisierung auf Instruktionsebene}
   \begin{itemize}
-    \item Wir können den Speicherbedarf einer \(\mathcal{H}^2\)-Matrix um
-          75-90\% reduzieren
-    \item Der Rechenaufwand für eine
+    \item z.B. float2, float4, float8, float16 in OpenCL
+    \item Abstrahieren die Vektorregister der unterliegenden Architektur
+    \item SSE/AVX auf CPUs (falls vorhanden)
+    \item NVIDIAs Skalarprozessoren besizten keine Vektoreinheiten
+    \begin{itemize}
+      \item Vektorisierte Speicherzugriffe können jedoch zusammengefasst
+            werden.
+      \item Vektorisierte Rechenoperationen werden durch skalare simuliert
+      \item Höhere Anzahl an Register werden benötigt
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
-\begin{frame}[allowframebreaks]{References}
+\begin{frame}{Optimierung: Vektorisierung auf Instruktionsebene}
+  \small
+  \begin{table}
+    \begin{tabular}{rrr} \toprule
+      \multirow{3}{*}{Dimension} & \multicolumn{2}{c}{Preformanz in ms} \\ \cmidrule{2-3}
+      & \multicolumn{2}{c}{Vektorbreite} \\ \cmidrule{2-3}
+      & 1 & 4  \\ \cmidrule{1-3}
+       16384 &  305.763 &  286.222 \\
+       32768 &  614.329 &  581.817 \\
+       65536 &  805.513 &  763.979 \\
+      131072 & 1665.412 & 1562.938 \\
+      \bottomrule
+    \end{tabular}
+    \caption{Performanzvergleich unterschiedlicher Vektorbreiten, verwendet zur
+             vektorisierten Berechnung der Quadratur.}
+  \end{table}
+  \normalsize
+\end{frame}
+
+\section{Zusammenfassung \& Ausblick}
+
+\begin{frame}{Zusammenfassung}
+  \small
+  \begin{table}
+    \begin{tabular}{rrrr} \toprule
+                & \multicolumn{3}{c}{Performanz in ms} \\ \cmidrule{2-4}
+      Dimension & \(\mathcal{H}^2\)-MVM
+                & \begin{tabular}{@{}c@{}}
+                    \(\mathcal{H}^2\)-MVM + \\
+                    Blockmatrizen \\
+                    on-the-fly (CPU)
+                  \end{tabular}
+                & \begin{tabular}{@{}c@{}}
+                    \(\mathcal{H}^2\)-MVM + \\
+                    Blockmatrizen \\
+                    on-the-fly (GPU)
+                  \end{tabular} \\ \midrule
+          16384 &  140 &   23390 &  470 \\
+          32768 &  300 &   50740 &  970 \\
+          65536 &  660 &  100160 & 1510 \\
+         131072 & 1190 &  205210 & 2990 \\ \bottomrule
+      \end{tabular}
+    \end{table}
+  \normalsize
+  \begin{itemize}
+    \item Wir können den Speicherbedarf einer \(\mathcal{H}^2\)-Matrix um
+          75-90\% reduzieren
+    \item Die benötigte Rechenzeit kann auf GPUs um einen Faktor TODO
+          reduziert werden verglichen mit einer CPU-Implementierung
+    \item Kann mit einer reinen, BLAS-optimierten und OpenMP-parallelisierten
+          \(\mathcal{H}^2\)-Matrix-Vektor-Multiplikation (fast) mithalten.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Zusammenfassung}
+  \small
+  \begin{table}
+    \begin{tabular}{rrr} \toprule
+                & \multicolumn{2}{c}{Performanz in ms} \\ \cmidrule{2-3}
+      Dimension & \(\mathcal{H}^2\)-Matrix & Blockmatrizen \\ \midrule
+          16384 &                   131620 &   63310 \\
+          32768 &                   267940 &  109092 \\
+          65536 &                   530570 &  271120 \\
+         131072 &                  1073480 &  559450 \\ \bottomrule
+      \end{tabular}
+    \end{table}
+  \normalsize
+  \begin{itemize}
+    \item Setup-Zeit lässt sich um die Hälfte reduzieren
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Ausblick}
+  \begin{itemize}
+    \item Parallelisierung des hostseitigen Codes?
+    \item Multi-GPU\@?
+    \item Auslagern der Vorwärts- und Rückwärtstransformation auf GPUs?
+  \end{itemize}
+\end{frame}
+\begin{frame}[allowframebreaks]{Literatur}
 
   \bibliography{presentation}
   \bibliographystyle{abbrv}
+  \nocite{*}
 
 \end{frame}
 
+\begin{frame}
+  \Huge Vielen Dank! Fragen?
+\end{frame}
 \end{document}

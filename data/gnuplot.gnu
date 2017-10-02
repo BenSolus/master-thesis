@@ -3,7 +3,7 @@
 reset
 
 set terminal pdf transparent
-set output 'fg-performance-ff.pdf'
+set output 'fg-performance-feval-1-4.pdf'
 
 # png
 # set terminal pngcairo transparent size 800,400 enhanced font 'Verdana,9'
@@ -39,10 +39,11 @@ set xlabel 'Dimension der Matrix'
 set ylabel 'Performanz in ms'
 
 set datafile separator ","
-set boxwidth 0.75
 
-plot 'performance-ff.csv' u 1:2 t 'Tesla K20Xm' w lp ls 2, \
-     ''                   u 1:3 t 'GeForce GTX 680' w lp ls 3, \
-     ''                   u 1:4 t 'GeForce GTX 760' w lp ls 4
+plot 'performance-feval-1-4.csv' u 1:2 t '1. Phase' w lp ls 1, \
+     ''                          u 1:3 t '2. Phase' w lp ls 3, \
+     ''                          u 1:4 t '3. Phase' w lp ls 4, \
+     ''                          u 1:5 t '4. Phase' w lp ls 2
+
 #plot 'memory-galerkin-h2.csv' u 1:2 t 'Galerkin'  w ls 1, \
 #     ''                       u 1:3 t 'H2-Matrix' w ls 2
