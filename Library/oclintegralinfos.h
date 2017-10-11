@@ -72,11 +72,20 @@ uninit_integralinfos(pintegralinfos iinfos);
 HEADER_PREFIX pintegralinfos
 new_integralinfos();
 
+HEADER_PREFIX void
+del_integralinfos(pintegralinfos iinfos);
+
 HEADER_PREFIX pintegralinfos
 build_from_idxinfos_integralinfos(pcgcopencl idxinfos,
                                   pch2matrix H2,
                                   const uint dim,
                                   void       *poly_idxs,
                                   const uint min_num_id_verts);
+
+HEADER_PREFIX pintegralinfos
+build_from_idxinfos(pcgcopencl idxinfos,
+                    pch2matrix H2,
+                    const uint dim,
+                    void       *poly_idxs);
 
 #endif // OCLINTEGRALINFOS_H

@@ -135,6 +135,8 @@ new_greencross_laplace3d(psurface3d gr, uint res, uint q, uint m, real accur)
 
   gc->sq_gca    = build_from_singquad2d(((pbem3d) gc->bem)->sq);
 
+  gc->sq_uncommon = build_uncommon_from_singquad2d(((pbem3d) gc->bem)->sq);
+
   gc->sq_partial_min_vert =
     build_min_vert_from_singquad2d(((pbem3d) gc->bem)->sq);
 

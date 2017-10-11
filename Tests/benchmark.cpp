@@ -122,19 +122,14 @@ main(int argc, char *argv[])
 
   H2      = build_green_cross_h2matrix_greencross(gc, (void *) &eta);
 
-//  psingquad2d sq2d = ((pbem3d) gc->bem)->sq;
-
-//  const uint vnq = ROUNDUP(sq2d->n_id, VREAL);
-
-//  psingquadgca sq = gc->sq_partial_min_vert;
-
-//  for(uint i = 0; i < sq->nq; ++i)
-//    printf("%3.u: xq1: %.5e, xq2: %.5e, yq1: %.5e, yq2: %.5e, wq: %.5e\n", i, (sq2d->x_id + (sq2d->n_id - sq2d->n_vert))[i], ((sq2d->x_id + (sq2d->n_id - sq2d->n_vert)) + vnq)[i], sq2d->y_id[(sq2d->n_id - sq2d->n_vert) + i], sq2d->y_id[(sq2d->n_id - sq2d->n_vert) + vnq + i], (sq2d->w_id + vnq * 9)[(sq2d->n_id - sq2d->n_vert) + i]);
+//  printf("H2Lib:\n\n");
 //
-//  std::cout << "\n";
+//  psingquad2d sq = ((pbem3d) gc->bem)->sq;
 //
-//  for(uint i = 0; i < sq->nq; ++i)
-//    printf("%3.u: xq1: %.5e, xq2: %.5e, yq1: %.5e, yq2: %.5e, wq: %.5e\n", i, sq->xqs[4 * sq->nq + i], sq->xqs[5 * sq->nq + i], sq->yqs[4 * sq->nq + i], sq->yqs[5 * sq->nq + i], sq->wqs[2 * sq->nq + i]);
+//  const uint vnq = ROUNDUP(sq->n_vert, VREAL);
+//
+//  for(uint q = sq->n_dist; q < sq->n_vert; ++q)
+//    printf("%u: %.5e %.5e %.5e %.5e %.5e\n", q, sq->x_vert[q], sq->x_vert[q + vnq], sq->y_vert[q], sq->y_vert[q + vnq], (sq->w_vert + 9 * vnq)[q]);
 
   printf("\nGeometry:\n"
          "  %u polygons\n"
@@ -262,8 +257,7 @@ main(int argc, char *argv[])
 
   real time_ff          = r_zero;
   real time_nf_common   = r_zero;
-  real time_min_vert = r_zero;
-  real time_nf_min_edge = r_zero;
+  real time_nf_uncommon = r_zero;
 
   for(uint i(0); i < tests; ++i)
   {
@@ -308,8 +302,6 @@ main(int argc, char *argv[])
 
     time_nf_common += (real) (fin - start) * (real) 1e-06;
 
-    start = fin = 0;
-
     clGetEventProfilingInfo(gc->kernel_events[2],
                             CL_PROFILING_COMMAND_START,
                             sizeof(cl_ulong),
@@ -321,22 +313,7 @@ main(int argc, char *argv[])
                             &fin,
                             NULL);
 
-    time_min_vert += (real) (fin - start) * (real) 1e-06;
-
-    start = fin = 0;
-
-    clGetEventProfilingInfo(gc->kernel_events[3],
-                            CL_PROFILING_COMMAND_START,
-                            sizeof(cl_ulong),
-                            &start,
-                            NULL);
-    clGetEventProfilingInfo(gc->kernel_events[3],
-                            CL_PROFILING_COMMAND_END,
-                            sizeof(cl_ulong),
-                            &fin,
-                            NULL);
-
-    time_nf_min_edge += (real) (fin - start) * (real) 1e-06;
+    time_nf_uncommon += (real) (fin - start) * (real) 1e-06;
   }
 
   add_avector(r_minusone, y_ref, y);
@@ -351,16 +328,12 @@ main(int argc, char *argv[])
             << time_ff / (real) tests
             << " ms\n\n";
 
-  std::cout << "GPU partial nearfield fastaddeval of all integrals:\n  "
+  std::cout << "GPU nearfield common fastaddeval of all integrals:\n  "
             << time_nf_common / (real) tests
             << " ms\n\n";
 
-  std::cout << "GPU partial nearfield fastaddeval of integrals with at minimum of an identical vertex:\n  "
-            << time_min_vert / (real) tests
-            << " ms\n\n";
-
-  std::cout << "GPU partial nearfield fastaddeval of integrals with at minimum of an identical edge:\n  "
-            << time_nf_min_edge / (real) tests
+  std::cout << "GPU nearfield uncommon fastaddeval of all integrals:\n  "
+            << time_nf_uncommon / (real) tests
             << " ms\n\n";
 
   time = 0;
@@ -401,7 +374,7 @@ main(int argc, char *argv[])
     time += end - begin;
   }
 
-  std::cout << "CPU partial nearfield fastaddeval of all integrals:\n  "
+  std::cout << "CPU common nearfield fastaddeval:\n  "
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms\n\n";
 
@@ -413,14 +386,14 @@ main(int argc, char *argv[])
 
     std::clock_t begin(std::clock());
 
-    fastaddeval_nearfield_partial_min_id_vert_gca(gc, r_one, xt, yt);
+    fastaddeval_nearfield_uncommon_gca(gc, r_one, xt, yt);
 
     std::clock_t end(std::clock());
 
     time += end - begin;
   }
 
-  std::cout << "CPU partial nearfield fastaddeval of integrals with at minimum of an identical vertex:\n  "
+  std::cout << "CPU uncommon nearfield fastaddeval:\n  "
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms\n\n";
 
@@ -432,14 +405,14 @@ main(int argc, char *argv[])
 
     std::clock_t begin(std::clock());
 
-    fastaddeval_nearfield_partial_min_id_edge_gca(gc, r_one, xt, yt);
+    fastaddeval_nearfield_uncommon_gca(gc, r_one, xt, yt);
 
     std::clock_t end(std::clock());
 
     time += end - begin;
   }
 
-  std::cout << "CPU partial nearfield fastaddeval of integrals with at minimum of an identical edge:\n  "
+  std::cout << "CPU common nearfield fastaddeval of all integrals:\n  "
             << 1000.0 * time / (tests * CLOCKS_PER_SEC)
             << " ms\n\n";
 

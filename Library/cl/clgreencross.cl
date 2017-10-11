@@ -386,4 +386,94 @@ fastaddeval_nf_min_edge(         const uint dim,
   }
 }
 
+kernel void
+fastaddeval_nf_uncommon(         const uint dim,
+                                 const uint n,
+                        global   const real *vs,
+                        global   const uint *p,
+                        global   const real *g,
+                        global   const uint *nq,
+                        constant       real *xqs,
+                        constant       real *yqs,
+                        constant       real *wqs,
+                        global   const real *bases,
+                                 const uint num_nf_writing_clusters,
+                        global   const uint *nf_writings_this_device,
+                        global   const uint *num_nf_h2_leafs_per_cluster,
+                        global   const uint *nf_idx_offs,
+                        global   const uint *nf_ridx_sizes,
+                        global   const uint *nf_cidx_sizes,
+                        global   const uint *nf_ridx_offs,
+                        global   const uint *nf_cidx_offs,
+                        global   const uint *nf_ridxs,
+                        global   const uint *nf_cidxs,
+                        global   const uint *nf_xt_offs,
+                        global   const uint *nf_yt_offs,
+                        global   const uint *num_min_vert,
+                        global   const uint *idx_off_min_vert,
+                        global   const uint *rows_min_vert,
+                        global   const uint *cols_min_vert,
+                        global   const uint *cidx_min_vert,
+                                 const real bem_alpha,
+                                 const real alpha,
+                        global   const real *xt,
+                        global         real *yt)
+{
+  const size_t grpid0 = get_group_id(0);
+
+  if(grpid0 >= num_nf_writing_clusters)
+    return;
+  else
+  {
+    const real   kernel_factor = r_four_pi;
+
+    uint   row_this_group      = nf_writings_this_device[grpid0];
+
+    uint   num_h2_leafs        = num_nf_h2_leafs_per_cluster[row_this_group];
+
+    gcidxinfo  gcii;
+    geom       sur;
+    intinfo    iinfo;
+    singquadc  sq;
+
+    local real ytl[1];
+
+    init_row_gcidxinfo(&gcii,
+                       num_h2_leafs,
+                       nf_idx_offs[row_this_group],
+                       nf_ridx_sizes[row_this_group],
+                       nf_ridx_offs[row_this_group],
+                       nf_ridxs,
+                       nf_yt_offs[row_this_group],
+                       yt,
+                       ytl);
+
+    init_intinfo(&iinfo,
+                 num_min_vert[row_this_group],
+                 idx_off_min_vert[row_this_group],
+                 rows_min_vert,
+                 cols_min_vert,
+                 cidx_min_vert);
+
+    init_singquadc_uncommon(&sq,
+                            dim,
+                            nq,
+                            xqs,
+                            yqs,
+                            wqs,
+                            bases);
+
+    init_geom(&sur, dim, n, vs, p, g, 0, 0, 0);
+
+    eval_integrals(&gcii,
+                   &iinfo,
+                   &sur,
+                   &sq,
+                   bem_alpha,
+                   kernel_factor,
+                   alpha,
+                   xt);
+  }
+}
+
 #endif // GREENCROSS_CL

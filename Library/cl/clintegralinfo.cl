@@ -86,13 +86,19 @@ eval_integrals(pgcidxinfo gcii, pcintinfo iinfo, pcgeom sur, psingquadc sq,
                                  vload3(q.z, sur->v) };
 
     real base;
+    uint nq;
     uint xp[3], yp[3];
 
     constant real *xq, *yq, *wq;
 
-    select_quadraturec(sq, p, q, xp, yp, &xq, &yq, &wq, &base);
+    select_uncommon_quadraturec(sq, p, q, xp, yp, &nq, &xq, &yq, &wq, &base);
 
-    const uint nq = sq->nq;
+
+    // uint test = (p.x == q.x) + (p.x == q.y) + (p.x == q.z) +
+    //             (p.y == q.x) + (p.y == q.y) + (p.y == q.z) +
+    //             (p.z == q.x) + (p.z == q.y) + (p.z == q.z);
+    //
+    // if(get_global_id(0) == 0 && k == 0) printf("%u\n", test);
 
     real sum = r_zero;
 
@@ -121,6 +127,8 @@ eval_integrals(pgcidxinfo gcii, pcintinfo iinfo, pcgeom sur, psingquadc sq,
              (t - s)    * convert_float3(y[yp[1]]) +
              s          * convert_float3(y[yp[2]]);
 #else
+        // if(k == 0 && get_group_id(0) == 0) printf("%u: %.5e %.5e %.5e %.5e %.5e\n", q + lid0, xq[q + lid0], xq[q + lid0 + nq], yq[q + lid0], yq[q + lid0 + nq], wq[q + lid0]);
+
         t  = xq[q + lid0];
         s  = xq[q + lid0 + nq];
 
@@ -129,7 +137,7 @@ eval_integrals(pgcidxinfo gcii, pcintinfo iinfo, pcgeom sur, psingquadc sq,
         xx = (r_one - t) * x[xp[0]] + (t - s) * x[xp[1]] + s * x[xp[2]];
 
         t  = yq[q + lid0];
-        s  = yq[q + lid0 + sq->nq];
+        s  = yq[q + lid0 + nq];
 
         yy = (r_one - t) * y[yp[0]] + (t - s) * y[yp[1]] + s * y[yp[2]];
 #endif

@@ -46,7 +46,7 @@ typedef const greencross *pcgreencross;
 static const uint greencross_min_dim = 2;
 static const uint greencross_max_dim = 3;
 
-static const size_t num_kernels = 4;
+static const size_t num_kernels = 3;
 
 /** @brief Main container object for performing the Green cross approximation
  *         (GCA) method. */
@@ -104,6 +104,8 @@ struct _greencross
 
   psingquadgca sq_gca;
 
+  psingquadgca sq_uncommon;
+
   psingquadgca   sq_partial_min_vert;
 
   psingquadgca   sq_partial_min_edge;
@@ -125,6 +127,8 @@ struct _greencross
   pgcopencl gcocl;
 
   pgcopencl      ocl_info_nf;
+
+  pintegralinfos iinfos;
 
   pintegralinfos iinfos_min_edge;
 
@@ -302,6 +306,12 @@ fastaddeval_nearfield_partial_min_id_vert_gca(pcgreencross gc,
                                               field        alpha,
                                               pavector     xt,
                                               pavector     yt);
+
+HEADER_PREFIX void
+fastaddeval_nearfield_uncommon_gca(pcgreencross gc,
+                                   field        alpha,
+                                   pavector     xt,
+                                   pavector     yt);
 
 HEADER_PREFIX void
 //#ifndef USE_OPENMP

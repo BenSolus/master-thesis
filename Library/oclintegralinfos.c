@@ -150,6 +150,14 @@ new_integralinfos()
   return iinfos;
 }
 
+void
+del_integralinfos(pintegralinfos iinfos)
+{
+  uninit_integralinfos(iinfos);
+
+  if(iinfos != NULL)
+    freemem(iinfos);
+}
 static bool
 are_equal_clusters(pccluster a, pccluster b)
 {
@@ -339,6 +347,129 @@ build_from_idxinfos_integralinfos(pcgcopencl idxinfos,
   {
     /* Get index offsets for informations about integrals where row and column
      * polygon share at least min_num_id_verts common vertices. */
+    if(i > 0)
+      iinfos->idx_off[i] = iinfos->idx_off[i - 1] + iinfos->num_integrals[i - 1];
+  }
+
+  /* Allocate memory for nondimensionalize versions of the arrays. */
+
+  iinfos->host_rows =
+    (uint *) calloc(iinfos->idx_off[iinfos->num_integral_grps - 1] +
+                    iinfos->num_integrals[iinfos->num_integral_grps - 1],
+                    sizeof(uint));
+
+  iinfos->host_cols =
+    (uint *) calloc(iinfos->idx_off[iinfos->num_integral_grps - 1] +
+                    iinfos->num_integrals[iinfos->num_integral_grps - 1],
+                    sizeof(uint));
+
+  iinfos->host_cidx =
+    (uint *) calloc(iinfos->idx_off[iinfos->num_integral_grps - 1] +
+                    iinfos->num_integrals[iinfos->num_integral_grps - 1],
+                    sizeof(uint));
+
+  /* Write in the nondimensionalize versions of the arrays. */
+  for(uint i = 0; i < iinfos->num_integral_grps; ++i)
+  {
+    memcpy(iinfos->host_rows + iinfos->idx_off[i],
+           iinfos->rows[i],
+           iinfos->num_integrals[i] * sizeof(uint));
+
+    memcpy(iinfos->host_cols + iinfos->idx_off[i],
+           iinfos->cols[i],
+           iinfos->num_integrals[i] * sizeof(uint));
+
+    memcpy(iinfos->host_cidx + iinfos->idx_off[i],
+           iinfos->cidx[i],
+           iinfos->num_integrals[i] * sizeof(uint));
+  }
+
+  /* Write everything to the devices. */
+  for(uint i = 0; i < ocl_system.num_devices; ++i)
+  {
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           iinfos->num_integral_grps,
+                           sizeof(uint),
+                           iinfos->num_integrals,
+                           NULL,
+                           &iinfos->buf_num_integrals[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           iinfos->num_integral_grps,
+                           sizeof(uint),
+                           iinfos->idx_off,
+                           NULL,
+                           &iinfos->buf_idx_off[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           iinfos->idx_off[iinfos->num_integral_grps - 1] +
+                           iinfos->num_integrals[iinfos->num_integral_grps - 1],
+                           sizeof(uint),
+                           iinfos->host_rows,
+                           NULL,
+                           &iinfos->buf_rows[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           iinfos->idx_off[iinfos->num_integral_grps - 1] +
+                           iinfos->num_integrals[iinfos->num_integral_grps - 1],
+                           sizeof(uint),
+                           iinfos->host_cols,
+                           NULL,
+                           &iinfos->buf_cols[i]);
+
+    create_and_fill_buffer(ocl_system.contexts[i],
+                           CL_MEM_READ_ONLY,
+                           ocl_system.queues[i * ocl_system.queues_per_device],
+                           iinfos->idx_off[iinfos->num_integral_grps - 1] +
+                           iinfos->num_integrals[iinfos->num_integral_grps - 1],
+                           sizeof(uint),
+                           iinfos->host_cidx,
+                           NULL,
+                           &iinfos->buf_cidx[i]);
+  }
+
+  return iinfos;
+}
+
+pintegralinfos
+build_from_idxinfos(pcgcopencl idxinfos,
+                    pch2matrix H2,
+                    const uint dim,
+                    void       *poly_idxs)
+{
+  pintegralinfos iinfos = new_integralinfos();
+
+  iinfos->num_integral_grps = idxinfos->num_row_leafs;
+
+  iinfos->num_integrals = (uint*)   calloc(iinfos->num_integral_grps, sizeof(uint));
+  iinfos->idx_off       = (uint*)   calloc(iinfos->num_integral_grps, sizeof(uint));
+  iinfos->rows          = (uint **) calloc(iinfos->num_integral_grps, sizeof(uint*));
+  iinfos->cols          = (uint **) calloc(iinfos->num_integral_grps, sizeof(uint*));
+  iinfos->cidx          = (uint **) calloc(iinfos->num_integral_grps, sizeof(uint*));
+
+  for(uint i = 0; i < iinfos->num_integral_grps; ++i)
+  {
+    iinfos->rows[i] = (uint *) calloc(0, sizeof(uint));
+    iinfos->cols[i] = (uint *) calloc(0, sizeof(uint));
+    iinfos->cidx[i] = (uint *) calloc(0, sizeof(uint));
+  }
+
+  iterate_recursively_h2matrix(idxinfos, H2, 0, dim, poly_idxs, 0, iinfos);
+
+  iinfos->idx_off = (uint*) calloc(iinfos->num_integral_grps, sizeof(uint));
+
+  for(uint i = 0; i < iinfos->num_integral_grps; ++i)
+  {
+    /* Get index offsets for informations about integrals where row and column
+     * polygon share at least one common vertex. */
     if(i > 0)
       iinfos->idx_off[i] = iinfos->idx_off[i - 1] + iinfos->num_integrals[i - 1];
   }

@@ -61,7 +61,7 @@ struct _singquadl
 
 struct _singquadc
 {
-  uint nq;
+  uint4    nq;
 
   constant real *xqs;
   constant real *yqs;
@@ -110,13 +110,13 @@ init_singquadl(             psingquadl sq,
 }
 
 void
-init_singquadc_any(               psingquadc sq,
-                            const uint       dim,
-                            const uint       nq,
-                   constant       real       *xqs,
-                   constant       real       *yqs,
-                   constant       real       *wqs,
-                   global   const real       *bases)
+init_singquadc_common(               psingquadc sq,
+                               const uint       dim,
+                               const uint       nq,
+                      constant       real       *xqs,
+                      constant       real       *yqs,
+                      constant       real       *wqs,
+                      global   const real       *bases)
 {
   sq->nq    = nq;
 
@@ -127,6 +127,29 @@ init_singquadc_any(               psingquadc sq,
   sq->bases = vload4(0, bases);
 
   sq->offset = 0;
+}
+
+void
+init_singquadc_uncommon(               psingquadc sq,
+                                 const uint       dim,
+                        global   const uint       *nq,
+                        constant       real       *xqs,
+                        constant       real       *yqs,
+                        constant       real       *wqs,
+                        global   const real       *bases)
+{
+  sq->nq.x  =  nq[0];
+  sq->nq.y  =  nq[1];
+  sq->nq.z  =  nq[2];
+  sq->nq.w  =  0;
+
+  sq->xqs   = xqs;
+  sq->yqs   = yqs;
+  sq->wqs   = wqs;
+
+  sq->bases = vload4(0, bases);
+
+  sq->offset = -1;
 }
 
 void
@@ -293,6 +316,7 @@ select_quadraturec(               psingquadc sq,
                    private  const uint3      y,
                    private        uint       *xp,
                    private        uint       *yp,
+                   private        uint       *nq,
                    constant       real       **xq,
                    constant       real       **yq,
                    constant       real       **wq,
@@ -304,9 +328,10 @@ select_quadraturec(               psingquadc sq,
 
   xp[0] = 0; xp[1] = 1; xp[2] = 2; yp[0] = 0; yp[1] = 1; yp[2] = 2;
 
-  *xq   = sq->xqs + (2 * (p + sq->offset) * sq->nq);
-  *yq   = sq->yqs + (2 * (p + sq->offset) * sq->nq);
-  *wq   = sq->wqs + ((p + sq->offset) * sq->nq);
+  *nq   = ((private uint*) &sq->nq)[p + sq->offset];
+  *xq   = sq->xqs + (2 * (p + sq->offset) * *nq);
+  *yq   = sq->yqs + (2 * (p + sq->offset) * *nq);
+  *wq   = sq->wqs + (1 * (p + sq->offset) * *nq);
   *base = ((private real*) &sq->bases)[p + sq->offset];
 
   p = 0;
@@ -325,7 +350,85 @@ select_quadraturec(               psingquadc sq,
     }
   }
 
-  // printf("%u (%u %u %u) (%u %u %u)\n", p, xp[0], xp[1], xp[2], yp[0], yp[1], yp[2]);
+  uint q = p;
+
+  for(uint i = 0; i < 3; ++i)
+  {
+    uint j = 0;
+
+    for(j = 0; (j < q) &&
+               (((private const uint*) &x)[i] !=
+                ((private const uint*) &x)[xp[j]]); ++j)
+      ;
+
+    if(j == q)
+      xp[q++] = i;
+  }
+
+  q = p;
+
+  for(uint i = 0; i < 3; ++i)
+  {
+    uint j = 0;
+
+    for(j = 0; (j < q) &&
+               (((private const uint*) &y)[i] !=
+                ((private const uint*) &y)[yp[j]]); ++j)
+      ;
+
+    if(j == q)
+      yp[q++] = i;
+  }
+
+  return p;
+}
+
+uint
+select_uncommon_quadraturec(               psingquadc sq,
+                            private  const uint3      x,
+                            private  const uint3      y,
+                            private        uint       *xp,
+                            private        uint       *yp,
+                            private        uint       *nq,
+                            constant       real       **xq,
+                            constant       real       **yq,
+                            constant       real       **wq,
+                            private        real       *base)
+{
+  uint p = (x.x == y.x) + (x.x == y.y) + (x.x == y.z) +
+           (x.y == y.x) + (x.y == y.y) + (x.y == y.z) +
+           (x.z == y.x) + (x.z == y.y) + (x.z == y.z);
+
+  xp[0] = 0; xp[1] = 1; xp[2] = 2; yp[0] = 0; yp[1] = 1; yp[2] = 2;
+
+  *nq   = ((private uint*) &sq->nq)[p + sq->offset];
+  *xq   = sq->xqs;
+  *yq   = sq->yqs;
+  *wq   = sq->wqs;
+  *base = ((private real*) &sq->bases)[p + sq->offset];
+
+  for(uint i = 0; i < (p + sq->offset); ++i)
+  {
+    *xq += 2 * ((private uint*) &sq->nq)[i];
+    *yq += 2 * ((private uint*) &sq->nq)[i];
+    *wq += 1 * ((private uint*) &sq->nq)[i];
+  }
+
+  p = 0;
+
+  for(uint i = 0; i < 3; ++i)
+  {
+    for(uint j = 0; j < 3; ++j)
+    {
+      if(((private const uint*) &x)[i] == ((private const uint*) &y)[j])
+      {
+        xp[p] = i;
+        yp[p] = j;
+        ++p;
+        break;
+      }
+    }
+  }
 
   uint q = p;
 

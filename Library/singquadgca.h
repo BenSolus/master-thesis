@@ -30,7 +30,7 @@ typedef const singquadgca *pcsingquadgca;
 
 struct _singquadgca
 {
-  uint nq;
+  uint nq[3];
 
   real *xqs;
   real *yqs;
@@ -38,6 +38,8 @@ struct _singquadgca
   real *bases;
 
   int    offset;
+
+  cl_mem *buf_nq;
 
   /** @brief OpenCL buffer objects for the first quadratur points. */
   cl_mem *buf_xqs;
@@ -69,6 +71,9 @@ build_min_vert_from_singquad2d(psingquad2d sq);
 HEADER_PREFIX psingquadgca
 build_min_edge_from_singquad2d(psingquad2d sq);
 
+HEADER_PREFIX psingquadgca
+build_uncommon_from_singquad2d(psingquad2d sq);
+
 HEADER_PREFIX void
 select_quadrature_singquadgca(psingquadgca sq_gca,
                               const uint   *tv,
@@ -79,3 +84,15 @@ select_quadrature_singquadgca(psingquadgca sq_gca,
                               real         **y,
                               real         **w,
                               real         *base);
+
+HEADER_PREFIX void
+select_quadrature_uncommon_singquadgca(psingquadgca sq_gca,
+                                       const uint   *tv,
+                                       const uint   *sv,
+                                       uint         *tp,
+                                       uint         *sp,
+                                       uint         *nq,
+                                       real         **x,
+                                       real         **y,
+                                       real         **w,
+                                       real         *base);
