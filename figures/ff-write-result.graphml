@@ -139,7 +139,7 @@
           <y:Geometry height="30.0" width="120.0" x="360.0" y="525.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="39.0" x="40.5" y="-5.0">&lt;html&gt;x&lt;sub&gt;t&lt;sub&gt;1&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="38.0" x="41.0" y="-5.0">&lt;html&gt;x&lt;sub&gt;t&lt;sub&gt;1&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -156,7 +156,7 @@
           <y:Geometry height="30.0" width="120.0" x="510.0" y="525.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="39.0" x="40.5" y="-5.0">&lt;html&gt;x&lt;sub&gt;t&lt;sub&gt;2&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="38.0" x="41.0" y="-5.0">&lt;html&gt;x&lt;sub&gt;t&lt;sub&gt;2&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -173,7 +173,7 @@
           <y:Geometry height="30.0" width="120.0" x="660.0" y="525.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="39.0" x="40.5" y="-5.0">&lt;html&gt;x&lt;sub&gt;t&lt;sub&gt;3&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="38.0" x="41.0" y="-5.0">&lt;html&gt;x&lt;sub&gt;t&lt;sub&gt;3&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -226,7 +226,7 @@ Vektoreintrag<y:LabelModel>
           <y:Geometry height="35.12000000000012" width="53.551999999999964" x="393.224" y="612.4399999999999"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="50.0" x="1.7760000000000105" y="-2.439999999999941">&lt;html&gt;res&lt;sub&gt;1&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="51.0" x="1.2760000000000105" y="-2.439999999999941">&lt;html&gt;res&lt;sub&gt;1&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -243,7 +243,7 @@ Vektoreintrag<y:LabelModel>
           <y:Geometry height="35.12000000000012" width="53.551999999999964" x="543.2240000000002" y="612.4399999999999"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="50.0" x="1.7759999999999536" y="-2.439999999999941">&lt;html&gt;res&lt;sub&gt;2&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="51.0" x="1.2759999999999536" y="-2.439999999999941">&lt;html&gt;res&lt;sub&gt;2&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -260,7 +260,7 @@ Vektoreintrag<y:LabelModel>
           <y:Geometry height="35.12000000000012" width="53.551999999999964" x="693.2239999999999" y="612.4399999999999"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="50.0" x="1.7759999999999536" y="-2.439999999999941">&lt;html&gt;res&lt;sub&gt;3&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="51.0" x="1.2759999999999536" y="-2.439999999999941">&lt;html&gt;res&lt;sub&gt;3&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -277,7 +277,7 @@ Vektoreintrag<y:LabelModel>
           <y:Geometry height="120.0" width="42.28800000000001" x="812.712" y="360.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="43.0" x="-0.35599999999999454" y="40.0">&lt;html&gt;y&lt;sub&gt;&amp;tau&lt;sub&gt;3&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="42.0" x="0.14400000000000546" y="40.0">&lt;html&gt;y&lt;sub&gt;&amp;tau&lt;sub&gt;3&lt;/sub&gt;&lt;/sub&gt;&lt;/html&gt; <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -460,7 +460,7 @@ Zwischenergebnis<y:LabelModel>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="4.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="55.21875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="189.58203125" x="93.16754468455156" y="-76.26549731992236">Schreib Ergebnis
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="55.21875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="203.1171875" x="86.39996655955156" y="-76.26549731992236">Schreibe Ergebnis
 in den Vektor<y:LabelModel>
               <y:SmartEdgeLabelModel autoRotationEnabled="false" defaultAngle="0.0" defaultDistance="10.0"/>
             </y:LabelModel>

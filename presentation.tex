@@ -3,19 +3,28 @@
 \usetheme{metropolis}
 \usepackage{appendixnumberbeamer}
 
-\usepackage{algorithm}
-\usepackage{algpseudocode}
+\usepackage[]{algorithm2e}
+% \usepackage{algorithm}
+% \usepackage{algpseudocode}
 \usepackage{amsfonts}
 \usepackage[ngerman]{babel}
+\usepackage[backend=biber]{biblatex}
 \usepackage{booktabs}
 \usepackage[scale=2]{ccicons}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage[utf8]{inputenc} 
 \usepackage{lipsum}
 \usepackage{listings}
 \usepackage{multirow}
+
 \usepackage{pgfplots}
 \usepackage{xcolor}
+
+\addbibresource{presentation.bib}
+
+\SetInd{0.25em}{0.4em}
+
 
 \usepgfplotslibrary{dateplot}
 
@@ -51,7 +60,7 @@
     language=C
 }
 
-\title{Ein skalierbarer Löser für Randwertprobleme unter Verwendung der
+\title{Ein skalierbarer L\"oser f\"ur Randwertprobleme unter Verwendung der
        Greenschen Kreuzapproximationsmethode und GPUs}
 \date{\today}
 \author{Bennet Carstensen}
@@ -73,7 +82,7 @@
 
 \begin{frame}{Randwertprobleme}
   \begin{columns}
-    \column{0.575\linewidth}
+    \column{0.675\linewidth}
       \begin{itemize}
         \visible<1->{\item Wird verwendet in der
                      \begin{itemize}
@@ -82,14 +91,14 @@
                        \item Akustik
                      \end{itemize}}
         \item \visible<1->{Sei \(\Omega \subseteq \mathbb{R}^{d}\) gegeben,
-                           \(d \in \{ 2, 3 \}\)}
-        \item \visible<2->{\(\int\limits_{\Omega} g(x, y) u(y) dy = f(x)
-                           \text{ für alle } x \in \Omega\)}
+                           \( d \in \{ 2, 3 \} \)}
+        \item \visible<2->{\( \int\limits_{\Omega} g(x, y) u(y) dy = f(x)
+                              \newline \text{ für alle } x \in \Omega \)}
         \item \visible<2->{z.B. \(g(x, y) = \frac{1}{4\pi\left\lVert x - y
                            \right\rVert_{2}}\) (Fundamentallösung der
                            Laplacegleichung)}
       \end{itemize}
-    \column{0.33\linewidth}
+    \column{0.325\linewidth}
       \centering
       \begin{overprint}
         \onslide<1>\includegraphics[width=1.5\linewidth]{figures/fg-sphere-full.pdf}
@@ -98,37 +107,47 @@
 
   \end{columns}
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation.}}
+  \let\thefootnote\relax\footnote{Steffen Börm und Sven Christophersen.
+  \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{
+  ``Approximation of integral operators by Green quadrature and nested cross 
+  approximation''}. In:   \textit{Numerische Mathematik} 133.3 (2016), S. 
+  409-442, 2016.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
 
 \begin{frame}{Diskretisierung}
   \begin{columns}
-    \column{0.575\linewidth}
-      Diskretisierung durch Basisfunktionen\\
+    \column{0.675\linewidth}
+      Galerkin-Diskretisierung mit Basisfunktionen\\
       \({(\varphi_{i})}_{i = 1}^{n} \text{ und }
         {(\psi_{j})}_{j = 1}^{n}, n \in \mathbb{N}\)
       \begin{itemize}
-        \item \(V_{n} = span\{ \varphi_{i} : i \in \{ 1, \hdots, n\}\}, \newline
-               U_{n} = span\{ \psi_{j} : j \in \{ 1, \hdots, n\}\}\)
+        \item \( V_{n} = span\{ \varphi_{i} : i \in \{ 1, \hdots, n\} \},
+                \newline
+                U_{n} = span\{ \psi_{j} : j \in \{ 1, \hdots, n\} \} \)
         \item Finde \(u_{n} \in U_{n}\) mit\\
-        \(\int\limits_{\Omega} v_{n}(x) \int\limits_{\Omega} g(x,y) \
-        u_{n}(y) \ dy \ dx = \int\limits_{\Omega} v_{n}(x) \ f(x) \ dx\)\\
-        für alle \(v_{n} \in V_{n}\)
+        \small{\( \int\limits_{\Omega} v_{n}(x) \int\limits_{\Omega} g(x,y) \
+                  u_{n}(y)
+                   \ dy \ dx = \int\limits_{\Omega} v_{n}(x) \ f(x) \ dx \) \\
+                für alle \(v_{n} \in V_{n}\)}
       \end{itemize}
-    \column{0.33\linewidth}
+    \column{0.325\linewidth}
       \centering
       \includegraphics[width=1.5\linewidth]{figures/fg-sphere-tri.pdf}
   \end{columns}
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation.}}
+  \let\thefootnote\relax\footnote{Steffen Börm und Sven Christophersen.
+  \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{
+  ``Approximation of integral operators by Green quadrature and nested cross 
+  approximation''}. In:   \textit{Numerische Mathematik} 133.3 (2016), S. 
+  409-442, 2016.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
 
 \begin{frame}{Lineares Gleichungssystem}
-  Sei \(u_{n}  = \sum\limits_{j = 1}^{n} \varphi_{j} z_{j}, z_{j} \in
+  Sei \(u_{n}  = \sum\limits_{j = 1}^{n} \psi_{j} z_{j}, z_{j} \in
         \mathbb{R} \)
   \begin{itemize}
     \item Finde \(z = (z_{1}, \hdots, z_{n}) \in \mathbb{R}^{n}\) mit\\
@@ -139,7 +158,11 @@
     \item \(i, j \in \{ 1, \hdots, n \}\)
   \end{itemize}
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation.}}
+  \let\thefootnote\relax\footnote{Steffen Börm und Sven Christophersen.
+  \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{
+  ``Approximation of integral operators by Green quadrature and nested cross 
+  approximation''}. In:   \textit{Numerische Mathematik} 133.3 (2016), S. 
+  409-442, 2016.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
@@ -148,33 +171,35 @@
   \begin{overprint}
     \onslide<1-2>
       \begin{table}[h]
-        \begin{tabular}{ccc} \toprule
-                    & \multicolumn{2}{c}{Speicherbedarf (in GB)} \\
-          Dimension & Galerkin & \\ \midrule
-              16384 &      1.0 & \\
-              32768 &      4.0 & \\
-              65536 &     16.0 & \\
-             131072 &     64.0 & \\
-             262144 &    256.0 & \\ \bottomrule
+        \begin{tabular}{rrr} \toprule
+          \multirow{2}{*}{Dimension} & \multicolumn{2}{c}{Speicherbedarf (in 
+          GB)} \\ \cmidrule{2-3}
+                      & Galerkin & \\ \midrule
+              16\,384 &      1.0 & \\
+              32\,768 &      4.0 & \\
+              65\,536 &     16.0 & \\
+             131\,072 &     64.0 & \\
+             262\,144 &    256.0 & \\ \bottomrule
         \end{tabular}
       \end{table}
     \onslide<3>
       \begin{table}[h]
-        \begin{tabular}{ccc} \toprule
-                    & \multicolumn{2}{c}{Speicherbedarf (in GB)} \\
-          Dimension & Galerkin & \(\mathcal{H}^2\)-Matrix \\ \midrule
-              16384 &      1.0 & 0.20613 \\
-              32768 &      4.0 & 0.43834 \\
-              65536 &     16.0 & 0.88314 \\
-             131072 &     64.0 & 1.80900 \\
-             262144 &    256.0 & 3.57143 \\ \bottomrule
+        \begin{tabular}{rrr} \toprule
+          \multirow{2}{*}{Dimension} & \multicolumn{2}{c}{Speicherbedarf (in 
+          GB)} \\ \cmidrule{2-3}
+                      & Galerkin & \(\mathcal{H}^2\)-Matrix \\ \midrule
+              16\,384 &      1.0 & 0.206 \\
+              32\,768 &      4.0 & 0.438 \\
+              65\,536 &     16.0 & 0.883 \\
+             131\,072 &     64.0 & 1.809 \\
+             262\,144 &    256.0 & 3.571 \\ \bottomrule
         \end{tabular}
       \end{table}
   \end{overprint}
 
   \begin{itemize}
     \item \visible<1->{Problem: \(G\) meist vollbesetzt \(\Rightarrow\) hohe
-                       Speicheranforderungen und Rechenaufwand}
+                       Speicheranforderungen und hoher Rechenaufwand}
     \visible<2->{\item Lösungsansätze:}
     \begin{itemize}
       \item \visible<2->{Schnelle Multipol-Methode (bessere
@@ -193,7 +218,7 @@
   \begin{figure}
     \centering
     \includegraphics[width=.45\linewidth]{figures/fg-memory-h2-nf-ff.pdf}
-    \caption{Speicherbedarf einer \(\mathcal{H}^2\)-Matrix und deren Blockmatrizen.}
+    \caption{Speicherbedarf einer \(\mathcal{H}^2\)-Matrix und deren Blockmatrizen}
   \end{figure}
   \begin{itemize}
     \item Problem: Reale Problemstellungen benötigen immer größere Matrizen
@@ -213,13 +238,14 @@
   \small
   \begin{table}[h]
     \begin{tabular}{rrr} \toprule
-                & \multicolumn{2}{c}{Performanz in ms\footnotemark[1]} \\ \cmidrule{2-3}
-      Dimension & \(\mathcal{H}^2\)-MVM &
+      \multirow{2}{*}{Dimension} & \multicolumn{2}{c}{Rechenzeit in
+      ms\footnotemark[1]} \\ \cmidrule{2-3}
+                & \(\mathcal{H}^2\)-MVM &
       \begin{tabular}{@{}c@{}}\(\mathcal{H}^2\)-MVM + \\ Blockmatrizen \\ on-the-fly\end{tabular} \\ \midrule
-        16384 &  140 &   23390 \\
-        32768 &  300 &   50740 \\
-        65536 &  660 &  100160 \\
-       131072 & 1190 &  205210 \\ \bottomrule
+        16\,384 &    140 &  6\,980 \\
+        32\,768 &    300 & 14\,640 \\
+        65\,536 &    660 & 29\,440 \\
+       131\,072 & 1\,190 & 60\,920 \\ \bottomrule
     \end{tabular}
   \end{table}
   \normalsize
@@ -243,7 +269,7 @@
 \begin{frame}{\(\mathcal{H}^2\)-Matrizen}
   \begin{figure}
     \begin{overprint}
-      \onslide<1>\centering\includegraphics[width=.5\linewidth]{figures/fg-h2-matrix.pdf}\caption{Aufbau eineer \(\mathcal{H}^2\)-Matrix aus Clusterbasen \(\tau\) und \(\sigma\)}
+      \onslide<1>\centering\includegraphics[width=.5\linewidth]{figures/fg-h2-matrix.pdf}\caption{Aufbau einer \(\mathcal{H}^2\)-Matrix aus Clusterbasen \( \tau \) und \( \sigma \)}
       \onslide<2>\centering\includegraphics[width=.5\linewidth]{figures/fg-h2-leaf-matrices.pdf}\caption{Blattmatrizen der Clusterbasen \(\tau\) und \(\sigma\)}
       \onslide<3>\centering\includegraphics[width=.5\linewidth]{figures/fg-h2-transfer-matrices.pdf}\caption{Aufbau der Teilclusterbasen von \(\tau\) und \(\sigma\)}
       \onslide<4>\centering\includegraphics[width=.5\linewidth]{figures/fg-h2-near-far-field-matrices.pdf}\caption{Matrizen für zulässige und unzulässige Blöcke}
@@ -251,7 +277,9 @@
   \end{figure}
 
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00607-002-1450-4?LI=true}{Data-sparse approximation by adaptive \(\mathcal{H}^2\)-matrices.}}
+  \let\thefootnote\relax\footnote{Wolfgang Hackbusch und Steffen B{\"o}rm.
+  \href{https://link.springer.com/article/10.1007\%2Fs00607-002-1450-4?LI=true}{``Data-sparse approximation by adaptive \(\mathcal{H}^2\)-matrices''}. In:
+   \textit{Computing} 69.1 (2002), S. 1-35.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
@@ -272,98 +300,141 @@
   \end{itemize}
 
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00607-002-1450-4?LI=true}{Data-sparse approximation by adaptive \(\mathcal{H}^2\)-matrices.}}
+  \let\thefootnote\relax\footnote{Wolfgang Hackbusch und Steffen B{\"o}rm.
+  \href{https://link.springer.com/article/10.1007\%2Fs00607-002-1450-4?LI=true}{``Data-sparse approximation by adaptive \(\mathcal{H}^2\)-matrices''}. In:
+   \textit{Computing} 69.1 (2002), S. 1-35.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
 
 \begin{frame}{\(\mathcal{H}^2\)-Matrix-Vektor-Multiplikation}
   \begin{columns}
-    \column{.33\linewidth}
+    \column{.30\linewidth}
       \begin{overprint}
         \onslide<1>
-          \(y|_{\hat{\tau}} := \overbrace{V_{\tau} \underbrace{S_{\tau \sigma}
-            \overbrace{V_{\sigma}^T
-            x|_{\hat{\sigma}}}^{\textcolor{red}{\text{forward}}}}_{fastaddeval}}
-            ^{backward}\)
+          \( y|_{\hat{\tau}} := \overbrace{V_{\tau} \underbrace{S_{\tau \sigma}
+             \overbrace{V_{\sigma}^T
+             x|_{\hat{\sigma}}}^{\textcolor{red}{\text{forward}}}}_{fastaddeval}}^{backward} \)
         \onslide<2>
-          \(y|_{\hat{\tau}} := \overbrace{V_{\tau} \underbrace{S_{\tau \sigma}
-            \textcolor{orange}{\hat{x}_\sigma}}_{\textcolor{red}{fastaddeval}}}
-            ^{backward}\)
+          \( y|_{\hat{\tau}} := \overbrace{V_{\tau} \underbrace{S_{\tau \sigma}
+             \textcolor{orange}{\hat{x}_\sigma}}_{\textcolor{red}{fastaddeval}}}^{backward} \)
         \onslide<3>
-          \(y|_{\hat{\tau}} := \overbrace{V_{\tau}
-            \textcolor{orange}{\hat{y}_\tau}}^{\textcolor{red}{backward}}\)
+           \( y|_{\hat{\tau}} := \overbrace{V_{\tau}
+              \textcolor{orange}{\hat{y}_\tau}}^{\textcolor{red}{backward}} \)
       \end{overprint}
 
-    \column{.5\linewidth}
+    \column{.60\linewidth}
       \begin{overprint}
         \onslide<1>
           \begin{algorithm}[H]
-            \begin{algorithmic}[1]
-              \normalsize
-              {
-              \Function{Forward}{cluster \(\sigma\)}
-              \If{\(sons(\sigma) = \emptyset\)}
-                \State{\(\hat{x}_{\sigma} \leftarrow V^T_{\sigma} x|_{\hat{\sigma}}\)}
-              \Else{}
-                \State{\(\hat{x}_{\sigma} \leftarrow 0\)}
-                \For{\(\sigma' \in sons(\sigma)\)}
-                  \State{FORWARD\relax(\(\sigma'\))}
-                  \State{\(\hat{x}_{\sigma} \leftarrow \hat{x}_{\sigma} +
-                           E^T_{\sigma'}\hat{x}_{\sigma'}\)}
-                \EndFor{}
-              \EndIf{}
-              \EndFunction{}
-              }
-            \end{algorithmic}
-          \end{algorithm}
-      \onslide<2>
-        \begin{algorithm}[H]
-          \begin{algorithmic}[1]
-            \normalsize
+            \SetAlFnt{\tiny}
+            \SetKwProg{Proc}{}{}{}
+            \Proc{forward\relax(\( \sigma \))}
             {
-            \Function{fastaddeval}{}
-            \State{(\(\alpha\), block \(, b = (\tau, \sigma)\))}
-            \If{\(b \in \mathcal{L}_{\mathcal{I} \times \mathcal{J}}^{+}\)}
-              \State{\(\hat{y}_{\tau} \leftarrow \hat{y}_{\tau} + \alpha S_{b}
-                       \hat{x}_{\sigma}\)}
-            \ElsIf{\(b \in \mathcal{L}_{\mathcal{I} \times \mathcal{J}}^{-}\)}
-              \State{\(y|_{\hat{\tau}} \leftarrow y|_{\hat{\tau}} + \alpha
-                       G|_{\hat{\tau} \times \hat{\sigma}} x|_{\hat{\sigma}}\)}
-            \Else{}
-              \For{\(b' \in sons(b)\)}
-                \State{FASTADDEVAL\relax(\(\alpha, b'\))}
-              \EndFor{}
-            \EndIf{}
-          \EndFunction{}
+              \uIf{sons\( (s) = \emptyset \) \textbf{then}}
+              {
+                \( \hat{x}_{s} \leftarrow W_{s}^{*}x|_{\hat{s}} \) \;
+              }
+              \Else{
+                \( \hat{x}_{s} \leftarrow 0 \) \;
+                \ForAll{\( s' \in \text{sons}(s) \)}
+                {
+                  \textit{forward\relax(}\( W, \ s', \ x, \
+                    \hat{x} \)\textit{)} \;
+                  \( \hat{x}_{s} \leftarrow \hat{x}_{s} + F_{s'}^{*}
+                     \hat{x}_{s'}\) \;
+                }
+              }
+            }
+          \end{algorithm}
+        \onslide<2>
+          \begin{algorithm}[H]
+            \SetKwProg{Proc}{}{}{}
+            \Proc{fastaddeval \\ \quad \small{(\( \alpha, \ G, \ b = (t, s), \ x, \
+                                                   \hat{x}, \, \textbf{var } y, \hat{y}
+                                                \))}}
+            {
+              \uIf{\( b \in \mathcal{L}^{+}_{\mathcal{I} \times \mathcal{J}}
+                   \)}
+              {
+                \( \hat{y}_{t} \leftarrow \hat{y}_{t} + \alpha S_{b}\hat{x}_{s}
+                \) \;
+              }
+              \uElseIf{\( b \in\mathcal{L}^{-}_{\mathcal{I} \times
+                          \mathcal{J}} \)}
+              {
+                \( y|_{\hat{t}} \leftarrow y|_{\hat{t}} + \alpha
+                   N_{b}x|_{\hat{s}} \) \;
+              }
+              \Else{
+                \ForAll{\( b' \in \text{sons}(b)\)}
+                {
+                  \small{\textit{fastaddeval\relax(}\( \alpha, \ G, \ b', \ x, \
+                                                                  \hat{x}, \ y, \
+                                                                  \hat{y} \)\textit{)} \;}
+                }
+              }
+            }
+          \end{algorithm}
+        \onslide<3>
+          \begin{algorithm}[H]
+            \SetKwProg{Proc}{}{}{}
+            \Proc{backward\relax(\( V, \ t, \ \textbf{var } \hat{y}, \ y
+                                                \))}
+            {
+              \eIf{sons\( (t) = \emptyset \) \textbf{then}}
+              {
+                \( y|_{\hat{t}} \leftarrow y|_{\hat{t}} + V_{t}\hat{y}_{t} \) \;
+              }
+              {
+                \ForAll{\( s' \in \text{sons}(s) \)}
+                {
+                \( \hat{y}_{t'} \leftarrow \hat{y}_{t'} + E_{t'} \hat{y}_{t}\) \;
+                  \textit{backward\relax(}\( V, \ t', \ \hat{x}, \ x
+                  \)\textit{)} \;
+              }
+            }
           }
-          \end{algorithmic}
         \end{algorithm}
-      \onslide<3>
-      \begin{algorithm}[H]
-        \begin{algorithmic}[1]
-          \normalsize
-          {
-          \Function{Backward}{cluster \(\tau\)}
-          \If{\(sons(\tau) = \emptyset\)}
-            \State{\(y|_{\hat{\tau}} \leftarrow y|_{\hat{\tau}} + V_{\tau}
-                     \hat{y}_{\tau}\)}
-          \Else{}
-            \For{\(\tau' \in sons(\tau)\)}
-              \State{\(\hat{y}_{\tau'} \leftarrow \hat{y}_{\tau'} +
-                       E_{\tau'}\hat{y}_{\tau}\)}
-              \State{Backward\relax(\(\tau'\))}
-            \EndFor{}
-          \EndIf{}
-          \EndFunction{}
-          }
-        \end{algorithmic}
-      \end{algorithm}
-    \end{overprint}
+      \end{overprint}
   \end{columns}
 
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00607-002-1450-4?LI=true}{Data-sparse approximation by adaptive \(\mathcal{H}^2\)-matrices.}}
+  \let\thefootnote\relax\footnote{Wolfgang Hackbusch und Steffen B{\"o}rm.
+  \href{https://link.springer.com/article/10.1007\%2Fs00607-002-1450-4?LI=true}{``Data-sparse approximation by adaptive \(\mathcal{H}^2\)-matrices''}. In:
+   \textit{Computing} 69.1 (2002), S. 1-35.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+  \normalsize
+\end{frame}
+
+\section{Sauter-Schwab Quadratur}
+
+\begin{frame}{Sauter-Schwab Quadratur}
+  \begin{itemize}
+    \item Vier Fälle von Integralen, abhängig von den entsprechenden 
+          Dreieckspaaren \( \Delta_{i}, \ \Delta_{j} \) der Triangulation:
+    \begin{enumerate}
+        \item \( \Delta_{i} \) und \( \Delta_{j} \) sind disjunkt, also \(
+                 \Delta_{i} \cap \Delta_{j} = \emptyset \).
+        \item \( \Delta_{i} \) und \( \Delta_{j} \) teilen sich einen Vertex \(
+                 v \in \mathbb{R}^{d} \), also \( \Delta_{i} \cap \Delta_{j} = 
+                 \{ v \} \).
+        \item \( \Delta_{i} \) und \( \Delta_{j} \) teilen sich eine Kante
+              \( \{ v_{1}, \ v_{2} \} \in \mathbb{R}^{d} \times \mathbb{R}^{d} 
+              \), also \( \Delta_{i} \cap \Delta_{j} = \{ v_{1}, \ v_{2} \} \).
+        \item \( \Delta_{i} \) und \( \Delta_{j} \) sind identisch, also \(
+                 \Delta_{i} = \Delta_{i} \cap \Delta_{j} = \Delta_{j} \).
+    \end{enumerate}
+    \item Auswertung reduziert sich auf (eine) unterschiedliche (Anzahl von)
+          Quadraturpunkten und Permutation der Dreiecksvertices zueinander
+  \end{itemize}
+
+  \footnotesize
+  \let\thefootnote\relax\footnote{S. A. Sauter und C. Lage.
+  \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{
+  ``On the efficient computation of singular and nearly singular surface 
+  integrals arising in 3D-Galerkin BEM''}. In:   \textit{Zeitschrift f\"ur 
+  angewandte Mathematik und Mechanik } 76 (1996), S. 273-275.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
@@ -396,168 +467,14 @@
   \end{itemize}
 
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
+  \let\thefootnote\relax\footnote{Steffen Börm und Sven Christophersen.
+  \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{
+  ``Approximation of integral operators by Green quadrature and nested cross 
+  approximation''}. In:   \textit{Numerische Mathematik} 133.3 (2016), S. 
+  409-442, 2016.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
-% \begin{frame}{GCA-Methode}
-%   \begin{enumerate}
-%     \item Niedrigrangapproximation eines zulässigen Blocks durch Greens zweite
-%           Identität
-%   \end{enumerate}
-%
-%   \begin{overprint}
-%       \onslide<1>
-%         \begin{itemize}
-%           \item \(g(x, y) = \int\limits_{\partial \omega} g(x, z)
-%                   \frac{\partial g}{\partial n(z)}(z, y) \ dz \ -
-%                   \int\limits_{\partial \omega}
-%                   \frac{\partial g}{\partial n(z)}(x, z) g(z, y) \ dz\)
-%           \item[] \hfil für alle \(x \in \omega, y \notin \omega\)
-%         % \item \visible<2->{\(G|_{\hat{\tau} \times \hat{\sigma}} \approx
-%         %                      A_{\tau} B_{\tau\omega}^{*} \qquad A_{\tau} =
-%         %                      (A_{\tau+} A_{\tau-}) \qquad B_{\tau\sigma} =
-%         %                      (B_{\tau\sigma+} B_{\tau\sigma-})\)}
-%         \end{itemize}
-%       \onslide<2>
-%         \begin{itemize}
-%           \item \(G|_{\hat{\tau} \times \hat{\sigma}} \approx A_{\tau}
-%                   B_{\tau\omega}^{*} \qquad A_{\tau} = (A_{\tau+} \ A_{\tau-})
-%                   \qquad B_{\tau\sigma} = (B_{\tau\sigma+} \ B_{\tau\sigma-})\)
-%           \item[] \hfil \(A_{\tau+}, A_{\tau-} \in \mathbb{R}^{\hat{\tau}
-%                   \times K}, B_{\tau\sigma+}, B_{\tau\sigma-} \in
-%                   \mathbb{R}^{\hat{\sigma} \times K}\)
-%           \item[] \hfil \(K := \{1, \hdots, 2d \} \times \{1, \hdots, m\}^{d-1},
-%                   m \in \mathbb{N}\)
-%           \begin{align*}
-%             a_{\tau+, i, \nu} &:= w_{\nu} \int\limits_{\Omega} \varphi_{i}(x)
-%                                   g(x, z_{\nu}) dx, && b_{\tau\sigma+, j\nu} &:=
-%                                   \int\limits_{\Omega} \psi_{j}(y)
-%                                   \frac{\partial g}{\partial n_{\iota}}
-%                                   (z_{\nu}, y) \ dy \\
-%             a_{\tau-, i, \nu} &:= w_{\nu} \int\limits_{\Omega} \varphi_{i}(x)
-%                                   \frac{\partial g}{\partial n_{\iota}}
-%                                   (x, z_{\nu}) dx, && b_{\tau\sigma-, j\nu} &:=
-%                                   -\int\limits_{\Omega} \psi_{j}(y)
-%                                   g(z_{\nu}, y) \ dy
-%           \end{align*}
-%           \item[] \hfil \(\nu = (\iota, \mu) \in K, i \in \hat{\tau}, j \in
-%                           \hat{\sigma}, w_{\nu} \in \mathbb{R}, z \in
-%                           \mathbb{R}^{d}\)
-%         \end{itemize}
-%   \end{overprint}
-%
-%   \footnotesize
-%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
-%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
-%   \normalsize
-% \end{frame}
-%
-% \begin{frame}{Kreuzapproximationsmethode}
-%   \begin{itemize}
-%     \item \visible<1->{\(i_{1} \in \hat{\tau}, j_{1} \in \hat{\sigma} \qquad
-%                          c_{i}^{(1)} := \frac{x_{i, j_{1}}}{x_{i_{1}, j_{1}}}
-%                          \qquad d_{j}^{(1)} := x_{i_{1}, j}\)}
-%     \item[] \visible<1->{\hfil \(\tilde{X}^{(1)} := c^{(1)} (d^{(1)})^{*}\)}
-%     \item \visible<2->{Bereche ab, wenn der Fehler (\(X^{(1)} := X -
-%                        \tilde{X}^{(1)}\)) klein genug ist, ansonsten wiederhole
-%                        Prozedur mit \(X^{(1)}\).}
-%     \item \visible<3->{\(X = CD^{*} = (c^{(1)} \hdots c^{(l)}) (d^{(1)} \hdots
-%                          d^{(l)})^{*}\)}
-%   \end{itemize}
-%
-%   \footnotesize
-%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
-%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
-%   \normalsize
-% \end{frame}
-%
-% \begin{frame}{Algebraische Interpolation}
-%   \begin{itemize}
-%     \item \visible<1->{Zeilenpermuationsmatrix \(P \in \mathbb{R}^{l \times
-%                          \hat{\tau}}\)}
-%     \item[] \visible<1->{\hfil \(Pz :=
-%                                  \begin{pmatrix}
-%                                    z_{i_{1}} \\
-%                                    \vdots \\
-%                                    z_{i_{l}}
-%                                  \end{pmatrix}
-%                                  \qquad \text{für alle } z \in \mathbb{R}^{\tau}
-%                                \)}
-%     \item \visible<2->{\(V := C{(PC)}^{-1} \qquad \mathfrak{J} := VP\)}
-%     \item \visible<3->{\(\mathfrak{I}C = VPC = C{(PC)}^{-1}PC = C\)}
-%     \item \visible<3->{\(\mathfrak{I}X = VPX = VPCD^{*} = CD^{*}\)}
-%   \end{itemize}
-%
-%   \footnotesize
-%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
-%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
-%   \normalsize
-% \end{frame}
-%
-% \begin{frame}{GCA-Methode}
-%   \begin{enumerate}
-%     \item \visible<1->{Niedrigrangapproximation eines zulässigen Blocks durch
-%                        Greens zweite Identität}
-%     \item \visible<1->{Approximation von \(A_{\tau}\) mithilfe der
-%                        Kreuzapproximationsmethode}
-%     \item \visible<2->{Wiederhole 1.\ und 2.\ für
-%                        \(G|_{\hat{\tau} \times \hat{\sigma}}^{*}\) }
-%     \item \visible<3->{Wende Kreuzapproximation auf permutierte Nicht-Blätter
-%                        an}
-%   \end{enumerate}
-%
-%   \begin{overprint}
-%       \onslide<1>
-%         \begin{itemize}
-%           \item \(A_{t} \approx C_{\tau}D_{\tau}^{*} = \mathfrak{I}A_{\tau} =
-%                   V_{\tau}P_{\tau}A_{\tau} \qquad G|_{\hat{\tau} \times \hat{\sigma}} \approx V_{\tau}P_{\tau}
-%                   G|_{\hat{\tau} \times \hat{\sigma}}\)
-%         \end{itemize}
-%       \onslide<2>
-%         \begin{itemize}
-%           \item \(G|_{\hat{\tau} \times \hat{\sigma}} \approx V_{\tau}
-%                   \underbrace{P_{\tau}G|_{\hat{\tau} \times \hat{\sigma}}P_{\sigma}^{*}}_{S_{b}}
-%                   V_{\sigma}^{*}\)
-%         \end{itemize}
-%       \onslide<3>
-%         \begin{itemize}
-%           \small
-%           \item \(\begin{pmatrix}
-%                     V_{\tau 1} & \\
-%                                & V_{\tau 2}
-%                   \end{pmatrix}
-%                   \begin{pmatrix}
-%                     P_{\tau 1} & \\
-%                                & P_{\tau 2}
-%                   \end{pmatrix} A_{\tau} \approx
-%                   \begin{pmatrix}
-%                     V_{\tau 1} & \\
-%                                & V_{\tau 2}
-%                   \end{pmatrix} \widehat{V}_{\tau}\widehat{P}_{\tau}
-%                   \begin{pmatrix}
-%                     P_{\tau 1} & \\
-%                                & P_{\tau 2}
-%                   \end{pmatrix} A_{\tau}\)
-%           \normalsize
-%           \item \( \begin{pmatrix}
-%                      E_{\tau 1} \\ E_{\tau 2}
-%                    \end{pmatrix} := \widehat{V}_{\tau} \Rightarrow V_{\tau} :=
-%                    \begin{pmatrix}
-%                       V_{\tau 1} & \\
-%                                  & V_{\tau 2}
-%                    \end{pmatrix}\widehat{V}_{\tau} =
-%                    \begin{pmatrix}
-%                      V_{\tau 1} E_{\tau 1} \\ V_{\tau 2} E_{\tau 2}
-%                    \end{pmatrix}\)
-%         \end{itemize}
-%   \end{overprint}
-%
-%   \footnotesize
-%   \let\thefootnote\relax\footnote{Quelle: \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{Approximation of integral operators by Green quadrature and nested cross approximation}}
-%   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
-%   \normalsize
-% \end{frame}
 
 \section{GPUs}
 
@@ -591,16 +508,24 @@
 \begin{frame}{GPUs}
   \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/fg-gpu_architecture.png}
+    \includegraphics[width=\linewidth]{figures/fg-gpu_architecture.pdf}
     \caption{Architektur einer Graphikkarte}
   \end{figure}
+
+  \footnotesize
+  \let\thefootnote\relax\footnote{Sunpyo Hong und Hyesoon Kim.
+  \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{
+  ``An analytical model for a GPU architecture with memory-level and thread-level parallelism awareness''}. In:   \textit{ACM SIGARCH Computer 
+  Architecture News}. Bd. 37. 3. 2009, S. 152-163.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+  \normalsize
 \end{frame}
 
 \section{OpenCL}
 
 \begin{frame}{OpenCL}
   \begin{itemize}
-    \item Framework zum programmieren von/auf unterschiedlichen
+    \item Framework zum Programmieren von/auf unterschiedlichen
           Hardwarearchitekturen
     \begin{itemize}
       \item Field Programmable Gate Arrays (FPGAs)
@@ -611,7 +536,7 @@
   \end{itemize}
 
   \footnotesize
-  \let\thefootnote\relax\footnote{Quelle: \href{https://www.khronos.org/registry/OpenCL/specs/opencl-2.0.pdf}{The OpenCL Specifictaion (Version: 2.0)}}
+  \let\thefootnote\relax\footnote{Lee Howes. \href{https://www.khronos.org/registry/OpenCL/specs/opencl-2.0.pdf}{\textit{The OpenCL Specifictaion}}. Document Revision: 23. Khronos OpenCL Working Group. Nov. 2015.}
   \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
@@ -619,60 +544,58 @@
 \begin{frame}{OpenCL}
   \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/fg-opencl-platform-model.png}
-    \caption{Das Platformmodell von OpenCL\footnotemark[1]}
+    \includegraphics[width=.9\linewidth]{figures/fg-opencl-platform-model.pdf}
+    \caption{Das Platformmodell von OpenCL}
   \end{figure}
 
   \footnotesize
-  \footnotetext[1]{\url{https://www.researchgate.net/profile/Yi_Ping_You/publication/261411530/figure/fig6/AS:281659619463173@1444164294142/Figure-1-OpenCL-platform-model-adapted-from8.png}}
+  \let\thefootnote\relax\footnote{Lee Howes. \href{https://www.khronos.org/registry/OpenCL/specs/opencl-2.0.pdf}{\textit{The OpenCL Specifictaion}}. Document Revision: 23. Khronos OpenCL Working Group. Nov. 2015.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
 
 \begin{frame}{OpenCL}
   \begin{figure}
     \centering
-    \includegraphics[width=.75\linewidth]{figures/fg-opencl-memory-model.png}
-    \caption{Das Speichermodell von OpenCL\footnotemark[1]}
+    \includegraphics[width=.75\linewidth]{figures/fg-opencl-memory-model.pdf}
+    \caption{Das Speichermodell von OpenCL}
   \end{figure}
 
   \footnotesize
-  \footnotetext[1]{\url{https://www.researchgate.net/publication/275973210_Intelligent_Vehicle_Perception_Toward_the_Integration_on_Embedded_Many-core/figures?lo=1}}
+  \let\thefootnote\relax\footnote{Lee Howes. \href{https://www.khronos.org/registry/OpenCL/specs/opencl-2.0.pdf}{\textit{The OpenCL Specifictaion}}. Document Revision: 23. Khronos OpenCL Working Group. Nov. 2015.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
 
 \begin{frame}{OpenCL}
   \begin{figure}
     \centering
-    \includegraphics[width=.75\linewidth]{figures/fg-opencl-execution-model.jpg}
-    \caption{Das Ausführungsmodell von OpenCL\footnotemark[1]}
+    \includegraphics[width=.75\linewidth]{figures/fg-opencl-execution-model.pdf}
+    \caption{Das Ausführungsmodell von OpenCL}
   \end{figure}
 
   \footnotesize
-  \footnotetext[1]{\url{https://www.packtpub.com/graphics/9781849692342/graphics/2342OT_02_11.jpg}}
+  \let\thefootnote\relax\footnote{Lee Howes. \href{https://www.khronos.org/registry/OpenCL/specs/opencl-2.0.pdf}{\textit{The OpenCL Specifictaion}}. Document Revision: 23. Khronos OpenCL Working Group. Nov. 2015.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
 
 \begin{frame}[fragile]{OpenCL}
   \begin{lstlisting}[style=CStyle]
-    kernel void vec_inc(global float *a, const float b)
-    {
-      const size_t gid = get_global_id(0);
-      const size_t lid = get_local_id(0);
+  kernel void vec_inc(const size_t n,
+                      global float *a,
+                      const float b)
+  {
+    const size_t gid = get_global_id(0);
 
-      local float a_local[32];
+    if(gid >= n)
+      return;
 
-      if(lid < 32)
-      {
-        a_local[lid] = a[gid];
-
-        a_local[lid] += b;
-
-        a[gid] = a_local[lid];
-      }
-    }
+    a[gid] += b;
+  }
   \end{lstlisting}
 \end{frame}
-\section{4 Phasen-fastaddeval}
+\section{3 Phasen-fastaddeval}
 
 \begin{frame}{Idee}
   \begin{columns}
@@ -681,43 +604,46 @@
         \item Berechne reproduzierbare Matrizen nur bei Bedarf:
         \item \(S_{b} = P_{\tau}G|_{\tau \times \sigma} P_{\sigma}^{*}\)
         \begin{itemize}
-          \item Permutierte Einträge der Galerkin-Diskretisierung
-          \item Einträge bestehen nur aus einem Typ von
-                Integralen\footnotemark[1]\footnotemark[2]
+          \item Permutierte Eintr\"age der Galerkin-Diskretisierung
+          \item Eintr\"age bestehen nur aus einem Typ von
+                Integralen
         \end{itemize}
         \item \(G|_{\hat{\tau} \times \hat{\sigma}}\)
         \begin{itemize}
-          \item Einträge der Galerkin-Diskretisierung
-          \item Einträge bestehen aus allen Typen von Integralen
+          \item Eintr\"age der Galerkin-Diskretisierung
+          \item Eintr\"age bestehen aus allen Typen von Integralen
         \end{itemize}
       \end{itemize}
     \column{.5\linewidth}
       \begin{algorithm}[H]
-        \begin{algorithmic}[1]
-          \normalsize
+        \SetKwProg{Proc}{}{}{}
+        \Proc{fastaddeval \newline \quad \small{(\( \alpha, \ G, \ b = (t, s), \ x, \
+                                              \hat{x}, \, \textbf{var } y,
+                                              \hat{y} \))}}
+        {
+          \uIf{\( b \in \mathcal{L}^{+}_{\mathcal{I} \times \mathcal{J}}
+               \)}
           {
-          \Function{fastaddeval}{}
-          \State{(\(\alpha\), block \(, b = (\tau, \sigma)\))}
-          \If{\(b \in \mathcal{L}_{\mathcal{I} \times \mathcal{J}}^{+}\)}
-            \State{\(\hat{y}_{\tau} \leftarrow \hat{y}_{\tau} + \alpha S_{b}
-                     \hat{x}_{\sigma}\)}
-          \ElsIf{\(b \in \mathcal{L}_{\mathcal{I} \times \mathcal{J}}^{-}\)}
-            \State{\(y|_{\hat{\tau}} \leftarrow y|_{\hat{\tau}} + \alpha
-                     G|_{\hat{\tau} \times \hat{\sigma}} x|_{\hat{\sigma}}\)}
-          \Else{}
-            \For{\(b' \in sons(b)\)}
-              \State{FASTADDEVAL\relax(\(\alpha, b'\))}
-            \EndFor{}
-          \EndIf{}
-        \EndFunction{}
+            \( \hat{y}_{t} \leftarrow \hat{y}_{t} + \alpha S_{b}\hat{x}_{s}
+            \) \;
+          }
+          \uElseIf{\( b \in\mathcal{L}^{-}_{\mathcal{I} \times
+                      \mathcal{J}} \)}
+          {
+            \( y|_{\hat{t}} \leftarrow y|_{\hat{t}} + \alpha
+               N_{b}x|_{\hat{s}} \) \;
+          }
+          \Else{
+            \ForAll{\( b' \in \text{sons}(b)\)}
+            {
+              \scriptsize{\textit{fastaddeval\relax(}\( \alpha, \ G, \ b', \ x, \
+                                                   \hat{x}, \ y, \ \hat{y}
+                                                \)\textit{)} \;}
+            }
+          }
         }
-        \end{algorithmic}
       \end{algorithm}
   \end{columns}
-  \footnotesize
-  \footnotetext[1]{Typen von Integralen: Keinen gemeinsamen Vertex, einen gemeinsamen Vertex, eine gemeinsame Kante, identisches Dreieck}
-  \footnotetext[2]{Quelle: On the efficient computation of singular and nearly singular surface integrals arising in 3D-Galerkin BEM}
-  \normalsize
 \end{frame}
 
 \begin{frame}{Vorbereitung}\vfill
@@ -730,12 +656,12 @@
       \onslide<2>
         \centering
         \includegraphics[width=.66\linewidth]{figures/fg-h2-matrix-block-labled.pdf}
-        \caption{Kennzeichne die Blockmatrizen mit dem zuständigen Zeilencluster}
+        \caption{Kennzeichne die Blockmatrizen mit dem zust\"andigen Zeilencluster}
       \onslide<3>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-h2-matrix-block-orderd.pdf}
         \caption{Gruppierung von Blockmatrizen nach Fern- bzw. Nahfeld und nach
-                 zuständigen Zeilencluster}
+                 zust\"andigen Zeilencluster}
     \end{overprint}
   \end{figure}
 \end{frame}
@@ -763,7 +689,7 @@
       \onslide<5>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-ff-next-column.pdf}
-        \caption{Wiederhole die Prozedur für alle Einträge einer Zeile.}
+        \caption{Wiederhole die Prozedur f\"ur alle Eintr\"age einer Zeile.}
       \onslide<6>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-ff-write-result.pdf}
@@ -777,7 +703,7 @@
   \begin{figure}
     \centering
     \includegraphics[width=\linewidth]{figures/fg-performance-ff.pdf}
-    \caption{Performanz der 1.Phase auf verschiedenen GPUs.}
+    \caption{Rechenzeit der 1.Phase auf verschiedenen GPUs.}
   \end{figure}
 \end{frame}
 
@@ -785,68 +711,85 @@
   \small
   \begin{table}
     \begin{tabular}{rrrrrr} \toprule
-      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
-      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
+      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Rechenzeit in ms} \\ \cmidrule{2-6}
+      & \multicolumn{2}{c}{CPUs} & \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
       & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
       & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
       & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
       & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
       & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
-       16384 &  16830.000 &  76423.179 &  367.612 &  430.675 &  469.848 \\
-       32768 &  36960.000 & 167487.521 &  721.806 &  840.885 &  935.754 \\
-       65536 &  74710.000 & 337433.000 & 1056.583 & 1182.343 & 1226.704 \\
-      131072 & 154540.000 & 700738.240 & 2110.852 & 2387.168 & --- \\
+       16\,384 &  16\,830.000 &  76\,423.179 &  367.612 &  430.675 &  469.848 \\
+       32\,768 &  36\,960.000 & 167\,487.521 &  721.806 &  840.885 &  935.754 \\
+       65\,536 &  74\,710.000 & 337\,433.000 & 1\,056.583 & 1\,182.343 & 1\,226.704 \\
+      131\,072 & 154\,540.000 & 700\,738.240 & 2\,110.852 & 2\,387.168 & --- \\
       \bottomrule
     \end{tabular}
   \end{table}
   \normalsize
 \end{frame}
 
-\begin{frame}{2.-4. Phase (Nahfeld)}
+\begin{frame}{2.-3. Phase (Nahfeld)}
   \begin{itemize}
     \item Nahfeld besteht aus allen Integraltypen
     \item Interpertation als Integrale mit unterschiedlichen/unterschiedlich
           vielen Quadraturpunkten
-    \item Vertices zweier Dreiecke müssen zueinander permutiert werden\footnotemark[1]
+    \item Vertices zweier Dreiecke müssen zueinander permutiert werden
   \end{itemize}
+  
   \footnotesize
-  \footnotetext[1]{Quelle: On the efficient computation of singular and nearly singular surface integrals arising in 3D-Galerkin BEM}
+  \let\thefootnote\relax\footnote{S. A. Sauter und C. Lage.
+  \href{https://link.springer.com/article/10.1007\%2Fs00211-015-0757-y}{
+  ``On the efficient computation of singular and nearly singular surface 
+  integrals arising in 3D-Galerkin BEM''}. In:   \textit{Zeitschrift f\"ur 
+  angewandte Mathematik und Mechanik } 76 (1996), S. 273-275.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
   \normalsize
 \end{frame}
 
-\begin{frame}{2.-4. Phase (Nahfeld)}
+\begin{frame}{2.-3. Phase (Nahfeld)}
   \begin{tabular}{cccccc} \cmidrule[\heavyrulewidth]{1-5}
      & \multicolumn{4}{c}{Anzahl gemeinsamer Vertices} & \\ \cmidrule{2-5}
     \multirow{2}{*}{Anzahl Quadraturpunkte} & 0 & 1 & 2 & 3 & \\ \cmidrule{2-5}
-     & k & l & m & m & \(\Leftarrow\) 2.-4. Phase\\
+     & k & l & m & m & \(\Leftarrow\) 2.-3. Phase\\
     \cmidrule[\heavyrulewidth]{1-5}
   \end{tabular}
   \begin{itemize}
     \item \(k, l, m \in \mathbb{N}, k < l < m\)
   \end{itemize}
+
+  \footnotesize
+  \let\thefootnote\relax\footnote{Steffen Börm u. a. \textit{H2Lib}.
+  \url{http://www.h2lib.org/}.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+  \normalsize
 \end{frame}
 
-\begin{frame}{2.-4. Phase (Nahfeld)}
+\begin{frame}{2.-3. Phase (Nahfeld)}
   \begin{tabular}{cccccc} \cmidrule[\heavyrulewidth]{1-5}
      & \multicolumn{4}{c}{Anzahl gemeinsamer Vertices} & \\ \cmidrule{2-5}
     \multirow{2}{*}{Anzahl Quadraturpunkte} & 0 & 1 & 2 & 3 & \\ \cmidrule{2-5}
      & k & k     & k         & k         & \(\Leftarrow\) 2. Phase \\
-     &   & l - k & l - k     & l - k     & \(\Leftarrow\) 3. Phase \\
-     &   &       & m - l - k & m - l - k & \(\Leftarrow\) 4. Phase \\
+     &   & l - k & m - k     & m - k     & \(\Leftarrow\) 3. Phase \\
     \cmidrule[\heavyrulewidth]{1-5}
   \end{tabular}
   \begin{itemize}
     \item \(k, l, m \in \mathbb{N}, k < l < m\)
   \end{itemize}
+
+  \footnotesize
+  \let\thefootnote\relax\footnote{Steffen Börm u. a. \textit{H2Lib}.
+  \url{http://www.h2lib.org/}.}
+  \addtocounter{footnote}{-1}\let\thefootnote\svthefootnote\relax
+  \normalsize
 \end{frame}
 
 \begin{frame}{2. Phase}
   \begin{itemize}
-    \item Ähnlich wie in der 1. Phase, bis auf dass
+    \item \"Ahnlich wie in der 1. Phase, bis auf dass
     \begin{itemize}
-      \item für jeden Matrixeintrag entschieden werden muss, welche
+      \item f\"ur jeden Matrixeintrag entschieden werden muss, welche
             Quadraturpunkte zu wählen sind.
-      \item für jeden Matrixeintrag die entsprechenden Dreiecksvertices
+      \item f\"ur jeden Matrixeintrag die entsprechenden Dreiecksvertices
             zueinander permutiert werden müssen.
     \end{itemize}
   \end{itemize}
@@ -856,55 +799,73 @@
   \small
   \begin{table}
     \begin{tabular}{rrrrrr} \toprule
-      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
-      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
+      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Rechenzeit in ms} \\ \cmidrule{2-6}
+      & \multicolumn{2}{c}{CPUs} & \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
       & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
       & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
       & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
       & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
       & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
-       16384 &  900.000 &  4547.475 &  72.462 &  64.436 &  75.006 \\
-       32768 & 1780.000 &  9167.462 & 138.161 & 125.223 & 147.785 \\
-       65536 & 3550.000 & 18162.474 & 273.268 & 246.615 & 291.429\\
-      131072 & 7070.000 & 36480.016 & 528.493 & 480.287 & --- \\
+       16\,384 &    900.000 &  4\,547.475 &  72.462 &  64.436 &  75.006 \\
+       32\,768 & 1\,780.000 &  9\,167.462 & 138.161 & 125.223 & 147.785 \\
+       65\,536 & 3\,550.000 & 18\,162.474 & 273.268 & 246.615 & 291.429\\
+      131\,072 & 7\,070.000 & 36\,480.016 & 528.493 & 480.287 & --- \\
       \bottomrule
     \end{tabular}
   \end{table}
   \normalsize
 \end{frame}
 
-\begin{frame}{3.-4. Phase}
+\begin{frame}{3. Phase}
   \begin{columns}
     \column{0.425\linewidth}
       \begin{algorithm}[H]
-        \begin{algorithmic}[1]
-          \footnotesize
+        \small{
+          \( sum \gets 0 \) \;
+          \For{\( q = 0 \to (nq - 1) \)}
           {
-          \State{sum = 0}
-          \For{q = 0; q < nq; ++q}
-            \State{sum += \(w_{q}\) * kernel\relax(\(x_{q}, y_{q}\))}
-          \EndFor{}
+            \( sum \gets sum + w_{q} * kernel\relax(x_{q}, \ y_{q}) \) \;
           }
-          \State{result += sum}
-        \end{algorithmic}
+          \( result \gets result + sum \) \;
+        }
       \end{algorithm}
     \column{0.6\linewidth}
       \begin{algorithm}[H]
-        \begin{algorithmic}[1]
-          \footnotesize
+        \small{
+        \( lid \gets \) get\_local\_id\relax(0) \;
+        \( lsize \gets \) get\_local\_size\relax(0) \;
+        \( sum_{lid} \gets 0 \) \;
+        \( q \gets 0 \) \;
+        \While{\( q < nq \)}
+        {
+          \If{\( (q + lid) < nq \)}
           {
-          \State{lid = get\_local\_id\relax(0)}
-          \State{lsize = get\_local\_size\relax(0)}
-          \State{sum = 0}
-          \For{q = 0; q < nq; q += lsize}
-            \If{(q + lid) < nq}
-              \State{\(sum_{lid}\) += \(w_{q + lid}\) * kernel\relax(\(x_{q + lid}, y_{q + lid}\))}
-            \EndIf{}
-          \EndFor{}
+            \( sum_{lid} \gets sum_{lid} + w_{q + lid} *
+               kernel\relax(x_{q + lid}, y_{q + lid}) \) \;
           }
-          \State{result += \(\sum\limits_{i = 0}^{lsize} sum_{i}\)}
-        \end{algorithmic}
+
+          \( nq \gets nq + lsize \) \;
+        }
+
+        \( result \gets results + \sum\limits_{i = 0}^{lsize - 1} sum_{i} \) \;
+        }
       \end{algorithm}
+      % \begin{algorithm}[H]
+      %   \begin{algorithmic}[1]
+      %     \footnotesize
+      %     {
+      %     \State{lid = get\_local\_id\relax(0)}
+      %     \State{lsize = get\_local\_size\relax(0)}
+      %     \State{sum = 0}
+      %     \For{q = 0; q < nq; q += lsize}
+      %       \If{(q + lid) < nq}
+      %         \State{\(sum_{lid}\) += \(w_{q + lid}\) * kernel\relax(\(x_{q + lid}, y_{q + lid}\))}
+      %       \EndIf{}
+      %     \EndFor{}
+      %     }
+      %     \State{result += \(\sum\limits_{i = 0}^{lsize} sum_{i}\)}
+      %   \end{algorithmic}
+      % \end{algorithm}
   \end{columns}
   \begin{center}
     Pseudocode zum sequentiellen (links) und Thread-level vektorisierten
@@ -914,83 +875,66 @@
 
 \begin{frame}{3. Phase}
   \small
-  \begin{table}
+  \begin{table}[ht]\label{tab:fevalnfu}
     \begin{tabular}{rrrrrr} \toprule
-      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
-      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
-      & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
-      & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
+      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Rechenzeit in ms} \\
+      \cmidrule{2-6}
+      & \multicolumn{2}{c}{CPUs} & \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
+      & \begin{tabular}{@{}c@{}}Xeon \\ E5-\relax4640\end{tabular}
+      & \begin{tabular}{@{}c@{}}Core \\ i7-\relax3820\end{tabular}
       & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
       & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
       & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
-       16384 &  420.000 &  2453.863 &  63.717 &  89.152 &  83.960 \\
-       32768 &  850.000 &  4963.603 & 132.433 & 197.693 & 177.870 \\
-       65536 & 1680.000 &  9840.110 & 255.715 & 428.641 & 354.457 \\
-      131072 & 3380.000 & 19829.370 & 508.279 & 734.910 & --- \\
+       16\,384 &    710.000 &  4\,005.020 &  95.714 & 122.481 & 109.927 \\
+       32\,768 & 1\,420.000 &  8\,096.907 & 185.583 & 248.359 & 216.954 \\
+       65\,536 & 2\,800.000 & 16\,019.292 & 359.989 & 463.968 & 433.221 \\
+      131\,072 & 5\,680.000 & 32\,403.679 & 721.983 & 995.758 & --- \\
       \bottomrule
     \end{tabular}
   \end{table}
   \normalsize
 \end{frame}
 
-\begin{frame}{4. Phase}
-  \small
-  \begin{table}
-    \begin{tabular}{rrrrrr} \toprule
-      \multirow{3}{*}{Dimension} & \multicolumn{5}{c}{Preformanz in ms} \\ \cmidrule{2-6}
-      & \multicolumn{2}{c}{CPUs} |& \multicolumn{3}{c}{GPUs} \\ \cmidrule{2-6}
-      & \begin{tabular}{@{}c@{}}Xeon \\ E5-4640\end{tabular}
-      & \begin{tabular}{@{}c@{}}Core \\ i7-3820\end{tabular}
-      & \begin{tabular}{@{}c@{}}Tesla \\ K20Xm\end{tabular}
-      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 680\end{tabular}
-      & \begin{tabular}{@{}c@{}}GeForce \\ GTX 760\end{tabular} \\ \cmidrule{1-6}
-       16384 & 1160.000 &  6007.246 &  32.705 &  50.510 &  46.254 \\
-       32768 & 2360.000 & 12146.984 &  70.949 & 114.736 & 103.447 \\
-       65536 & 4650.000 & 24019.114 & 137.341 & 247.243 & 200.640 \\
-      131072 & 9440.000 & 48587.012 & 261.457 & 410.919 & --- \\
-      \bottomrule
-    \end{tabular}
-  \end{table}
-  \normalsize
-\end{frame}
 
-\begin{frame}{1.-4.Phase im Vergleich}
+\begin{frame}{1.-3.Phase im Vergleich}
   \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/fg-performance-feval-1-4.pdf}
-    \caption{Performanz der einzelnen Phasen im Vergleich auf einer Tesla
+    \includegraphics[width=\linewidth]{figures/fg-performance-feval-1-3.pdf}
+    \caption{Rechenzeit der einzelnen Phasen im Vergleich auf einer Tesla
              K20xm.}
   \end{figure}
 \end{frame}
 
-\begin{frame}{Optimierung: Lokalität von Speicher}
+
+\begin{frame}{Optimierung: Lokalit\"at von Speicher}
   \begin{algorithm}[H]
-    \begin{algorithmic}[1]
-      \normalsize
+    \SetKwProg{Proc}{}{}{}
+    \Proc{fastaddeval\_farfield}
+    {
+      \For{\( i = 0 \to (rows - 1) \)}
       {
-      \Function{fastaddeval\_1\_phase}{}
-      \For{i = 0; i < rows; ++i}
-       \State{// Hole Informationen über Zeile i.}
-        \For{j = 0; j < cols; ++j}
-          \State{// Hole Informationen über Spalte j.}
-          \For{q = 0; q < nq; ++q}
-            \State{// Führe Quadratur bzgl. i, j und q-ten Quadraturpunkt}
-            \State{// und -gewicht durch.}
-          \EndFor{}
-        \EndFor{}
-      \EndFor{}
-      \EndFunction{}
-      }
-    \end{algorithmic}
+        // Hole Informationen \"uber Zeile i \\
+        \For{\( j = 0 \to (cols - 1) \)}
+        {
+          // Hole Informationen \"uber Spalte j \\
+
+          \For{\( q = 0 \to (nq - 1) \)}
+          {
+            // F\"uhre Quadratur bzgl. i, j und q-ten Quadraturpunkt \\
+            // und -gewicht durch.
+          }
+        }
+      }      
+    }
     \caption{Verschachtelte Schleifen in der 1. Phase. Eine tiefere
              Verschachtelungsebene bedeutet mehr Speicherzugriffe.}
   \end{algorithm}
 \end{frame}
 
-\begin{frame}{Optimierung: Lokalität von Speicher}
+\begin{frame}{Optimierung: Lokalit\"at von Speicher}
   \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/fg-gpu_architecture.png}
+    \includegraphics[width=\linewidth]{figures/fg-gpu_architecture.pdf}
     \caption{Erinnerung: (Speicher-)Architektur einer Grafikkarte.}
   \end{figure}
 \end{frame}
@@ -999,13 +943,13 @@
   \small
   \begin{table}
     \begin{tabular}{rrr} \toprule
-      \multirow{3}{*}{Dimension} & \multicolumn{2}{c}{Preformanz in ms} \\ \cmidrule{2-3}
+      \multirow{3}{*}{Dimension} & \multicolumn{2}{c}{Rechenzeit in ms} \\ \cmidrule{2-3}
       & \multicolumn{2}{c}{Lokalität der Quadraturpunkte} \\ \cmidrule{2-3}
       & Globaler Speicher & Lokaler Speicher \\ \cmidrule{1-3}
-       16384 &  367.612 & 305.763  \\ %324 bytes
-       32768 &  721.806 & 614.329  \\
-       65536 & 1056.583 & 805.513  \\
-      131072 & 2110.852 & 1665.412 \\
+       16\,384 &    367.612 &    305.763  \\ %324 bytes
+       32\,768 &    721.806 &    614.329  \\
+       65\,536 & 1\,056.583 &    805.513  \\
+      131\,072 & 2\,110.852 & 1\,665.412 \\
       \bottomrule
     \end{tabular}
     \caption{Performanzvergleiche von der Verfügbarkeit von Quadraturpunkten
@@ -1030,56 +974,81 @@
 \end{frame}
 
 \begin{frame}{Optimierung: Vektorisierung auf Instruktionsebene}
-  \small
-  \begin{table}
+  \begin{table}[ht]\label{tab:vec}
     \begin{tabular}{rrr} \toprule
-      \multirow{3}{*}{Dimension} & \multicolumn{2}{c}{Preformanz in ms} \\ \cmidrule{2-3}
+      \multirow{3}{*}{Dimension} & \multicolumn{2}{c}{Rechenzeit in ms} \\ 
+      \cmidrule{2-3}
       & \multicolumn{2}{c}{Vektorbreite} \\ \cmidrule{2-3}
-      & 1 & 4  \\ \cmidrule{1-3}
-       16384 &  305.763 &  286.222 \\
-       32768 &  614.329 &  581.817 \\
-       65536 &  805.513 &  763.979 \\
-      131072 & 1665.412 & 1562.938 \\
+      & 1 & 4 \\ \midrule
+       16\,384 &    305.763 &    286.222 \\
+       32\,768 &    614.329 &    581.817 \\
+       65\,536 &    805.513 &    763.979 \\
+      131\,072 & 1\,665.412 & 1\,562.938 \\
       \bottomrule
     \end{tabular}
     \caption{Performanzvergleich unterschiedlicher Vektorbreiten, verwendet zur
              vektorisierten Berechnung der Quadratur.}
   \end{table}
-  \normalsize
 \end{frame}
 
 \section{Zusammenfassung \& Ausblick}
 
 \begin{frame}{Zusammenfassung}
-  \small
-  \begin{table}
-    \begin{tabular}{rrrr} \toprule
-                & \multicolumn{3}{c}{Performanz in ms} \\ \cmidrule{2-4}
-      Dimension & \(\mathcal{H}^2\)-MVM
-                & \begin{tabular}{@{}c@{}}
-                    \(\mathcal{H}^2\)-MVM + \\
-                    Blockmatrizen \\
-                    on-the-fly (CPU)
-                  \end{tabular}
-                & \begin{tabular}{@{}c@{}}
-                    \(\mathcal{H}^2\)-MVM + \\
-                    Blockmatrizen \\
-                    on-the-fly (GPU)
-                  \end{tabular} \\ \midrule
-          16384 &  140 &   23390 &  470 \\
-          32768 &  300 &   50740 &  970 \\
-          65536 &  660 &  100160 & 1510 \\
-         131072 & 1190 &  205210 & 2990 \\ \bottomrule
+  \begin{table}[ht]\label{tab:mvm}
+    \resizebox{\textwidth}{!}
+    {
+      \begin{tabular}{rrrrrrrr} \toprule
+        \multirow{4}{*}{Dimension} & \multicolumn{7}{c}{Rechenzeit in ms} \\
+        \cmidrule{2-8}
+        & \multirow{3}{*}{\( \mathcal{H}^2 \)-MVM}
+        & \multicolumn{6}{c}{Ordnung} \\ \cmidrule{3-8}
+        & & \multicolumn{2}{c}{2} & \multicolumn{2}{c}{3} & \multicolumn{2}{c}{4}
+        \\ \cmidrule{3-8}
+        & 
+        & \begin{tabular}{@{}c@{}}
+            \( \mathcal{H}^2 \)-MVM \\
+            (CPU)
+          \end{tabular}
+        & \begin{tabular}{@{}c@{}}
+            \( \mathcal{H}^2 \)-MVM \\
+            (GPU)
+          \end{tabular}
+        & \begin{tabular}{@{}c@{}}
+            \( \mathcal{H}^2 \)-MVM \\
+            (CPU)
+          \end{tabular}
+        & \begin{tabular}{@{}c@{}}
+            \( \mathcal{H}^2 \)-MVM \\
+            (GPU)
+          \end{tabular}
+        & \begin{tabular}{@{}c@{}}
+            \( \mathcal{H}^2 \)-MVM \\
+            (CPU)
+          \end{tabular}
+        & \begin{tabular}{@{}c@{}}
+            \( \mathcal{H}^2 \)-MVM \\
+            (GPU)
+          \end{tabular} \\ \midrule
+         16\,384 &    140 &  6\,980 &    500 &  19\,770 &    950 &  50\,730 &
+          2\,350 \\
+         32\,768 &    300 & 14\,640 & 1\,000 &  43\,600 & 1\,820 & 106\,770 &
+          4\,530 \\
+         65\,536 &    660 & 29\,440 & 1\,490 &  94\,740 & 2\,940 & 220\,670 &
+          8\,280 \\
+        131\,072 & 1\,190 & 60\,920 & 3\,030 & 194\,980 & 5\,840 & 452\,060 & 
+         16\,320 \\
+        \bottomrule
       \end{tabular}
-    \end{table}
-  \normalsize
+    }
+  \end{table}
   \begin{itemize}
     \item Wir können den Speicherbedarf einer \(\mathcal{H}^2\)-Matrix um
-          75-90\% reduzieren
-    \item Die benötigte Rechenzeit kann auf GPUs um einen Faktor TODO
+          75 bis 90\% reduzieren
+    \item Die benötigte Rechenzeit kann auf GPUs um einen Faktor 20 bis 50
           reduziert werden verglichen mit einer CPU-Implementierung
-    \item Kann mit einer reinen, BLAS-optimierten und OpenMP-parallelisierten
-          \(\mathcal{H}^2\)-Matrix-Vektor-Multiplikation (fast) mithalten.
+    \item Rechenaufwand jedoch höher als bei einer reinen
+          Matrix-Vektor-Multiplikation (und nimmt zusätzlich mit höherer
+          Quadraturordnung zu)
   \end{itemize}
 \end{frame}
 
@@ -1089,10 +1058,10 @@
     \begin{tabular}{rrr} \toprule
                 & \multicolumn{2}{c}{Performanz in ms} \\ \cmidrule{2-3}
       Dimension & \(\mathcal{H}^2\)-Matrix & Blockmatrizen \\ \midrule
-          16384 &                   131620 &   63310 \\
-          32768 &                   267940 &  109092 \\
-          65536 &                   530570 &  271120 \\
-         131072 &                  1073480 &  559450 \\ \bottomrule
+          16\,384 &                     131\,620 &   63\,310 \\
+          32\,768 &                     267\,940 &  109\,092 \\
+          65\,536 &                     530\,570 &  271\,120 \\
+         131\,072 &                  1\,073\,480 &  559\,450 \\ \bottomrule
       \end{tabular}
     \end{table}
   \normalsize
@@ -1110,8 +1079,7 @@
 \end{frame}
 \begin{frame}[allowframebreaks]{Literatur}
 
-  \bibliography{presentation}
-  \bibliographystyle{abbrv}
+  \printbibliography
   \nocite{*}
 
 \end{frame}
