@@ -25,3 +25,5 @@
 
 # XeLatex
 *.xdv
+
+!fg*.pdf
