@@ -83,13 +83,12 @@
       </data>
     </node>
     <node id="n4">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="1.0" width="311.8918276947021" x="549.252172305298" y="179.5"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="29.609375" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="333.0009765625" x="-10.554574433899006" y="-32.609375">Anzahl gemeinsamer Vertices<y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="22" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="29.609375" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="359.029296875" x="-23.568734590149006" y="-32.609375">Anzahl gemeinsamer Eckpunkte<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -101,7 +100,6 @@
       </data>
     </node>
     <node id="n5">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="320.7089373568326" width="1.0" x="509.5" y="270.0"/>
@@ -120,7 +118,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </node>
     <node id="n6">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="30.0" x="555.0" y="195.0"/>
@@ -138,7 +135,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </node>
     <node id="n7">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="30.0" x="645.0" y="195.0"/>
@@ -156,7 +152,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </node>
     <node id="n8">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="30.0" x="735.0" y="195.0"/>
@@ -174,7 +169,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </node>
     <node id="n9">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="30.0" x="825.0" y="195.0"/>
@@ -192,7 +186,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </node>
     <node id="n10">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="1.0" width="311.8918276947021" x="549.0540861526489" y="239.0"/>
@@ -211,7 +204,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </node>
     <node id="n11">
-      <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="30.0" x="915.0" y="315.0"/>
@@ -229,7 +221,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </node>
     <edge id="e0" source="n0" target="n1">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="-2.5369059431163805" sy="-90.8385918026026" tx="1.3535455639319025" ty="-90.8385918026026"/>
@@ -240,7 +231,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </edge>
     <edge id="e1" source="n1" target="n2">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="-5.385462578994748" sy="-89.3410344375078" tx="-1.869400413220319" ty="-37.46951939494653"/>
@@ -251,7 +241,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </edge>
     <edge id="e2" source="n2" target="n3">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="1.1257143169692654" sy="-36.96590727171025" tx="0.0" ty="0.0"/>
@@ -262,7 +251,6 @@ Quadraturpunkte<y:LabelModel>
       </data>
     </edge>
     <edge id="e3" source="n11" target="n0">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="3.4533235172630157" ty="-88.83742231427152"/>
