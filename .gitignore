@@ -21,7 +21,9 @@
 
 # BibTeX
 *.bbl
+*.bcf
 *.blg
+*.run.xml
 
 # XeLatex
 *.xdv

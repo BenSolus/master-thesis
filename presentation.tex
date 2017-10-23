@@ -25,7 +25,6 @@
 
 \SetInd{0.25em}{0.4em}
 
-
 \usepgfplotslibrary{dateplot}
 
 \usepackage{xspace}
@@ -62,7 +61,7 @@
 
 \title{Ein skalierbarer L\"oser f\"ur Randwertprobleme unter Verwendung der
        Greenschen Kreuzapproximationsmethode und GPUs}
-\date{\today}
+\date{24. Oktober 2017}
 \author{Bennet Carstensen}
 \institute{Christian-Albrechts-Universität zu Kiel\\
            Institut für Informatik\\
@@ -94,9 +93,9 @@
                            \( d \in \{ 2, 3 \} \)}
         \item \visible<2->{\( \int\limits_{\Omega} g(x, y) u(y) dy = f(x)
                               \newline \text{ für alle } x \in \Omega \)}
-        \item \visible<2->{z.B. \(g(x, y) = \frac{1}{4\pi\left\lVert x - y
+        \item \visible<2->{z.\,B. \(g(x, y) = \frac{1}{4\pi\left\lVert x - y
                            \right\rVert_{2}}\) (Fundamentallösung der
-                           Laplacegleichung)}
+                           Laplace-Gleichung)}
       \end{itemize}
     \column{0.325\linewidth}
       \centering
@@ -123,16 +122,16 @@
       \({(\varphi_{i})}_{i = 1}^{n} \text{ und }
         {(\psi_{j})}_{j = 1}^{n}, n \in \mathbb{N}\)
       \begin{itemize}
-        \item \( V_{n} = span\{ \varphi_{i} : i \in \{ 1, \hdots, n\} \},
+        \item \( V_{n} = \text{span}\{ \varphi_{i} : i \in \{ 1, \hdots, n\} \}
                 \newline
-                U_{n} = span\{ \psi_{j} : j \in \{ 1, \hdots, n\} \} \)
+                U_{n} = \text{span}\{ \psi_{j} : j \in \{ 1, \hdots, n\} \} \)
         \item Finde \(z = (z_{1}, \hdots, z_{n}) \in \mathbb{R}^{n} \) mit
               \( u_{n}  = \sum\limits_{j = 1}^{n} \psi_{j} z_{j} \in U_{n} \) 
               und \( Gz = b \)
         \begin{itemize}
           \item \( g_{ij} = \int\limits_{\Omega} \varphi_{i}(x)
                    \int\limits_{\Omega} g(x, y) \ \psi_{j}(y) \ dy \ dx \)
-          \item \(b_{i} = \int\limits_{\Omega} \varphi_{i} \ f(x) \ dx\)
+          \item \(b_{i} = \int\limits_{\Omega} \varphi_{i}(x) \ f(x) \ dx\)
           \item \( i, j \in \{ 1, \hdots, n \} \)
         \end{itemize}
       \end{itemize}
@@ -158,11 +157,11 @@
           \multirow{2}{*}{Dimension} & \multicolumn{2}{c}{Speicherbedarf (in 
           GB)} \\ \cmidrule{2-3}
                       & Galerkin & \\ \midrule
-              16\,384 &      1.0 & \\
-              32\,768 &      4.0 & \\
-              65\,536 &     16.0 & \\
-             131\,072 &     64.0 & \\
-             262\,144 &    256.0 & \\ \bottomrule
+              16\,384 &      1,0 & \\
+              32\,768 &      4,0 & \\
+              65\,536 &     16,0 & \\
+             131\,072 &     64,0 & \\
+             262\,144 &    256,0 & \\ \bottomrule
         \end{tabular}
       \end{table}
     \onslide<3>
@@ -171,11 +170,11 @@
           \multirow{2}{*}{Dimension} & \multicolumn{2}{c}{Speicherbedarf (in 
           GB)} \\ \cmidrule{2-3}
                       & Galerkin & \(\mathcal{H}^2\)-Matrix \\ \midrule
-              16\,384 &      1.0 & 0.2 \\
-              32\,768 &      4.0 & 0.4 \\
-              65\,536 &     16.0 & 0.8 \\
-             131\,072 &     64.0 & 1.8 \\
-             262\,144 &    256.0 & 3.5 \\ \bottomrule
+              16\,384 &      1,0 & 0,2 \\
+              32\,768 &      4,0 & 0,4 \\
+              65\,536 &     16,0 & 0,8 \\
+             131\,072 &     64,0 & 1,8 \\
+             262\,144 &    256,0 & 3,5 \\ \bottomrule
         \end{tabular}
       \end{table}
   \end{overprint}
@@ -189,7 +188,7 @@
                          Laufzeitkomplexität)}
       \item \visible<3->{\(\mathcal{H}^2\)-Matrizen +
                            Greensche Kreuzapproximationsmethode\\
-                           (engl. \textit{Green cross approximation (GCA)
+                           (engl. \textit{Green cross approximation [GCA]
                            method})\\
                            (geringere Speicheranforderungen \(\Rightarrow\)
                            bessere Laufzeitkomplexität)}
@@ -199,20 +198,22 @@
 
 \begin{frame}{Probleme \& Lösungsansätze}
   \begin{figure}
-    \centering
-    \includegraphics[width=.45\linewidth]{figures/fg-memory-h2-nf-ff.pdf}
+    \includegraphics[width=\linewidth]{figures/fg-memory-h2-nf-ff.pdf}
     \caption{Speicherbedarf einer \(\mathcal{H}^2\)-Matrix und derer 
              Blockmatrizen}
   \end{figure}
+\end{frame}
+
+\begin{frame}{Probleme \& Lösungsansätze}
   \begin{itemize}
     \item Problem: Reale Problemstellungen benötigen immer größere Matrizen
           \(\Rightarrow\) Selbst \(\mathcal{H}^2\)-Matrizen haben ihre Grenzen
-    \item Lösungsansätz:
+    \item Lösungsansätze:
     \begin{itemize}
       \item Mehr Arbeitsspeicher
       \item Berechne reproduzierbare Untermatrizen einer
             \(\mathcal{H}^2\)-Matrix on-the-fly, wenn sie benötigt werden.
-            (75-90 \% des Speicherbedarfs wird eingespart)
+            (75--90\,\% des Speicherbedarfs wird eingespart.)
     \end{itemize}
   \end{itemize}
 \end{frame}
@@ -235,7 +236,7 @@
   \normalsize
   \begin{itemize}
     \item Problem: Wesentlich größerer Rechenaufwand bei letzterem Ansatz
-    \item Lösungsansatz (diese Masterarbeit):
+    \item Lösungsansatz (Thema dieser Master-Arbeit):
     \begin{itemize}
       \item Quadratur zur Auswertung der Integrale bestimmt Performance
       \item Quadratur ist äußerst parallelisierbar/vektorisierbar
@@ -324,7 +325,7 @@
     \column{.3\linewidth}
       \( y|_{\hat{\tau}} := \overbrace{V_{\tau} \underbrace{S_{\tau \sigma}
         \overbrace{V_{\sigma}^T
-        x|_{\hat{\sigma}}}^{\textcolor{red}{\text{forward}}}}_{fastaddeval}}^{backward} \)
+        \textcolor{orange}{x|_{\hat{\sigma}}}}^{\textcolor{red}{\text{forward}}}}_{fastaddeval}}^{backward} \)
     \column{.3\linewidth}
       \( y|_{\hat{\tau}} := \overbrace{V_{\tau} \underbrace{S_{\tau \sigma}
          \textcolor{orange}{\hat{x}_\sigma}}_{\textcolor{red}{fastaddeval}}}^{backward} \)
@@ -424,7 +425,7 @@
 
 \begin{frame}{GCA-Methode}
   \begin{itemize}
-    \item Sei ein zulässiger Block \(b = (\tau \times \sigma)\) gegeben
+    \item Sei ein zulässiger Block \(b = (\tau, \ \sigma)\) gegeben
     \item Algebraische Interpolation in zulässigen Blättern
     \begin{itemize}
       \item Greens zweite Identität, Quadratur und adaptive Kreuzapproximation
@@ -433,11 +434,11 @@
                            \mathfrak{I}_{\sigma} = W_{\sigma}P_{\sigma}\)}
       \item \visible<2->{\(V_{\tau} \in \mathbb{R}^{\tau \times \tilde{\tau}},
                            \qquad W_{\sigma} \in \mathbb{R}^{\sigma \times
-                           \tilde{\sigma}}\): \glqq Interpolationspolynome \grqq}
+                           \tilde{\sigma}}\): \glqq Interpolationspolynome\grqq}
       \item \visible<2->{\(P_{\tau} \in \mathbb{R}^{\tilde{\tau} \times \tau},
                            \qquad P_{\sigma} \in \mathbb{R}^{\tilde{\sigma}
-                           \times \sigma}\): \glqq Interpolationpunkte \grqq}
-      \item \visible<2->{\(\tilde{\tau} \subseteq \tau, \qquad, \tilde{\sigma}
+                           \times \sigma}\): \glqq Interpolationpunkte\grqq}
+      \item \visible<2->{\(\tilde{\tau} \subseteq \tau, \qquad \tilde{\sigma}
                            \subseteq \sigma\)}
       \item \visible<3->{\(G|_{\tau \times \sigma} \approx
                            \mathfrak{I}_{\tau} G|_{\tau \times \sigma}
@@ -445,7 +446,7 @@
                            V_{\tau} G|_{\tilde{\tau} \times \tilde{\sigma}}
                            W_{\sigma}^{*}\)}
     \end{itemize}
-    \item \visible<4->{Nicht-Blätter: Greens zweite Identität auf die von den Söhnen ausgewählten Basisfunktionen und ACA}
+    \item \visible<4->{Innere Knoten: Greens zweite Identität auf die von den Söhnen ausgewählten Basisfunktionen und ACA}
   \end{itemize}
 
   \footnotesize
@@ -467,7 +468,7 @@
         \item Graphics Processing Units (GPUs) sind ein auf Computergrafik
               spezialisierte Prozessoren
         \begin{itemize}
-          \item Schnelle Gleitkommaoperationen
+          \item Schnelle Gleitkomma-Operationen
           \item Vektorisierte Architektur
         \end{itemize}
         \item Entwicklung von GPUs durch Videospielindustrie stark
@@ -479,7 +480,7 @@
         \centering
         \includegraphics[width=\linewidth]{figures/fg-flops.png}
         \caption{Theoretische Verarbeitungsgeschwindigkeit von
-                 Gleitkommaoperationen verschiedener
+                 Gleitkomma-Operationen verschiedener
                  Architekturen\footnotemark[1]}
       \end{figure}
   \end{columns}
@@ -491,7 +492,7 @@
   \begin{figure}
     \centering
     \includegraphics[width=\linewidth]{figures/fg-gpu_architecture.pdf}
-    \caption{Architektur einer Graphikkarte}
+    \caption{Architektur einer Grafikkarte}
   \end{figure}
 
   \footnotesize
@@ -508,7 +509,7 @@
 \begin{frame}{OpenCL}
   \begin{itemize}
     \item Framework zum Programmieren von/auf unterschiedlichen
-          Hardwarearchitekturen
+          Hardware-Architekturen
     \begin{itemize}
       \item Field Programmable Gate Arrays (FPGAs)
       \item Digitaler Signalprozessoren (DSPs)
@@ -527,7 +528,7 @@
   \begin{figure}
     \centering
     \includegraphics[width=.9\linewidth]{figures/fg-opencl-platform-model.pdf}
-    \caption{Das Plattformmodell von OpenCL}
+    \caption{OpenCL-Plattformmodell}
   \end{figure}
 
   \footnotesize
@@ -577,7 +578,7 @@
   }
   \end{lstlisting}
 \end{frame}
-\section{3 Phasen-fastaddeval}
+\section{3-Phasen-fastaddeval}
 
 \begin{frame}{Idee}
   \begin{columns}
@@ -588,13 +589,12 @@
               G|_{\tilde{\tau} \times \tilde{\sigma}}\)
         \begin{itemize}
           \item Permutierte Eintr\"age der Galerkin-Diskretisierung
-          \item Eintr\"age bestehen nur aus einem Typ von
-                Integralen
+          \item Eintr\"age bestehen nur aus einem Integraltypen
         \end{itemize}
         \item Nahfeldmatrizen \( G|_{\hat{\tau} \times \hat{\sigma}} \)
         \begin{itemize}
           \item Eintr\"age der Galerkin-Diskretisierung
-          \item Eintr\"age bestehen aus allen Typen von Integralen
+          \item Eintr\"age bestehen aus allen Integraltypen
         \end{itemize}
       \end{itemize}
     \column{.5\linewidth}
@@ -636,7 +636,7 @@
         \centering
         \includegraphics[width=\linewidth]{figures/fg-h2-matrix-block-orderd.pdf}
         \caption{Gruppierung von Blockmatrizen nach Fern- bzw. Nahfeld und nach
-                 zust\"andigen Zeilencluster}
+                 zust\"andigem Zeilencluster}
     \end{overprint}
   \end{figure}
 \end{frame}
@@ -647,7 +647,7 @@
       \onslide<1>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-ff-initial-situation.pdf}
-        \caption{Ausgangssituation einer OpenCL work-group in der 1. Phase.}
+        \caption{Ausgangssituation einer OpenCL-Work-Group in der 1. Phase.}
       \onslide<2>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-ff-compute-matrix-entry.pdf}
@@ -668,7 +668,7 @@
       \onslide<6>
         \centering
         \includegraphics[width=\linewidth]{figures/fg-ff-write-result.pdf}
-        \caption{Die Summe der Zwischenergebnisse ergiebt den Eintrag im
+        \caption{Die Summe der Zwischenergebnisse ergibt den Eintrag im
                  Ausgabevektor.}
     \end{overprint}
   \end{figure}
@@ -678,7 +678,7 @@
   \begin{figure}
     \centering
     \includegraphics[width=\linewidth]{figures/fg-performance-ff.pdf}
-    \caption{Rechenzeit der 1.Phase auf verschiedenen GPUs.}
+    \caption{Rechenzeit der 1.~Phase auf verschiedenen GPUs.}
   \end{figure}
 \end{frame}
 
@@ -709,7 +709,7 @@
   \normalsize
 \end{frame}
 
-\begin{frame}{2.-3. Phase (Nahfeld)}
+\begin{frame}{2.--3. Phase (Nahfeld)}
   \begin{itemize}
     \item Nahfeld besteht aus allen Integraltypen
     \item Approximation durch unterschiedliche Quadraturformeln
@@ -726,7 +726,7 @@
   \normalsize
 \end{frame}
 
-\begin{frame}{2.-3. Phase (Nahfeld)}
+\begin{frame}{2.--3. Phase (Nahfeld)}
   \begin{overprint}
     \onslide<1>
       \begin{figure}
@@ -751,7 +751,7 @@
 
 \begin{frame}{2. Phase}
   \begin{itemize}
-    \item \"Ahnlich wie in der 1. Phase, bis auf dass
+    \item \"Ahnlich wie in der 1. Phase, bis auf dass\ldots
     \begin{itemize}
       \item f\"ur jeden Matrixeintrag entschieden werden muss, welche
             Quadraturformel zu wählen ist.
@@ -790,7 +790,7 @@
           \( sum \gets 0 \) \;
           \For{\( q = 0 \to (nq - 1) \)}
           {
-            \( sum \gets sum + w_{q} * kernel\relax(x_{q}, \ y_{q}) \) \;
+            \( sum \gets sum + w_{q} \( * \) kernel\relax(x_{q}, \ y_{q}) \) \;
           }
           \( result \gets result + sum \) \;
         }
@@ -818,7 +818,7 @@
       \end{algorithm}
   \end{columns}
   \begin{center}
-    Pseudocode zum sequentiellen (links) und Thread-level vektorisierten
+    Pseudocode zum sequentiellen (links) und Thread-Level-vektorisierten
     (rechts) Auswerten einer Quadratur.
   \end{center}
 \end{frame}
@@ -902,7 +902,7 @@
       131\,072 & 2\,110 & 1\,665 \\
       \bottomrule
     \end{tabular}
-    \caption{Performanzvergleiche von der Verfügbarkeit von Quadraturpunkten
+    \caption{Performanzvergleiche der Verfügbarkeit von Quadraturpunkten
              in unterschiedlichen Speicherbereichen auf einer Tesla K20Xm.}
   \end{table}
   \normalsize
@@ -910,7 +910,7 @@
 
 \begin{frame}{Optimierung: Vektorisierung auf Instruktionsebene}
   \begin{itemize}
-    \item z.B. float2, float4, float8, float16 in OpenCL
+    \item z.\,B. float2, float4, float8, float16 in OpenCL
     \item Abstrahieren die Vektorregister der unterliegenden Architektur
     \item SSE/AVX auf CPUs (falls vorhanden)
     \item NVIDIAs Skalarprozessoren besizten keine Vektoreinheiten
@@ -993,9 +993,9 @@
   \end{table}
   \begin{itemize}
     \item Wir können den Speicherbedarf einer \(\mathcal{H}^2\)-Matrix um
-          75 bis 90\% reduzieren
+          75 bis 90\,\% reduzieren
     \item Die benötigte Rechenzeit kann auf GPUs um einen Faktor 20 bis 50
-          reduziert werden verglichen mit einer CPU-Implementierung
+          verglichen mit einer CPU-Implementierung reduziert werden
     \item Rechenaufwand jedoch höher als bei einer reinen
           Matrix-Vektor-Multiplikation (und nimmt zusätzlich mit höherer
           Quadraturordnung zu)
